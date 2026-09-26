@@ -23,6 +23,7 @@ permissions:
 env:
   BUILD_TYPE: Release
   QT_ANDROID_ABIS: arm64-v8a
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
   android-custom-build:
@@ -31,28 +32,40 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      - name: Checkout NEXUS repository
+      - name: Checkout pinned QGroundControl baseline
         uses: actions/checkout@v7
         with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
           fetch-depth: 1
-          submodules: recursive
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
           persist-credentials: false
 
       - name: Verify pinned QGC baseline
         shell: bash
         run: |
-          expected="25185047e855937d694a0174c1541d8f7d794a74"
-          actual="$(git -C qgroundcontrol rev-parse HEAD)"
-          echo "Expected QGC: ${expected}"
+          actual="$(git rev-parse HEAD)"
+          echo "Expected QGC: ${QGC_BASELINE_SHA}"
           echo "Actual QGC:   ${actual}"
-          test "${actual}" = "${expected}"
+          test "${actual}" = "${QGC_BASELINE_SHA}"
 
       - name: Stage NEXUS custom overlay
         shell: bash
         run: |
-          bash scripts/stage-custom.sh
-          test -f qgroundcontrol/custom/CMakeLists.txt
-          test -f qgroundcontrol/custom/src/NexusPlugin.cc
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+          test -f custom/CMakeLists.txt
+          test -f custom/cmake/CustomOverrides.cmake
+          test -f custom/src/NexusPlugin.cc
 
       - name: Set Android SDK location
         shell: bash
@@ -62,8 +75,7 @@ jobs:
 
       - name: Build setup
         id: setup
-        working-directory: qgroundcontrol
-        uses: ./qgroundcontrol/.github/actions/build-setup
+        uses: ./.github/actions/build-setup
         with:
           mode: android
           qt-host: linux
@@ -74,7 +86,7 @@ jobs:
           cpm-modules: .cache/CPM
 
       - name: Install host build dependencies
-        uses: ./qgroundcontrol/.github/actions/install-dependencies
+        uses: ./.github/actions/install-dependencies
 
       - name: Create CI debug keystore
         shell: bash
@@ -97,13 +109,13 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Configure NEXUS Android
-        uses: ./qgroundcontrol/.github/actions/cmake-configure
+        uses: ./.github/actions/cmake-configure
         with:
           build-dir: ${{ runner.temp }}/nexus-build
+          source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Android
           use-qt-cmake: 'false'
-          working-directory: qgroundcontrol
           extra-args: >-
             -DCMAKE_WARN_DEPRECATED=FALSE
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup.outputs.target_qt_root_dir }}/lib/cmake/Qt6/qt.toolchain.cmake
@@ -116,7 +128,7 @@ jobs:
         timeout-minutes: 75
         env:
           GRADLE_OPTS: -Dorg.gradle.daemon=false
-        uses: ./qgroundcontrol/.github/actions/cmake-build
+        uses: ./.github/actions/cmake-build
         with:
           build-dir: ${{ runner.temp }}/nexus-build
           build-type: ${{ env.BUILD_TYPE }}
