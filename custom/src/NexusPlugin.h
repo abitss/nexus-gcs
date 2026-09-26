@@ -1,8 +1,11 @@
 #pragma once
 
+#include <QtQml/QQmlAbstractUrlInterceptor>
+
 #include "QGCCorePlugin.h"
 #include "QGCOptions.h"
 
+class QQmlApplicationEngine;
 class NexusPlugin;
 
 class NexusFlyViewOptions final : public QGCFlyViewOptions
@@ -34,6 +37,12 @@ private:
     NexusFlyViewOptions *_flyViewOptions = nullptr;
 };
 
+class NexusOverrideInterceptor final : public QQmlAbstractUrlInterceptor
+{
+public:
+    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) final;
+};
+
 class NexusPlugin final : public QGCCorePlugin
 {
     Q_OBJECT
@@ -45,8 +54,12 @@ public:
 
     QGCOptions *options() final { return _options; }
     void paletteOverride(const QString &colorName, QGCPalette::PaletteColorInfo_t &colorInfo) final;
+    QQmlApplicationEngine *createQmlApplicationEngine(QObject *parent) final;
+    void destroyQmlApplicationEngine(QQmlApplicationEngine *qmlEngine) final;
     QString stableDownloadLocation() const final { return QStringLiteral("NEXUS GCS"); }
 
 private:
     NexusOptions *_options = nullptr;
+    QQmlApplicationEngine *_qmlEngine = nullptr;
+    NexusOverrideInterceptor *_urlInterceptor = nullptr;
 };
