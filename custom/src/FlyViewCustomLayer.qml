@@ -14,6 +14,7 @@ Item {
     property var mapControl
 
     readonly property var activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
+    readonly property var guidedController: globals.guidedControllerFlyView
     readonly property var primaryBattery: activeVehicle && activeVehicle.batteries && activeVehicle.batteries.count > 0
                                           ? activeVehicle.batteries.get(0)
                                           : null
@@ -337,6 +338,83 @@ Item {
                     value: activeVehicle ? factValue(activeVehicle.distanceToHome, 0) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.distanceToHome) : ""
                     Layout.fillWidth: true
+                }
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: 50
+            radius: 10
+            color: "#EE0B1016"
+            border.color: "#24313C"
+            border.width: 1
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 5
+                spacing: 7
+
+                Label {
+                    text: qsTr("ACTIONS")
+                    color: "#7F8C98"
+                    font.pixelSize: 9
+                    font.bold: true
+                    Layout.preferredWidth: 62
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                NexusActionButton {
+                    text: qsTr("ARM")
+                    primary: true
+                    visible: guidedController && guidedController.showArm
+                    enabled: visible && !linkLost
+                    Layout.fillWidth: true
+                    onClicked: guidedController.confirmAction(guidedController.actionArm)
+                }
+
+                NexusActionButton {
+                    text: qsTr("TAKEOFF")
+                    primary: true
+                    visible: guidedController && guidedController.showTakeoff
+                    enabled: visible && !linkLost
+                    Layout.fillWidth: true
+                    onClicked: guidedController.confirmAction(guidedController.actionTakeoff)
+                }
+
+                NexusActionButton {
+                    text: qsTr("HOLD")
+                    visible: guidedController && guidedController.showPause
+                    enabled: visible && !linkLost
+                    Layout.fillWidth: true
+                    onClicked: guidedController.confirmAction(guidedController.actionPause)
+                }
+
+                NexusActionButton {
+                    text: qsTr("RTL")
+                    visible: !!activeVehicle
+                    enabled: guidedController && guidedController.showRTL && !linkLost
+                    Layout.fillWidth: true
+                    onClicked: guidedController.confirmAction(guidedController.actionRTL)
+                }
+
+                NexusActionButton {
+                    text: qsTr("LAND")
+                    critical: true
+                    visible: guidedController && guidedController.showLand
+                    enabled: visible && !linkLost
+                    Layout.fillWidth: true
+                    onClicked: guidedController.confirmAction(guidedController.actionLand)
+                }
+
+                Label {
+                    visible: !activeVehicle
+                    text: qsTr("Connect a vehicle to enable flight actions")
+                    color: "#7F8C98"
+                    font.pixelSize: 10
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
                 }
             }
         }
