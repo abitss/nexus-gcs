@@ -58,6 +58,9 @@ public:
     void destroyQmlApplicationEngine(QQmlApplicationEngine *qmlEngine) final;
     QString stableDownloadLocation() const final { return QStringLiteral("NEXUS GCS"); }
 
+private slots:
+    void _advancedChanged(bool advanced);
+
 private:
     NexusOptions *_options = nullptr;
     QQmlApplicationEngine *_qmlEngine = nullptr;
