@@ -1,0 +1,4 @@
+[submodule "qgroundcontrol"]
+	path = qgroundcontrol
+	url = https://github.com/mavlink/qgroundcontrol.git
+	branch = master
