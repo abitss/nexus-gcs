@@ -32,6 +32,12 @@ NexusPlugin::NexusPlugin(QObject *parent)
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
     _showAdvancedUI = false;
+    (void) connect(this, &QGCCorePlugin::showAdvancedUIChanged, this, &NexusPlugin::_advancedChanged);
+}
+
+void NexusPlugin::_advancedChanged(bool advanced)
+{
+    emit _options->showFirmwareUpgradeChanged(advanced);
 }
 
 QGCCorePlugin *NexusPlugin::instance()
