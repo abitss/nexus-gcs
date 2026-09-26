@@ -1,7 +1,9 @@
 #include "NexusPlugin.h"
 
 #include <QtCore/QApplicationStatic>
+#include <QtCore/QFile>
 #include <QtGui/QColor>
+#include <QtQml/QQmlApplicationEngine>
 
 Q_APPLICATION_STATIC(NexusPlugin, _nexusPluginInstance);
 
@@ -35,6 +37,48 @@ NexusPlugin::NexusPlugin(QObject *parent)
 QGCCorePlugin *NexusPlugin::instance()
 {
     return _nexusPluginInstance();
+}
+
+QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
+{
+    _qmlEngine = QGCCorePlugin::createQmlApplicationEngine(parent);
+    _urlInterceptor = new NexusOverrideInterceptor();
+    _qmlEngine->addUrlInterceptor(_urlInterceptor);
+    return _qmlEngine;
+}
+
+void NexusPlugin::destroyQmlApplicationEngine(QQmlApplicationEngine *qmlEngine)
+{
+    if (qmlEngine && qmlEngine == _qmlEngine) {
+        qmlEngine->removeUrlInterceptor(_urlInterceptor);
+        delete _urlInterceptor;
+        _urlInterceptor = nullptr;
+        _qmlEngine = nullptr;
+    }
+
+    QGCCorePlugin::destroyQmlApplicationEngine(qmlEngine);
+}
+
+QUrl NexusOverrideInterceptor::intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type)
+{
+    switch (type) {
+    case QQmlAbstractUrlInterceptor::QmlFile:
+    case QQmlAbstractUrlInterceptor::UrlString:
+        if (url.scheme() == QStringLiteral("qrc")) {
+            const QString overrideResource = QStringLiteral(":/Custom%1").arg(url.path());
+            if (QFile::exists(overrideResource)) {
+                QUrl result;
+                result.setScheme(QStringLiteral("qrc"));
+                result.setPath('/' + overrideResource.mid(2));
+                return result;
+            }
+        }
+        break;
+    default:
+        break;
+    }
+
+    return url;
 }
 
 void NexusPlugin::paletteOverride(const QString &colorName, QGCPalette::PaletteColorInfo_t &colorInfo)
