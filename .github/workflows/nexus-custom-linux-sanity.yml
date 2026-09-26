@@ -60,6 +60,10 @@ jobs:
           test -f custom/cmake/CustomOverrides.cmake
           test -f custom/src/NexusPlugin.cc
 
+      - name: Validate Flight cockpit architecture
+        shell: bash
+        run: bash nexus-overlay/scripts/validate-flight-cockpit.sh nexus-overlay/custom/src/FlyViewCustomLayer.qml
+
       - name: Build setup
         id: setup
         uses: ./.github/actions/build-setup

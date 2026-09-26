@@ -26,6 +26,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusMetric.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusNavItem.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusActionButton.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOpsPanel.qml"
 )
 
 set_source_files_properties(
@@ -51,6 +52,10 @@ set_source_files_properties(
 set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusActionButton.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusActionButton.qml"
+)
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOpsPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusOpsPanel.qml"
 )
 
 qt_add_resources(

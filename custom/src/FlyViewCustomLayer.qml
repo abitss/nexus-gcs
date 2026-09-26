@@ -15,87 +15,160 @@ Item {
 
     readonly property var activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
     readonly property var guidedController: globals.guidedControllerFlyView
+    readonly property var planMasterController: globals.planMasterControllerFlyView
+    readonly property var missionController: planMasterController ? planMasterController.missionController : null
     readonly property var primaryBattery: activeVehicle && activeVehicle.batteries && activeVehicle.batteries.count > 0
                                           ? activeVehicle.batteries.get(0)
                                           : null
+    readonly property var healthReport: activeVehicle ? activeVehicle.healthAndArmingCheckReport : null
 
     readonly property bool linkLost: activeVehicle
                                      ? activeVehicle.vehicleLinkManager.communicationLost
                                      : false
-    readonly property int gpsLock: activeVehicle ? Number(activeVehicle.gps.lock.rawValue) : 0
-    readonly property int gpsSatCount: activeVehicle ? Number(activeVehicle.gps.count.rawValue) : 0
-    readonly property bool gpsHealthy: activeVehicle && gpsLock >= 3
-    readonly property real batteryPercent: primaryBattery ? Number(primaryBattery.percentRemaining.rawValue) : NaN
+    readonly property int gpsLock: activeVehicle && !linkLost ? Number(activeVehicle.gps.lock.rawValue) : 0
+    readonly property int gpsSatCount: activeVehicle && !linkLost ? Number(activeVehicle.gps.count.rawValue) : 0
+    readonly property bool gpsHealthy: activeVehicle && !linkLost && gpsLock >= 3
+
+    readonly property real batteryPercent: primaryBattery && !linkLost
+                                           ? Number(primaryBattery.percentRemaining.rawValue)
+                                           : NaN
     readonly property bool batteryKnown: !isNaN(batteryPercent)
     readonly property bool batteryWarning: batteryKnown && batteryPercent < 25
     readonly property bool batteryCritical: batteryKnown && batteryPercent < 15
 
+    readonly property bool preflightSupported: !!healthReport && healthReport.supported
+    readonly property bool preflightBlocked: activeVehicle && !activeVehicle.armed &&
+                                             ((preflightSupported && !healthReport.canArm) ||
+                                              (!preflightSupported && activeVehicle.prearmError.length > 0))
+    readonly property bool preflightWarning: activeVehicle && !activeVehicle.armed &&
+                                             preflightSupported && healthReport.canArm &&
+                                             healthReport.hasWarningsOrErrors
+
     readonly property string connectionText: !activeVehicle ? qsTr("DISCONNECTED")
                                                             : (linkLost ? qsTr("LINK LOST") : qsTr("CONNECTED"))
     readonly property string vehicleText: activeVehicle ? qsTr("UAV-%1").arg(activeVehicle.id) : qsTr("NO VEHICLE")
-    readonly property string modeText: activeVehicle ? activeVehicle.flightMode : "--"
-    readonly property string gpsText: !activeVehicle ? "--"
-                                                     : (gpsHealthy ? qsTr("%1 SAT").arg(gpsSatCount)
-                                                                   : qsTr("NO FIX"))
+    readonly property string modeText: activeVehicle && !linkLost ? activeVehicle.flightMode : "--"
+    readonly property string gpsText: !activeVehicle || linkLost ? "--"
+                                                                : (gpsHealthy ? qsTr("%1 SAT").arg(gpsSatCount)
+                                                                              : qsTr("NO FIX"))
+    readonly property string navText: !activeVehicle || linkLost ? qsTr("UNKNOWN")
+                                                                : (gpsHealthy ? qsTr("NOMINAL") : qsTr("DEGRADED"))
     readonly property string linkText: !activeVehicle ? "--"
                                                       : (linkLost ? qsTr("LOST") : activeVehicle.vehicleLinkManager.primaryLinkName)
     readonly property string batteryText: batteryKnown ? qsTr("%1%").arg(Math.round(batteryPercent)) : "--"
 
+    readonly property int missionIndex: missionController && !linkLost ? missionController.currentMissionIndex : -1
+    readonly property int missionVisualCount: missionController && missionController.visualItems
+                                              ? missionController.visualItems.count
+                                              : 0
+    readonly property real missionProgress: missionController && !linkLost && !isNaN(Number(missionController.progressPct))
+                                                ? Math.max(0, Math.min(1, Number(missionController.progressPct)))
+                                                : 0
+    readonly property string missionText: missionIndex >= 0
+                                          ? qsTr("WP %1").arg(missionIndex)
+                                          : qsTr("IDLE")
+
+    readonly property string preflightText: {
+        if (!activeVehicle || linkLost) return qsTr("UNKNOWN")
+        if (activeVehicle.armed) return qsTr("ARMED")
+        if (preflightBlocked) return qsTr("BLOCKED")
+        if (preflightWarning) return qsTr("WARNING")
+        return qsTr("READY")
+    }
+
+    readonly property color preflightAccent: preflightBlocked ? "#E25555"
+                                                              : (preflightWarning ? "#D6A84A"
+                                                                                  : (activeVehicle && !linkLost ? "#2C9B7F" : "#6F7E8C"))
+
+    readonly property string videoText: {
+        if (!QGroundControl.videoManager.hasVideo) return qsTr("VIDEO OFF")
+        if (QGroundControl.videoManager.streaming && QGroundControl.videoManager.decoding) return qsTr("VIDEO LIVE")
+        if (QGroundControl.videoManager.streaming) return qsTr("VIDEO WAIT")
+        return qsTr("VIDEO READY")
+    }
+
+    readonly property color videoAccent: QGroundControl.videoManager.streaming && QGroundControl.videoManager.decoding
+                                         ? "#2C9B7F"
+                                         : (QGroundControl.videoManager.hasVideo ? "#D6A84A" : "#6F7E8C")
+
     readonly property string flightStateText: {
-        if (!activeVehicle) {
-            return qsTr("WAITING FOR VEHICLE")
-        }
-        if (linkLost) {
-            return qsTr("COMMUNICATION LOST")
-        }
-        if (!activeVehicle.armed) {
-            return qsTr("PREFLIGHT")
-        }
-        if (activeVehicle.armed && !activeVehicle.flying) {
-            return qsTr("ARMED")
-        }
+        if (!activeVehicle) return qsTr("WAITING FOR VEHICLE")
+        if (linkLost) return qsTr("COMMUNICATION LOST")
+        if (!activeVehicle.armed) return qsTr("PREFLIGHT")
+        if (activeVehicle.armed && !activeVehicle.flying) return qsTr("ARMED")
         return activeVehicle.flightMode
     }
 
     readonly property string alertText: {
-        if (!activeVehicle) {
-            return qsTr("No active vehicle. Connect a UAV to begin.")
+        if (!activeVehicle) return qsTr("No active vehicle. Connect a UAV to begin.")
+        if (linkLost) return qsTr("Vehicle communication lost. Live telemetry is hidden until the link recovers.")
+        if (batteryCritical) return qsTr("Aircraft battery critically low.")
+        if (preflightBlocked) {
+            if (!preflightSupported && activeVehicle.prearmError.length > 0) return activeVehicle.prearmError
+            return qsTr("Preflight checks are blocking arming.")
         }
-        if (linkLost) {
-            return qsTr("Vehicle communication lost. Telemetry may be stale.")
-        }
-        if (batteryCritical) {
-            return qsTr("Aircraft battery critically low.")
-        }
-        if (batteryWarning) {
-            return qsTr("Aircraft battery low.")
-        }
-        if (!gpsHealthy) {
-            return qsTr("Navigation degraded: no 3D GPS lock.")
-        }
+        if (batteryWarning) return qsTr("Aircraft battery low.")
+        if (!gpsHealthy) return qsTr("Navigation degraded: no 3D GPS lock.")
+        if (preflightWarning) return qsTr("Preflight checks contain warnings.")
         return ""
     }
 
     readonly property string alertSeverity: {
         if (!activeVehicle) return "INFO"
-        if (linkLost || batteryCritical) return "CRITICAL"
-        if (batteryWarning || !gpsHealthy) return "WARNING"
+        if (linkLost || batteryCritical || preflightBlocked) return "CRITICAL"
+        if (batteryWarning || !gpsHealthy || preflightWarning) return "WARNING"
         return ""
     }
 
     readonly property color alertAccent: alertSeverity === "CRITICAL" ? "#E25555"
-                                                : alertSeverity === "WARNING" ? "#D6A84A"
-                                                : "#4F8FB8"
+                                               : alertSeverity === "WARNING" ? "#D6A84A"
+                                               : "#4F8FB8"
+
+    property string commandFeedback: ""
+    property color commandFeedbackAccent: "#4F8FB8"
 
     function factValue(fact, decimals) {
-        if (!fact || isNaN(Number(fact.value))) {
+        if (!activeVehicle || linkLost || !fact || isNaN(Number(fact.value))) {
             return "--"
         }
         return Number(fact.value).toFixed(decimals)
     }
 
     function factUnits(fact) {
-        return fact && fact.units ? fact.units : ""
+        return activeVehicle && !linkLost && fact && fact.units ? fact.units : ""
+    }
+
+    function factDisplay(fact, decimals) {
+        const value = factValue(fact, decimals)
+        if (value === "--") return value
+        const units = factUnits(fact)
+        return units && units.length > 0 ? value + " " + units : value
+    }
+
+    function confirmGuidedAction(actionCode) {
+        if (!guidedController || !activeVehicle || linkLost) return
+        guidedController.confirmAction(actionCode)
+    }
+
+    Timer {
+        id: feedbackTimer
+        interval: 6000
+        repeat: false
+        onTriggered: root.commandFeedback = ""
+    }
+
+    Connections {
+        target: activeVehicle
+        ignoreUnknownSignals: true
+
+        function onMavCommandResult(vehicleId, targetComponent, command, ackResult, failureCode) {
+            if (!root.activeVehicle || vehicleId !== root.activeVehicle.id) return
+            root.commandFeedback = ackResult === 0
+                                   ? qsTr("VEHICLE ACK · CMD %1 ACCEPTED").arg(command)
+                                   : qsTr("VEHICLE ACK · CMD %1 REJECTED (%2)").arg(command).arg(ackResult)
+            root.commandFeedbackAccent = ackResult === 0 ? "#2C9B7F" : "#E25555"
+            feedbackTimer.restart()
+        }
     }
 
     QGCToolInsets {
@@ -104,8 +177,11 @@ Item {
         leftEdgeTopInset: parentToolInsets.leftEdgeTopInset
         leftEdgeCenterInset: parentToolInsets.leftEdgeCenterInset
         leftEdgeBottomInset: parentToolInsets.leftEdgeBottomInset
-        rightEdgeTopInset: parentToolInsets.rightEdgeTopInset
-        rightEdgeCenterInset: parentToolInsets.rightEdgeCenterInset
+
+        rightEdgeTopInset: Math.max(parentToolInsets.rightEdgeTopInset,
+                                    opsPanel.visible ? opsPanel.width + chromeMargin * 2 : 0)
+        rightEdgeCenterInset: Math.max(parentToolInsets.rightEdgeCenterInset,
+                                       opsPanel.visible ? opsPanel.width + chromeMargin * 2 : 0)
         rightEdgeBottomInset: parentToolInsets.rightEdgeBottomInset
 
         topEdgeLeftInset: Math.max(parentToolInsets.topEdgeLeftInset, topChromeBottom)
@@ -146,7 +222,7 @@ Item {
             spacing: 8
 
             ColumnLayout {
-                Layout.preferredWidth: 110
+                Layout.preferredWidth: 104
                 spacing: 0
 
                 Label {
@@ -174,21 +250,22 @@ Item {
             NexusStatusChip {
                 label: qsTr("MODE")
                 value: modeText
-                accentColor: activeVehicle && activeVehicle.armed ? "#4F8FB8" : "#4F6575"
+                accentColor: activeVehicle && !linkLost && activeVehicle.armed ? "#4F8FB8" : "#4F6575"
                 Layout.fillWidth: true
             }
 
             NexusStatusChip {
                 label: qsTr("GPS")
                 value: gpsText
-                accentColor: !activeVehicle ? "#4F6575" : (gpsHealthy ? "#2C9B7F" : "#D6A84A")
+                accentColor: !activeVehicle || linkLost ? "#4F6575" : (gpsHealthy ? "#2C9B7F" : "#D6A84A")
                 Layout.fillWidth: true
             }
 
             NexusStatusChip {
-                label: qsTr("DATA")
-                value: linkText && linkText.length > 0 ? linkText : "--"
-                accentColor: linkLost ? "#D95151" : "#4F8FB8"
+                label: qsTr("NAV")
+                value: navText
+                accentColor: navText === qsTr("NOMINAL") ? "#2C9B7F"
+                                                         : (navText === qsTr("DEGRADED") ? "#D6A84A" : "#4F6575")
                 Layout.fillWidth: true
             }
 
@@ -198,6 +275,13 @@ Item {
                 accentColor: batteryCritical ? "#D95151"
                                              : (batteryWarning ? "#D6A84A"
                                                                : (batteryKnown ? "#2C9B7F" : "#4F6575"))
+                Layout.fillWidth: true
+            }
+
+            NexusStatusChip {
+                label: qsTr("MISSION")
+                value: linkLost ? "--" : missionText
+                accentColor: missionIndex >= 0 && !linkLost ? "#4F8FB8" : "#4F6575"
                 Layout.fillWidth: true
             }
         }
@@ -250,6 +334,55 @@ Item {
                 width: alertBanner.width - 150
                 anchors.verticalCenter: parent.verticalCenter
             }
+        }
+    }
+
+    NexusOpsPanel {
+        id: opsPanel
+
+        visible: root.width >= 900
+        width: Math.min(280, root.width * 0.23)
+
+        anchors.top: alertBanner.visible ? alertBanner.bottom : statusRibbon.bottom
+        anchors.topMargin: chromeMargin
+        anchors.right: parent.right
+        anchors.rightMargin: chromeMargin
+
+        missionText: root.missionText
+        missionProgress: root.missionProgress
+        nextWaypointText: activeVehicle ? factDisplay(activeVehicle.distanceToNextWP, 0) : "--"
+        homeText: activeVehicle ? factDisplay(activeVehicle.distanceToHome, 0) : "--"
+        homeEtaText: activeVehicle ? factDisplay(activeVehicle.timeToHome, 0) : "--"
+        batteryTimeText: primaryBattery ? factDisplay(primaryBattery.timeRemaining, 0) : "--"
+        preflightText: root.preflightText
+        preflightAccent: root.preflightAccent
+        videoText: root.videoText
+        videoAccent: root.videoAccent
+    }
+
+    Rectangle {
+        id: feedbackBadge
+
+        visible: commandFeedback.length > 0
+        anchors.left: parent.left
+        anchors.leftMargin: chromeMargin
+        anchors.bottom: bottomChrome.top
+        anchors.bottomMargin: 8
+
+        implicitWidth: feedbackText.implicitWidth + 24
+        height: 34
+        radius: 8
+        color: "#E60C1117"
+        border.color: commandFeedbackAccent
+        border.width: 1
+
+        Label {
+            id: feedbackText
+            anchors.centerIn: parent
+            text: commandFeedback
+            color: "#EAF0F5"
+            font.pixelSize: 10
+            font.bold: true
         }
     }
 
@@ -326,10 +459,10 @@ Item {
 
                 NexusMetric {
                     label: qsTr("HEADING")
-                    value: activeVehicle && !isNaN(Number(activeVehicle.heading.rawValue))
+                    value: activeVehicle && !linkLost && !isNaN(Number(activeVehicle.heading.rawValue))
                            ? Math.round(Number(activeVehicle.heading.rawValue)).toString()
                            : "--"
-                    units: activeVehicle ? "°" : ""
+                    units: activeVehicle && !linkLost ? "°" : ""
                     Layout.fillWidth: true
                 }
 
@@ -337,6 +470,13 @@ Item {
                     label: qsTr("HOME")
                     value: activeVehicle ? factValue(activeVehicle.distanceToHome, 0) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.distanceToHome) : ""
+                    Layout.fillWidth: true
+                }
+
+                NexusMetric {
+                    label: qsTr("NEXT WP")
+                    value: activeVehicle ? factValue(activeVehicle.distanceToNextWP, 0) : "--"
+                    units: activeVehicle ? factUnits(activeVehicle.distanceToNextWP) : ""
                     Layout.fillWidth: true
                 }
             }
@@ -370,7 +510,7 @@ Item {
                     visible: guidedController && guidedController.showArm
                     enabled: visible && !linkLost
                     Layout.fillWidth: true
-                    onClicked: guidedController.confirmAction(guidedController.actionArm)
+                    onClicked: root.confirmGuidedAction(guidedController.actionArm)
                 }
 
                 NexusActionButton {
@@ -379,7 +519,7 @@ Item {
                     visible: guidedController && guidedController.showTakeoff
                     enabled: visible && !linkLost
                     Layout.fillWidth: true
-                    onClicked: guidedController.confirmAction(guidedController.actionTakeoff)
+                    onClicked: root.confirmGuidedAction(guidedController.actionTakeoff)
                 }
 
                 NexusActionButton {
@@ -387,7 +527,7 @@ Item {
                     visible: guidedController && guidedController.showPause
                     enabled: visible && !linkLost
                     Layout.fillWidth: true
-                    onClicked: guidedController.confirmAction(guidedController.actionPause)
+                    onClicked: root.confirmGuidedAction(guidedController.actionPause)
                 }
 
                 NexusActionButton {
@@ -395,7 +535,7 @@ Item {
                     visible: !!activeVehicle
                     enabled: guidedController && guidedController.showRTL && !linkLost
                     Layout.fillWidth: true
-                    onClicked: guidedController.confirmAction(guidedController.actionRTL)
+                    onClicked: root.confirmGuidedAction(guidedController.actionRTL)
                 }
 
                 NexusActionButton {
@@ -404,12 +544,27 @@ Item {
                     visible: guidedController && guidedController.showLand
                     enabled: visible && !linkLost
                     Layout.fillWidth: true
-                    onClicked: guidedController.confirmAction(guidedController.actionLand)
+                    onClicked: root.confirmGuidedAction(guidedController.actionLand)
                 }
 
                 Label {
                     visible: !activeVehicle
                     text: qsTr("Connect a vehicle to enable flight actions")
+                    color: "#7F8C98"
+                    font.pixelSize: 10
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Label {
+                    visible: activeVehicle && !linkLost &&
+                             !(guidedController && (guidedController.showArm ||
+                                                    guidedController.showTakeoff ||
+                                                    guidedController.showPause ||
+                                                    guidedController.showRTL ||
+                                                    guidedController.showLand))
+                    text: qsTr("No guided action available in the current vehicle state")
                     color: "#7F8C98"
                     font.pixelSize: 10
                     Layout.fillWidth: true
