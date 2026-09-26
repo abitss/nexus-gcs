@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - develop
+      - phase0-task0.2-nexus-custom-foundation
     paths:
       - 'custom/**'
       - '.github/workflows/nexus-android-emulator-smoke.yml'
