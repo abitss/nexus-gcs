@@ -1,7 +1,8 @@
 # NEXUS GCS custom-build configuration.
 # Keep this file small. Prefer QGC extension points over upstream edits.
 
-set(QGC_APP_NAME "NEXUS GCS" CACHE STRING "Application name" FORCE)
+# QGC_APP_NAME is also the CMake target name and therefore cannot contain spaces.
+set(QGC_APP_NAME "NEXUS-GCS" CACHE STRING "Application name" FORCE)
 set(QGC_APP_DESCRIPTION "Offline-first UAV Ground Control Station" CACHE STRING "Application description" FORCE)
 set(QGC_ORG_NAME "NEXUS GCS" CACHE STRING "Organization name" FORCE)
 set(QGC_ORG_DOMAIN "nexus-gcs.local" CACHE STRING "Organization domain" FORCE)
