@@ -13,12 +13,15 @@ Item {
     property var mapControl
 
     readonly property var activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
+    readonly property var primaryBattery: activeVehicle && activeVehicle.batteries && activeVehicle.batteries.count > 0
+                                          ? activeVehicle.batteries.get(0)
+                                          : null
     readonly property string vehicleMode: activeVehicle ? activeVehicle.flightMode : qsTr("NO VEHICLE")
     readonly property string batteryText: {
-        if (!activeVehicle || !activeVehicle.battery || isNaN(activeVehicle.battery.percentRemaining.rawValue)) {
+        if (!primaryBattery || isNaN(primaryBattery.percentRemaining.rawValue)) {
             return "--%"
         }
-        return Math.round(activeVehicle.battery.percentRemaining.rawValue) + "%"
+        return Math.round(primaryBattery.percentRemaining.rawValue) + "%"
     }
 
     Rectangle {
