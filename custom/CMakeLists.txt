@@ -2,6 +2,23 @@
 
 message(STATUS "NEXUS: enabling custom build")
 
+# Overlay Android packaging files without modifying the pinned QGC source tree.
+if(ANDROID)
+    set(NEXUS_ANDROID_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
+    if(IS_DIRECTORY "${NEXUS_ANDROID_DIR}")
+        set(DEFAULT_ANDROID_DIR "${CMAKE_SOURCE_DIR}/android")
+        set(FINAL_ANDROID_DIR "${CMAKE_BINARY_DIR}/${QGC_CUSTOM_DIR}/android")
+
+        file(REMOVE_RECURSE "${FINAL_ANDROID_DIR}")
+        file(COPY "${DEFAULT_ANDROID_DIR}/" DESTINATION "${FINAL_ANDROID_DIR}")
+        file(COPY "${NEXUS_ANDROID_DIR}/" DESTINATION "${FINAL_ANDROID_DIR}")
+
+        set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${FINAL_ANDROID_DIR}")
+        set(QGC_ANDROID_PACKAGE_SOURCE_DIR "${FINAL_ANDROID_DIR}" PARENT_SCOPE)
+        message(STATUS "NEXUS: Android package overlay staged at ${FINAL_ANDROID_DIR}")
+    endif()
+endif()
+
 set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/FlyViewCustomLayer.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/FlyViewToolStripActionList.qml"
