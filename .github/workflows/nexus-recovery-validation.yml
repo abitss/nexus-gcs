@@ -1,0 +1,112 @@
+name: NEXUS CRASH RECOVERY Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.15-security
+      - phase0-task0.14-device-health
+      - develop
+    paths:
+      - 'custom/**'
+      - 'scripts/validate-recovery.sh'
+      - '.github/workflows/nexus-recovery-validation.yml'
+      - '.github/workflows/nexus-android-process-restart.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-recovery-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  recovery-validation:
+    name: CRASH + RECOVERY integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout pinned QGroundControl
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Stage and validate recovery architecture
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+          bash nexus-overlay/scripts/validate-recovery.sh             nexus-overlay/custom/src/NexusRecoveryPanel.qml             nexus-overlay/custom/src/NexusRecoveryModel.cc             nexus-overlay/custom/src/NexusAlertManager.cc             nexus-overlay/custom/src/FlyViewCustomLayer.qml
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-recovery-validation
+          cpm-modules: .cache/CPM
+
+      - name: Install QGC dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure NEXUS tests
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-recovery-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - name: Build NEXUS test binary
+        timeout-minutes: 75
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-recovery-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-recovery-build.log
+
+      - name: Run recovery tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          "${RUNNER_TEMP}/nexus-recovery-build/Release/NEXUS-GCS"             --unittest:NexusRecoveryModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-recovery-test.log"
+
+      - name: Upload recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-recovery-validation-evidence
+          path: |
+            ${{ runner.temp }}/nexus-recovery-test.log
+            ${{ runner.temp }}/nexus-recovery-build/nexus-recovery-build.log
+          retention-days: 14
+          if-no-files-found: warn
