@@ -1,23 +1,21 @@
-name: NEXUS ENGINEER Validation
+name: NEXUS ANALYZE Validation
 
 on:
   pull_request:
     branches:
       - phase0-task0.11-offline-first
       - phase0-task0.10-engineer-mode
-      - phase0-task0.9-vehicle-module
-      - phase0-task0.8-payload-video
       - develop
     paths:
       - 'custom/**'
-      - 'scripts/validate-engineer.sh'
-      - '.github/workflows/nexus-engineer-validation.yml'
+      - 'scripts/validate-analyze.sh'
+      - '.github/workflows/nexus-analyze-validation.yml'
       - '.gitmodules'
       - 'qgroundcontrol'
   workflow_dispatch:
 
 concurrency:
-  group: nexus-engineer-validation-${{ github.ref }}
+  group: nexus-analyze-validation-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -29,8 +27,8 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  engineer-validation:
-    name: ENGINEER protected diagnostics integration
+  analyze-validation:
+    name: ANALYZE local flight evidence integration
     runs-on: ubuntu-24.04
     timeout-minutes: 120
 
@@ -52,17 +50,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Stage and validate ENGINEER mode
+      - name: Stage and validate ANALYZE architecture
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
           rm -rf custom
           mkdir -p custom
           cp -a nexus-overlay/custom/. custom/
-          bash nexus-overlay/scripts/validate-engineer.sh \
-            nexus-overlay/custom/src/NexusEngineerPanel.qml \
-            nexus-overlay/custom/src/NexusEngineerModel.cc \
-            nexus-overlay/custom/src/FlyViewCustomLayer.qml
+          bash nexus-overlay/scripts/validate-analyze.sh             nexus-overlay/custom/src/NexusAnalyzePanel.qml             nexus-overlay/custom/src/NexusAnalyzeModel.cc             nexus-overlay/custom/src/NexusAnalyzeGraph.qml             nexus-overlay/custom/src/FlyViewCustomLayer.qml
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -70,7 +65,7 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-engineer-validation
+          cache-key-suffix: nexus-analyze-validation
           cpm-modules: .cache/CPM
 
       - name: Install QGC dependencies
@@ -80,7 +75,7 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-engineer-build
+          build-dir: ${{ runner.temp }}/nexus-analyze-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
@@ -92,12 +87,12 @@ jobs:
         timeout-minutes: 75
         uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-engineer-build
+          build-dir: ${{ runner.temp }}/nexus-analyze-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-engineer-build.log
+          output-file: nexus-analyze-build.log
 
-      - name: Run ENGINEER integration tests
+      - name: Run ANALYZE model tests
         timeout-minutes: 10
         shell: bash
         env:
@@ -106,18 +101,15 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           QGC_TEST_MAXWARNINGS: '250'
         run: |
-          "${RUNNER_TEMP}/nexus-engineer-build/Release/NEXUS-GCS" \
-            --unittest:NexusEngineerModelTest \
-            --allow-multiple \
-            2>&1 | tee "${RUNNER_TEMP}/nexus-engineer-test.log"
+          "${RUNNER_TEMP}/nexus-analyze-build/Release/NEXUS-GCS"             --unittest:NexusAnalyzeModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-analyze-test.log"
 
-      - name: Upload ENGINEER evidence
+      - name: Upload ANALYZE evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-engineer-validation-evidence
+          name: nexus-analyze-validation-evidence
           path: |
-            ${{ runner.temp }}/nexus-engineer-test.log
-            ${{ runner.temp }}/nexus-engineer-build/nexus-engineer-build.log
+            ${{ runner.temp }}/nexus-analyze-test.log
+            ${{ runner.temp }}/nexus-analyze-build/nexus-analyze-build.log
           retention-days: 14
           if-no-files-found: warn

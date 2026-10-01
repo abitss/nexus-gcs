@@ -3,6 +3,7 @@ name: NEXUS OFFLINE-FIRST Validation
 on:
   pull_request:
     branches:
+      - phase0-task0.11-offline-first
       - phase0-task0.10-engineer-mode
       - phase0-task0.9-vehicle-module
       - develop
