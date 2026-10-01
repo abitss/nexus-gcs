@@ -8,6 +8,7 @@
 class QQmlApplicationEngine;
 class NexusPlugin;
 class NexusPlanVerifier;
+class NexusHealthModel;
 
 class NexusFlyViewOptions final : public QGCFlyViewOptions
 {
@@ -67,4 +68,5 @@ private:
     QQmlApplicationEngine *_qmlEngine = nullptr;
     NexusOverrideInterceptor *_urlInterceptor = nullptr;
     NexusPlanVerifier *_planVerifier = nullptr;
+    NexusHealthModel *_healthModel = nullptr;
 };

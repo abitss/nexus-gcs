@@ -1,0 +1,113 @@
+name: NEXUS HEALTH Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.4-plan-module
+      - phase0-task0.3-flight-cockpit
+      - develop
+    paths:
+      - 'custom/**'
+      - '.github/workflows/nexus-health-validation.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-health-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  health-validation:
+    name: HEALTH model + sensor failures + link loss
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout pinned QGroundControl
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Stage NEXUS custom build
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-health-validation
+          cpm-modules: .cache/CPM
+
+      - name: Install QGC dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure NEXUS tests
+        timeout-minutes: 20
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-health-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - name: Build NEXUS test binary
+        timeout-minutes: 75
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-health-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-health-build.log
+
+      - name: Run HEALTH integration tests
+        timeout-minutes: 10
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '250'
+        run: |
+          "${RUNNER_TEMP}/nexus-health-build/Release/NEXUS-GCS"             --unittest:NexusHealthModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-health-test.log"
+
+      - name: Upload HEALTH evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-health-validation-evidence
+          path: |
+            ${{ runner.temp }}/nexus-health-test.log
+            ${{ runner.temp }}/nexus-health-build/nexus-health-build.log
+          retention-days: 14
+          if-no-files-found: warn

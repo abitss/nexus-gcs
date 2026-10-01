@@ -1,5 +1,6 @@
 #include "NexusPlugin.h"
 #include "NexusPlanVerifier.h"
+#include "NexusHealthModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -31,6 +32,7 @@ NexusPlugin::NexusPlugin(QObject *parent)
     : QGCCorePlugin(parent)
     , _options(new NexusOptions(this, this))
     , _planVerifier(new NexusPlanVerifier(this))
+    , _healthModel(new NexusHealthModel(this))
 {
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
@@ -54,6 +56,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _urlInterceptor = new NexusOverrideInterceptor();
     _qmlEngine->addUrlInterceptor(_urlInterceptor);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusPlanVerifier"), _planVerifier);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusHealth"), _healthModel);
     return _qmlEngine;
 }
 
