@@ -4,6 +4,9 @@
 #include "MultiVehicleManager.h"
 #include "NexusHealthModel.h"
 #include "QGCMAVLink.h"
+#include "SettingsManager.h"
+#include "VideoManager.h"
+#include "VideoSettings.h"
 #include "Vehicle.h"
 #include "VehicleLinkManager.h"
 
@@ -310,6 +313,7 @@ void NexusAlertManager::_evaluateConditions()
         _setCondition(QStringLiteral("home"), false, {}, {}, {}, {});
         _setCondition(QStringLiteral("geofence"), false, {}, {}, {}, {});
         _setCondition(QStringLiteral("failsafe"), false, {}, {}, {}, {});
+        _setCondition(QStringLiteral("video-loss"), false, {}, {}, {}, {});
         _setCondition(QStringLiteral("autopilot-state"), false, {}, {}, {}, {});
         return;
     }
@@ -361,6 +365,17 @@ void NexusAlertManager::_evaluateConditions()
                   QStringLiteral("GEOFENCE"),
                   fence == QStringLiteral("CRITICAL") ? QStringLiteral("Geofence Breach / Failure") : QStringLiteral("Geofence Warning"),
                   _health->geofenceDetail());
+
+    auto *videoSettings = SettingsManager::instance()->videoSettings();
+    auto *videoManager = VideoManager::instance();
+    const bool videoConfigured = videoSettings && videoSettings->streamConfigured();
+    const bool videoMissing = videoConfigured && (!videoManager || !videoManager->decoding());
+    _setCondition(QStringLiteral("video-loss"),
+                  videoMissing,
+                  QStringLiteral("WARNING"),
+                  QStringLiteral("PAYLOAD"),
+                  QStringLiteral("Video Stream Unavailable"),
+                  QStringLiteral("EO/FPV source is configured but no decoded video is available"));
 
     _setCondition(QStringLiteral("failsafe"),
                   _failsafeActive,

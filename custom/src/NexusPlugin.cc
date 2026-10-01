@@ -3,6 +3,7 @@
 #include "NexusHealthModel.h"
 #include "NexusAlertManager.h"
 #include "NexusPreflightModel.h"
+#include "NexusPayloadModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -37,6 +38,7 @@ NexusPlugin::NexusPlugin(QObject *parent)
     , _healthModel(new NexusHealthModel(this))
     , _alertManager(new NexusAlertManager(_healthModel, this))
     , _preflightModel(new NexusPreflightModel(_healthModel, _alertManager, this))
+    , _payloadModel(new NexusPayloadModel(this))
 {
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
@@ -63,6 +65,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusHealth"), _healthModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusAlerts"), _alertManager);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusPreflight"), _preflightModel);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusPayload"), _payloadModel);
     return _qmlEngine;
 }
 

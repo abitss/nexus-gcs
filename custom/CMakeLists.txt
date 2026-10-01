@@ -33,6 +33,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightCard.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadPanel.qml"
 )
 
 set_source_files_properties(
@@ -87,6 +88,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusPreflightPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusPayloadPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -106,6 +111,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadModel.h
     PARENT_SCOPE
 )
 
