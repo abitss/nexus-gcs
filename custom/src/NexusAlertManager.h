@@ -35,7 +35,7 @@ public:
     };
     Q_ENUM(Roles)
 
-    explicit NexusAlertManager(NexusHealthModel *health, NexusDeviceHealthModel *deviceHealth, QObject *parent = nullptr);
+    explicit NexusAlertManager(NexusHealthModel *health, NexusDeviceHealthModel *deviceHealth = nullptr, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role) const override;
