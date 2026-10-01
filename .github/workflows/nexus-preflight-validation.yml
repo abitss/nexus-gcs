@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - phase0-task0.6-alerts-failsafes
+      - phase0-task0.17-px4-validation
       - phase0-task0.16-crash-recovery
       - phase0-task0.15-security
       - phase0-task0.14-device-health
