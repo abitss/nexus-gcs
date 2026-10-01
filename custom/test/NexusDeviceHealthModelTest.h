@@ -9,4 +9,5 @@ class NexusDeviceHealthModelTest final : public UnitTest
 private slots:
     void _testThresholdContracts();
     void _testPlatformStateContract();
+    void _testWarningThresholds();
 };
