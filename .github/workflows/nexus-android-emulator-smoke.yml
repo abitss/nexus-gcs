@@ -8,6 +8,7 @@ on:
       - phase0-task0.3-flight-cockpit
       - phase0-task0.4-plan-module
       - phase0-task0.5-health-module
+      - phase0-task0.6-alerts-failsafes
     paths:
       - 'custom/**'
       - '.github/workflows/nexus-android-emulator-smoke.yml'

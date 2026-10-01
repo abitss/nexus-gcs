@@ -1,21 +1,20 @@
-name: NEXUS Alerts Validation
+name: NEXUS Preflight Validation
 
 on:
   pull_request:
     branches:
-      - phase0-task0.5-health-module
       - phase0-task0.6-alerts-failsafes
-      - phase0-task0.4-plan-module
+      - phase0-task0.5-health-module
       - develop
     paths:
       - 'custom/**'
-      - '.github/workflows/nexus-alerts-validation.yml'
+      - '.github/workflows/nexus-preflight-validation.yml'
       - '.gitmodules'
       - 'qgroundcontrol'
   workflow_dispatch:
 
 concurrency:
-  group: nexus-alerts-validation-${{ github.ref }}
+  group: nexus-preflight-validation-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -27,8 +26,8 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  alerts-validation:
-    name: Alerts + failsafes integration
+  preflight-validation:
+    name: Preflight GO/WARNING/BLOCKED integration
     runs-on: ubuntu-24.04
     timeout-minutes: 120
 
@@ -64,7 +63,7 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-alerts-validation
+          cache-key-suffix: nexus-preflight-validation
           cpm-modules: .cache/CPM
 
       - name: Install QGC dependencies
@@ -74,7 +73,7 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-alerts-build
+          build-dir: ${{ runner.temp }}/nexus-preflight-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
@@ -86,12 +85,12 @@ jobs:
         timeout-minutes: 75
         uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-alerts-build
+          build-dir: ${{ runner.temp }}/nexus-preflight-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-alerts-build.log
+          output-file: nexus-preflight-build.log
 
-      - name: Run alerts/failsafes tests
+      - name: Run preflight integration tests
         timeout-minutes: 10
         shell: bash
         env:
@@ -100,15 +99,15 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           QGC_TEST_MAXWARNINGS: '250'
         run: |
-          "${RUNNER_TEMP}/nexus-alerts-build/Release/NEXUS-GCS"             --unittest:NexusAlertManagerTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-alerts-test.log"
+          "${RUNNER_TEMP}/nexus-preflight-build/Release/NEXUS-GCS"             --unittest:NexusPreflightModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-preflight-test.log"
 
-      - name: Upload alerts validation evidence
+      - name: Upload preflight evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-alerts-validation-evidence
+          name: nexus-preflight-validation-evidence
           path: |
-            ${{ runner.temp }}/nexus-alerts-test.log
-            ${{ runner.temp }}/nexus-alerts-build/nexus-alerts-build.log
+            ${{ runner.temp }}/nexus-preflight-test.log
+            ${{ runner.temp }}/nexus-preflight-build/nexus-preflight-build.log
           retention-days: 14
           if-no-files-found: warn

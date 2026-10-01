@@ -31,6 +31,8 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthCard.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightCard.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightPanel.qml"
 )
 
 set_source_files_properties(
@@ -77,6 +79,14 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusAlertPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightCard.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusPreflightCard.qml"
+)
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusPreflightPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -94,6 +104,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthModel.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightModel.h
     PARENT_SCOPE
 )
 
@@ -133,6 +145,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusHealthModelTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAlertManagerTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAlertManagerTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPreflightModelTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPreflightModelTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
