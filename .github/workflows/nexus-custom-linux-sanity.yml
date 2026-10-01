@@ -7,6 +7,7 @@ on:
       - phase0-task0.2-nexus-custom-foundation
       - phase0-task0.3-flight-cockpit
       - phase0-task0.4-plan-module
+      - phase0-task0.5-health-module
     paths:
       - 'custom/**'
       - '.github/workflows/nexus-custom-linux-sanity.yml'
