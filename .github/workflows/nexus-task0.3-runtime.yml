@@ -6,6 +6,7 @@ on:
       - develop
       - phase0-task0.2-nexus-custom-foundation
       - phase0-task0.3-flight-cockpit
+      - phase0-task0.4-plan-module
     paths:
       - 'custom/**'
       - 'scripts/**'
