@@ -410,6 +410,7 @@ Rectangle {
                                         title: qsTr("SPEED")
                                         unit: "m/s"
                                         candidateFields: [
+                                            "vehicle_gps_position.vel_m_s",
                                             "vehicle_local_position.vx",
                                             "vehicle_global_position.vel_n",
                                             "GPS.Spd",
