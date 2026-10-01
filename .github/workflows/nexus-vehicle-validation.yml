@@ -1,22 +1,21 @@
-name: NEXUS PAYLOAD Validation
+name: NEXUS VEHICLE Validation
 
 on:
   pull_request:
     branches:
       - phase0-task0.8-payload-video
       - phase0-task0.7-preflight-system
-      - phase0-task0.6-alerts-failsafes
       - develop
     paths:
       - 'custom/**'
-      - 'scripts/validate-payload.sh'
-      - '.github/workflows/nexus-payload-validation.yml'
+      - 'scripts/validate-vehicle.sh'
+      - '.github/workflows/nexus-vehicle-validation.yml'
       - '.gitmodules'
       - 'qgroundcontrol'
   workflow_dispatch:
 
 concurrency:
-  group: nexus-payload-validation-${{ github.ref }}
+  group: nexus-vehicle-validation-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -28,8 +27,8 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  payload-validation:
-    name: PAYLOAD / Video integration
+  vehicle-validation:
+    name: VEHICLE configuration integration
     runs-on: ubuntu-24.04
     timeout-minutes: 120
 
@@ -51,14 +50,17 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Stage NEXUS custom build
+      - name: Stage and validate VEHICLE module
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
           rm -rf custom
           mkdir -p custom
           cp -a nexus-overlay/custom/. custom/
-          bash nexus-overlay/scripts/validate-payload.sh             nexus-overlay/custom/src/NexusPayloadPanel.qml             nexus-overlay/custom/src/NexusPayloadModel.cc
+          bash nexus-overlay/scripts/validate-vehicle.sh \
+            nexus-overlay/custom/src/NexusVehiclePanel.qml \
+            nexus-overlay/custom/src/NexusVehicleModel.cc \
+            nexus-overlay/custom/src/FlyViewCustomLayer.qml
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -66,7 +68,7 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-payload-validation
+          cache-key-suffix: nexus-vehicle-validation
           cpm-modules: .cache/CPM
 
       - name: Install QGC dependencies
@@ -76,7 +78,7 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-payload-build
+          build-dir: ${{ runner.temp }}/nexus-vehicle-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
@@ -88,12 +90,12 @@ jobs:
         timeout-minutes: 75
         uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-payload-build
+          build-dir: ${{ runner.temp }}/nexus-vehicle-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-payload-build.log
+          output-file: nexus-vehicle-build.log
 
-      - name: Run PAYLOAD integration tests
+      - name: Run VEHICLE integration tests
         timeout-minutes: 10
         shell: bash
         env:
@@ -102,15 +104,18 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           QGC_TEST_MAXWARNINGS: '250'
         run: |
-          "${RUNNER_TEMP}/nexus-payload-build/Release/NEXUS-GCS"             --unittest:NexusPayloadModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-payload-test.log"
+          "${RUNNER_TEMP}/nexus-vehicle-build/Release/NEXUS-GCS" \
+            --unittest:NexusVehicleModelTest \
+            --allow-multiple \
+            2>&1 | tee "${RUNNER_TEMP}/nexus-vehicle-test.log"
 
-      - name: Upload PAYLOAD evidence
+      - name: Upload VEHICLE evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-payload-validation-evidence
+          name: nexus-vehicle-validation-evidence
           path: |
-            ${{ runner.temp }}/nexus-payload-test.log
-            ${{ runner.temp }}/nexus-payload-build/nexus-payload-build.log
+            ${{ runner.temp }}/nexus-vehicle-test.log
+            ${{ runner.temp }}/nexus-vehicle-build/nexus-vehicle-build.log
           retention-days: 14
           if-no-files-found: warn

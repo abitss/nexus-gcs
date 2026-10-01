@@ -34,6 +34,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightCard.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusVehiclePanel.qml"
 )
 
 set_source_files_properties(
@@ -92,6 +93,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusPayloadPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusVehiclePanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusVehiclePanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -113,6 +118,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPreflightModel.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPayloadModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusVehicleModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusVehicleModel.h
     PARENT_SCOPE
 )
 
@@ -156,6 +163,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPreflightModelTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPayloadModelTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPayloadModelTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusVehicleModelTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusVehicleModelTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
