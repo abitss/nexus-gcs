@@ -127,9 +127,14 @@ void NexusPayloadModel::refresh()
     _configured = videoSettings && videoSettings->streamConfigured();
     _streaming = video && video->streaming();
     _decoding = video && video->decoding();
-    _recording = video && video->recording();
+    const bool localRecording = video && video->recording();
+    const bool cameraRecording = _camera &&
+                                 _camera->captureVideoState() == MavlinkCameraControlInterface::CaptureVideoStateCapturing;
+    _recording = localRecording || cameraRecording;
 
-    if (_decoding) {
+    if (!_configured) {
+        _everDecoded = false;
+    } else if (_decoding) {
         _everDecoded = true;
     }
 
@@ -185,7 +190,7 @@ void NexusPayloadModel::refresh()
 
     if (_camera && _camera->captureVideoState() == MavlinkCameraControlInterface::CaptureVideoStateCapturing) {
         _recordTimeText = _camera->recordTimeStr();
-    } else if (_recording && _recordTimerValid) {
+    } else if (localRecording && _recordTimerValid) {
         _recordTimeText = _formatElapsed(_recordTimer.elapsed());
     } else {
         _recordTimeText = QStringLiteral("00:00:00");
