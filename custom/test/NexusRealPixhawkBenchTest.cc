@@ -7,6 +7,7 @@
 #include <QtCore/QJsonObject>
 #include <QtCore/QPointer>
 #include <QtCore/QScopeGuard>
+#include <QtCore/QTemporaryDir>
 #include <QtPositioning/QGeoCoordinate>
 #include <QtTest/QSignalSpy>
 #include <QtTest/QTest>
@@ -239,11 +240,29 @@ void NexusRealPixhawkBenchTest::_testRealPixhawkBenchQualification()
     facts.insert(QStringLiteral("homeAltitude"), home.altitude());
     stage(QStringLiteral("HOME"), QStringLiteral("PASS"));
 
-    // Upload and immediately read back a small mission. The mission is never started.
+    // Snapshot the current vehicle plan before bench mutation so the
+    // qualification can restore the exact mission-item payload afterwards.
     PlanMasterController plan;
     plan.setFlyView(false);
     plan.start();
     plan.startStaticActiveVehicle(vehicle);
+
+    plan.loadFromVehicle();
+    QVERIFY2(UnitTest::waitForCondition(
+                 [&] { return !plan.syncInProgress(); },
+                 120000, QStringLiteral("real Pixhawk existing mission download")),
+             "Could not snapshot the existing Pixhawk plan.");
+
+    QTemporaryDir backupDir;
+    QVERIFY(backupDir.isValid());
+    const QString backupPath = backupDir.filePath(QStringLiteral("nexus-prequalification.plan"));
+    QVERIFY2(plan.saveToFile(backupPath), "Could not save pre-qualification mission snapshot.");
+    const QJsonArray originalMissionItems =
+        plan.saveToJson().object().value(QStringLiteral("mission")).toObject().value(QStringLiteral("items")).toArray();
+    stage(QStringLiteral("MISSION_BACKUP"), QStringLiteral("PASS"),
+          QStringLiteral("%1 original mission item(s) backed up").arg(originalMissionItems.size()));
+
+    plan.removeAll();
 
     MissionController *const mission = plan.missionController();
     QVERIFY(mission);
