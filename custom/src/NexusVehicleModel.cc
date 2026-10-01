@@ -64,7 +64,7 @@ bool NexusVehicleModel::pendingWrites() const
 
 QStringList NexusVehicleModel::rebootParameters() const
 {
-    QStringList list(_rebootParameters.begin(), _rebootParameters.end());
+    QStringList list = _rebootParameters.values();
     list.sort(Qt::CaseInsensitive);
     return list;
 }
