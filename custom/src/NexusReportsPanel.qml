@@ -90,7 +90,7 @@ Rectangle {
                 ? logParser.maxTimestamp - logParser.minTimestamp : NaN
 
         routePoints = logParser.gpsPath()
-        distanceMeters = computeDistance(routePoints)
+        distanceMeters = reportsModel.routeDistanceMeters(routePoints)
 
         const altField = resolveField([
             "vehicle_global_position.alt",
@@ -98,14 +98,14 @@ Rectangle {
             "POS.Alt",
             "GPS.Alt"
         ])
-        maxAltitudeMeters = maxFromField(altField)
+        maxAltitudeMeters = altField ? reportsModel.maxSampleValue(logParser.fieldSamples(altField)) : NaN
 
         const batteryField = resolveField([
             "battery_status.remaining",
             "BAT.RemPct",
             "BAT.Remaining"
         ])
-        batteryUsedPercent = batteryUsage(batteryField)
+        batteryUsedPercent = batteryField ? reportsModel.batteryUsedPercent(logParser.fieldSamples(batteryField)) : NaN
 
         eventRows = logParser.events
         const warnings = []
