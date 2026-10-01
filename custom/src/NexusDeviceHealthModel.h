@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore/QObject>
+#include <QtCore/QStringList>
 #include <QtCore/QTimer>
 #include <QtCore/QtMath>
 
