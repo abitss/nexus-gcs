@@ -319,8 +319,3 @@ bool NexusVehicleModel::rebootVehicle()
     return true;
 }
 
-void NexusVehicleModel::clearRebootRequiredForTest()
-{
-    _rebootParameters.clear();
-    emit vehicleChanged();
-}
