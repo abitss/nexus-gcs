@@ -1,6 +1,7 @@
 #include "NexusReportsModelTest.h"
 
 #include <QtTest/QTest>
+#include <QtCore/QtMath>
 
 #include "NexusReportsModel.h"
 
@@ -55,4 +56,31 @@ void NexusReportsModelTest::_testReportSchema()
     QCOMPARE(report.value(QStringLiteral("batteryUsedPercent")).toDouble(), 18.0);
     QCOMPARE(report.value(QStringLiteral("missionCompletion")).toString(), QStringLiteral("PARTIAL"));
     QVERIFY(report.value(QStringLiteral("exportTargets")).toStringList().contains(QStringLiteral("KML")));
+}
+
+
+void NexusReportsModelTest::_testMetricHelpers()
+{
+    NexusReportsModel model;
+
+    QVariantList route;
+    route << QVariantMap{{QStringLiteral("latitude"), 0.0}, {QStringLiteral("longitude"), 0.0}}
+          << QVariantMap{{QStringLiteral("latitude"), 0.0}, {QStringLiteral("longitude"), 0.001}};
+    const double distance = model.routeDistanceMeters(route);
+    QVERIFY(!qIsNaN(distance));
+    QVERIFY(distance > 100.0);
+    QVERIFY(distance < 120.0);
+
+    const QVariantList altitudeSamples{
+        QVariantMap{{QStringLiteral("y"), 10.0}},
+        QVariantMap{{QStringLiteral("y"), 42.5}},
+        QVariantMap{{QStringLiteral("y"), 31.0}}
+    };
+    QCOMPARE(model.maxSampleValue(altitudeSamples), 42.5);
+
+    const QVariantList batterySamples{
+        QVariantMap{{QStringLiteral("y"), 96.0}},
+        QVariantMap{{QStringLiteral("y"), 72.0}}
+    };
+    QCOMPARE(model.batteryUsedPercent(batterySamples), 24.0);
 }
