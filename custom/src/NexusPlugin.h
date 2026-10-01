@@ -11,6 +11,7 @@ class NexusPlanVerifier;
 class NexusHealthModel;
 class NexusAlertManager;
 class NexusPreflightModel;
+class NexusPayloadModel;
 
 class NexusFlyViewOptions final : public QGCFlyViewOptions
 {
@@ -73,4 +74,5 @@ private:
     NexusHealthModel *_healthModel = nullptr;
     NexusAlertManager *_alertManager = nullptr;
     NexusPreflightModel *_preflightModel = nullptr;
+    NexusPayloadModel *_payloadModel = nullptr;
 };
