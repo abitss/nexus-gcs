@@ -49,7 +49,21 @@ void NexusPayloadModelTest::_testDisabledAndConfiguredWaitingStates()
 
     NexusHealthModel health;
     NexusAlertManager alerts(&health);
-    QTRY_VERIFY_WITH_TIMEOUT(alerts.activeCount() >= 0, TestTimeout::mediumMs());
+
+    bool payloadWarningFound = false;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]() {
+        for (int row = 0; row < alerts.rowCount(); ++row) {
+            const QModelIndex idx = alerts.index(row, 0);
+            if (alerts.data(idx, NexusAlertManager::SourceRole).toString() == QStringLiteral("PAYLOAD") &&
+                alerts.data(idx, NexusAlertManager::TitleRole).toString() == QStringLiteral("Video Stream Unavailable") &&
+                alerts.data(idx, NexusAlertManager::ActiveRole).toBool()) {
+                payloadWarningFound = true;
+                return true;
+            }
+        }
+        return false;
+    })(), TestTimeout::mediumMs());
+    QVERIFY(payloadWarningFound);
 }
 
 void NexusPayloadModelTest::_testLocalStorageAndCapabilityGates()
