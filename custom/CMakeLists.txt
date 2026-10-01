@@ -122,6 +122,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPlanEditingTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4PlanSITLTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4PlanSITLTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusHealthModelTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusHealthModelTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
