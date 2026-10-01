@@ -18,7 +18,6 @@ void NexusVehicleModelTest::_testConnectedSummaryAndSetupStates()
     QVERIFY(!model.setupState().isEmpty());
     QVERIFY(!model.parameterState().isEmpty());
 
-    QVERIFY(model.sensorsAvailable() || !model.sensorsAvailable());
     QVERIFY(!model.sensorsState().isEmpty());
     QVERIFY(!model.powerState().isEmpty());
     QVERIFY(!model.radioState().isEmpty());
@@ -34,10 +33,10 @@ void NexusVehicleModelTest::_testSafetyGates()
     NexusVehicleModel model;
     QTRY_VERIFY_WITH_TIMEOUT(model.connected(), TestTimeout::longMs());
 
-    Vehicle *vehicle = vehicleMgr()->activeVehicle();
-    QVERIFY(vehicle);
+    Vehicle *testVehicle = vehicle();
+    QVERIFY(testVehicle);
 
-    if (!model.linkLost() && !vehicle->armed() && !vehicle->flying()) {
+    if (!model.linkLost() && !testVehicle->armed() && !testVehicle->flying()) {
         QVERIFY(model.safeToConfigure());
     }
 
@@ -48,4 +47,9 @@ void NexusVehicleModelTest::_testSafetyGates()
 
     simulateCommLoss(false);
     QTRY_VERIFY_WITH_TIMEOUT(!model.linkLost(), TestTimeout::longMs());
+
+    simulateConnectionRemoved();
+    QTRY_VERIFY_WITH_TIMEOUT(!model.connected(), TestTimeout::longMs());
+    QVERIFY(!model.safeToConfigure());
+    QVERIFY(!model.safeToReboot());
 }
