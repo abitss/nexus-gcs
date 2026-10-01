@@ -1,5 +1,6 @@
 #include "NexusPayloadModelTest.h"
 
+#include <QtCore/QScopeGuard>
 #include <QtTest/QTest>
 
 #include "Fact.h"
