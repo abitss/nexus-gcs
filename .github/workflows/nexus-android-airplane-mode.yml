@@ -1,0 +1,188 @@
+name: NEXUS Android Airplane Mode
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.10-engineer-mode
+      - develop
+    paths:
+      - 'custom/**'
+      - '.github/workflows/nexus-android-airplane-mode.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-android-airplane-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QT_ANDROID_ABIS: x86_64
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+  NEXUS_PACKAGE: com.abitss.nexusgcs
+
+jobs:
+  airplane-mode:
+    name: Android no-internet launch stability
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout pinned QGroundControl baseline
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Stage NEXUS overlay
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - name: Set Android SDK location
+        shell: bash
+        run: |
+          echo "ANDROID_SDK_ROOT=${RUNNER_TEMP}/android-sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=${RUNNER_TEMP}/android-sdk" >> "$GITHUB_ENV"
+
+      - name: Build setup
+        id: setup
+        uses: ./.github/actions/build-setup
+        with:
+          mode: android
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          abis: ${{ env.QT_ANDROID_ABIS }}
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-airplane
+          cpm-modules: .cache/CPM
+
+      - name: Install host build dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Create CI debug keystore
+        shell: bash
+        run: |
+          keytool -genkey -v \
+            -keystore "${RUNNER_TEMP}/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=NEXUS Offline CI,O=NEXUS,C=IN"
+          {
+            echo "QT_ANDROID_KEYSTORE_PATH=${RUNNER_TEMP}/debug.keystore"
+            echo "QT_ANDROID_KEYSTORE_ALIAS=androiddebugkey"
+            echo "QT_ANDROID_KEYSTORE_STORE_PASS=android"
+            echo "QT_ANDROID_KEYSTORE_KEY_PASS=android"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure NEXUS x86_64 Android
+        timeout-minutes: 15
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-airplane-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Android
+          use-qt-cmake: 'false'
+          extra-args: >-
+            -DCMAKE_WARN_DEPRECATED=FALSE
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup.outputs.target_qt_root_dir }}/lib/cmake/Qt6/qt.toolchain.cmake
+            -DCMAKE_PREFIX_PATH=${{ steps.setup.outputs.target_qt_root_dir }}
+            -DQT_ANDROID_ABIS=${{ env.QT_ANDROID_ABIS }}
+            -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
+            -DQT_ANDROID_SIGN_APK=ON
+
+      - name: Build airplane-mode APK
+        timeout-minutes: 75
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-airplane-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-airplane-build.log
+
+      - name: Locate APK
+        id: apk
+        shell: bash
+        run: |
+          apk="$(find "${RUNNER_TEMP}/nexus-airplane-build/android-build" -maxdepth 1 -name '*.apk' -print -quit)"
+          test -n "$apk"
+          cp "$apk" "${RUNNER_TEMP}/NEXUS-GCS-airplane.apk"
+          echo "path=${RUNNER_TEMP}/NEXUS-GCS-airplane.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Airplane-mode emulator test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ steps.setup.outputs.android_platform }}
+          system-image-api-level: ${{ steps.setup.outputs.android_platform }}
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          avd-name: nexus-offline-ci
+          force-avd-creation: true
+          emulator-boot-timeout: 420
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot-save
+          script: |
+            set -euo pipefail
+            adb wait-for-device
+            adb install -r "${{ steps.apk.outputs.path }}"
+
+            adb shell settings put global airplane_mode_on 1
+            adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true || true
+            adb shell svc wifi disable || true
+            adb shell svc data disable || true
+
+            test "$(adb shell settings get global airplane_mode_on | tr -d '\r')" = "1"
+
+            adb shell am force-stop "${NEXUS_PACKAGE}"
+            adb shell monkey -p "${NEXUS_PACKAGE}" -c android.intent.category.LAUNCHER 1
+
+            sleep 25
+
+            pid="$(adb shell pidof "${NEXUS_PACKAGE}" | tr -d '\r')"
+            test -n "$pid"
+
+            adb shell dumpsys activity activities | grep -F "${NEXUS_PACKAGE}" >/dev/null
+
+            echo "NEXUS stayed alive with airplane mode enabled and Wi-Fi/data disabled."
+            adb logcat -d -t 400 > "${RUNNER_TEMP}/nexus-airplane-logcat.txt"
+
+      - name: Upload airplane-mode evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-airplane-mode-evidence
+          path: |
+            ${{ runner.temp }}/nexus-airplane-logcat.txt
+            ${{ runner.temp }}/nexus-airplane-build/nexus-airplane-build.log
+          retention-days: 14
+          if-no-files-found: warn
