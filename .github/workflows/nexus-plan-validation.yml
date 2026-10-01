@@ -1,0 +1,184 @@
+name: NEXUS PLAN Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.3-flight-cockpit
+      - develop
+    paths:
+      - 'custom/**'
+      - 'scripts/**'
+      - '.github/workflows/nexus-plan-validation.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-plan-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+  PX4_V117_SHA: d6f12ad1c4f70ad3230afd7d86e971421e02fef4
+  PX4_DEV_IMAGE: ghcr.io/px4/px4-dev:v1.17.0-rc2
+
+jobs:
+  plan-validation:
+    name: PLAN editing + readback + PX4 SITL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout pinned QGroundControl
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Stage NEXUS custom build
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - name: Build setup
+        id: setup
+        uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-plan-validation
+          cpm-modules: .cache/CPM
+
+      - name: Install QGC dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure NEXUS tests
+        timeout-minutes: 20
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-plan-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - name: Build NEXUS test binary
+        timeout-minutes: 75
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-plan-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-plan-build.log
+
+      - name: Run offline PLAN feature tests
+        timeout-minutes: 10
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '250'
+        run: |
+          "${RUNNER_TEMP}/nexus-plan-build/Release/NEXUS-GCS"             --unittest:NexusPlanEditingTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-plan-editing.log"
+
+      - name: Run MockLink upload/readback integrity test
+        timeout-minutes: 10
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '250'
+        run: |
+          "${RUNNER_TEMP}/nexus-plan-build/Release/NEXUS-GCS"             --unittest:NexusPlanVerificationTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-plan-mocklink.log"
+
+      - name: Checkout pinned PX4 v1.17.0
+        uses: actions/checkout@v7
+        with:
+          repository: PX4/PX4-Autopilot
+          ref: ${{ env.PX4_V117_SHA }}
+          path: px4-autopilot
+          submodules: recursive
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Start pinned PX4 SIH-as-SITL quadrotor
+        shell: bash
+        run: |
+          docker pull "${PX4_DEV_IMAGE}"
+          (
+            docker run --rm --network host               -v "${GITHUB_WORKSPACE}/px4-autopilot:/workspace/PX4-Autopilot"               -w /workspace/PX4-Autopilot               "${PX4_DEV_IMAGE}"               bash -lc 'make px4_sitl sihsim_quadx'
+          ) > "${RUNNER_TEMP}/px4-plan-sitl.log" 2>&1 &
+          echo $! > "${RUNNER_TEMP}/px4-plan-sitl-wrapper.pid"
+
+          ready=0
+          for _ in $(seq 1 180); do
+            if grep -q "Ready for takeoff" "${RUNNER_TEMP}/px4-plan-sitl.log" 2>/dev/null; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat "${RUNNER_TEMP}/px4-plan-sitl-wrapper.pid")" 2>/dev/null; then
+              tail -250 "${RUNNER_TEMP}/px4-plan-sitl.log" || true
+              exit 1
+            fi
+            sleep 2
+          done
+          test "${ready}" -eq 1
+
+      - name: Run real PX4 mission upload/readback
+        timeout-minutes: 12
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '250'
+        run: |
+          "${RUNNER_TEMP}/nexus-plan-build/Release/NEXUS-GCS"             --unittest:NexusPX4PlanSITLTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-plan-px4-sitl.log"
+
+      - name: Stop PX4 SITL
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "${RUNNER_TEMP}/px4-plan-sitl-wrapper.pid" ]; then
+            kill "$(cat "${RUNNER_TEMP}/px4-plan-sitl-wrapper.pid")" 2>/dev/null || true
+          fi
+          docker ps -q --filter ancestor="${PX4_DEV_IMAGE}" | xargs -r docker kill || true
+
+      - name: Upload PLAN validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-plan-validation-evidence
+          path: |
+            ${{ runner.temp }}/nexus-plan-editing.log
+            ${{ runner.temp }}/nexus-plan-mocklink.log
+            ${{ runner.temp }}/nexus-plan-px4-sitl.log
+            ${{ runner.temp }}/px4-plan-sitl.log
+            ${{ runner.temp }}/nexus-plan-build/nexus-plan-build.log
+          retention-days: 14
+          if-no-files-found: warn
