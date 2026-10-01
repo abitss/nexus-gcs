@@ -5,6 +5,7 @@ on:
     branches:
       - phase0-task0.5-health-module
       - phase0-task0.6-alerts-failsafes
+      - phase0-task0.8-payload-video
       - phase0-task0.7-preflight-system
       - phase0-task0.4-plan-module
       - develop
