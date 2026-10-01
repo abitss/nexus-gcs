@@ -1,0 +1,115 @@
+name: NEXUS PAYLOAD Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.7-preflight-system
+      - phase0-task0.6-alerts-failsafes
+      - develop
+    paths:
+      - 'custom/**'
+      - 'scripts/validate-payload.sh'
+      - '.github/workflows/nexus-payload-validation.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-payload-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  payload-validation:
+    name: PAYLOAD / Video integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout pinned QGroundControl
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Stage NEXUS custom build
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+          bash nexus-overlay/scripts/validate-payload.sh             nexus-overlay/custom/src/NexusPayloadPanel.qml             nexus-overlay/custom/src/NexusPayloadModel.cc
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-payload-validation
+          cpm-modules: .cache/CPM
+
+      - name: Install QGC dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure NEXUS tests
+        timeout-minutes: 20
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-payload-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - name: Build NEXUS test binary
+        timeout-minutes: 75
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-payload-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-payload-build.log
+
+      - name: Run PAYLOAD integration tests
+        timeout-minutes: 10
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '250'
+        run: |
+          "${RUNNER_TEMP}/nexus-payload-build/Release/NEXUS-GCS"             --unittest:NexusPayloadModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-payload-test.log"
+
+      - name: Upload PAYLOAD evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-payload-validation-evidence
+          path: |
+            ${{ runner.temp }}/nexus-payload-test.log
+            ${{ runner.temp }}/nexus-payload-build/nexus-payload-build.log
+          retention-days: 14
+          if-no-files-found: warn
