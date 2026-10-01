@@ -7,6 +7,8 @@
 #include <QtCore/QtMath>
 
 #include "AppSettings.h"
+#include "MultiVehicleManager.h"
+#include "Vehicle.h"
 #include "QGCFormat.h"
 #include "QGCNetworkHelper.h"
 #include "SerialPortManager.h"
@@ -26,6 +28,11 @@ NexusDeviceHealthModel::NexusDeviceHealthModel(QObject *parent)
     _timer.setTimerType(Qt::CoarseTimer);
     connect(&_timer, &QTimer::timeout, this, &NexusDeviceHealthModel::refresh);
     _timer.start();
+
+    auto *manager = MultiVehicleManager::instance();
+    connect(manager, &MultiVehicleManager::activeVehicleChanged,
+            this, &NexusDeviceHealthModel::_activeVehicleChanged);
+    _activeVehicleChanged(manager->activeVehicle());
     refresh();
 }
 
@@ -200,28 +207,43 @@ void NexusDeviceHealthModel::refresh()
     emit deviceHealthChanged();
 }
 
+bool NexusDeviceHealthModel::thermalWarningFor(double temperatureC, const QString &thermalState)
+{
+    return thermalState == QStringLiteral("SEVERE") ||
+           thermalState == QStringLiteral("CRITICAL") ||
+           thermalState == QStringLiteral("EMERGENCY") ||
+           thermalState == QStringLiteral("SHUTDOWN") ||
+           (!qIsNaN(temperatureC) && temperatureC >= 45.0);
+}
+
+bool NexusDeviceHealthModel::storageWarningFor(quint64 freeBytes, quint64 totalBytes)
+{
+    constexpr quint64 kLowStorageBytes = 2ULL * 1024ULL * 1024ULL * 1024ULL;
+    if (totalBytes == 0) return false;
+    const double fraction = static_cast<double>(freeBytes) / static_cast<double>(totalBytes);
+    return freeBytes < kLowStorageBytes || fraction < 0.05;
+}
+
+bool NexusDeviceHealthModel::batteryWarningFor(int percent, const QString &state)
+{
+    return percent >= 0 && percent <= 20 &&
+           state != QStringLiteral("CHARGING") &&
+           state != QStringLiteral("CHARGED");
+}
+
 bool NexusDeviceHealthModel::overheatingWarning() const
 {
-    return _thermalState == QStringLiteral("SEVERE") ||
-           _thermalState == QStringLiteral("CRITICAL") ||
-           _thermalState == QStringLiteral("EMERGENCY") ||
-           _thermalState == QStringLiteral("SHUTDOWN") ||
-           (!qIsNaN(_temperatureC) && _temperatureC >= 45.0);
+    return thermalWarningFor(_temperatureC, _thermalState);
 }
 
 bool NexusDeviceHealthModel::lowStorageWarning() const
 {
-    constexpr quint64 kLowStorageBytes = 2ULL * 1024ULL * 1024ULL * 1024ULL;
-    if (_storageTotalBytes == 0) return false;
-    const double fraction = static_cast<double>(_storageFreeBytes) / static_cast<double>(_storageTotalBytes);
-    return _storageFreeBytes < kLowStorageBytes || fraction < 0.05;
+    return storageWarningFor(_storageFreeBytes, _storageTotalBytes);
 }
 
 bool NexusDeviceHealthModel::lowBatteryWarning() const
 {
-    return _batteryPercent >= 0 && _batteryPercent <= 20 &&
-           _batteryState != QStringLiteral("CHARGING") &&
-           _batteryState != QStringLiteral("CHARGED");
+    return batteryWarningFor(_batteryPercent, _batteryState);
 }
 
 QString NexusDeviceHealthModel::overallState() const
@@ -258,4 +280,9 @@ void NexusDeviceHealthModel::requestLocationPermission()
         _refreshPermissions();
         emit deviceHealthChanged();
     });
+}
+
+void NexusDeviceHealthModel::_activeVehicleChanged(Vehicle *vehicle)
+{
+    setOperationalScreenAwake(vehicle != nullptr);
 }
