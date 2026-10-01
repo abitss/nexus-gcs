@@ -2,6 +2,9 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
+#include <QtCore/QtMath>
+
+class Vehicle;
 
 class NexusDeviceHealthModel final : public QObject
 {
@@ -61,8 +64,15 @@ public:
     Q_INVOKABLE void requestCameraPermission();
     Q_INVOKABLE void requestLocationPermission();
 
+    static bool batteryWarningFor(int percent, const QString &state);
+    static bool storageWarningFor(quint64 freeBytes, quint64 totalBytes);
+    static bool thermalWarningFor(double temperatureC, const QString &thermalState);
+
 signals:
     void deviceHealthChanged();
+
+private slots:
+    void _activeVehicleChanged(Vehicle *vehicle);
 
 private:
     static QString _permissionState(Qt::PermissionStatus status);
