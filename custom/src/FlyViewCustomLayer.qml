@@ -201,6 +201,7 @@ Item {
 
     Rectangle {
         id: statusRibbon
+        objectName: "nexusStatusRibbon"
 
         anchors.top: parent.top
         anchors.left: parent.left
@@ -241,6 +242,7 @@ Item {
             }
 
             NexusStatusChip {
+                objectName: "nexusConnectionChip"
                 label: qsTr("LINK")
                 value: connectionText
                 accentColor: !activeVehicle ? "#4F6575" : (linkLost ? "#D95151" : "#2C9B7F")
@@ -248,6 +250,7 @@ Item {
             }
 
             NexusStatusChip {
+                objectName: "nexusModeChip"
                 label: qsTr("MODE")
                 value: modeText
                 accentColor: activeVehicle && !linkLost && activeVehicle.armed ? "#4F8FB8" : "#4F6575"
@@ -255,6 +258,7 @@ Item {
             }
 
             NexusStatusChip {
+                objectName: "nexusGpsChip"
                 label: qsTr("GPS")
                 value: gpsText
                 accentColor: !activeVehicle || linkLost ? "#4F6575" : (gpsHealthy ? "#2C9B7F" : "#D6A84A")
@@ -262,6 +266,7 @@ Item {
             }
 
             NexusStatusChip {
+                objectName: "nexusNavChip"
                 label: qsTr("NAV")
                 value: navText
                 accentColor: navText === qsTr("NOMINAL") ? "#2C9B7F"
@@ -270,6 +275,7 @@ Item {
             }
 
             NexusStatusChip {
+                objectName: "nexusBatteryChip"
                 label: qsTr("BAT")
                 value: batteryText
                 accentColor: batteryCritical ? "#D95151"
@@ -279,6 +285,7 @@ Item {
             }
 
             NexusStatusChip {
+                objectName: "nexusMissionChip"
                 label: qsTr("MISSION")
                 value: linkLost ? "--" : missionText
                 accentColor: missionIndex >= 0 && !linkLost ? "#4F8FB8" : "#4F6575"
@@ -289,6 +296,7 @@ Item {
 
     Rectangle {
         id: alertBanner
+        objectName: "nexusAlertBanner"
 
         visible: alertText.length > 0
         anchors.top: statusRibbon.bottom
@@ -339,6 +347,7 @@ Item {
 
     NexusOpsPanel {
         id: opsPanel
+        objectName: "nexusOpsPanel"
 
         visible: root.width >= 900
         width: Math.min(280, root.width * 0.23)
@@ -362,6 +371,7 @@ Item {
 
     Rectangle {
         id: feedbackBadge
+        objectName: "nexusCommandFeedback"
 
         visible: commandFeedback.length > 0
         anchors.left: parent.left
@@ -378,6 +388,7 @@ Item {
 
         Label {
             id: feedbackText
+            objectName: "nexusCommandFeedbackText"
             anchors.centerIn: parent
             text: commandFeedback
             color: "#EAF0F5"
@@ -388,6 +399,7 @@ Item {
 
     Rectangle {
         id: stateBadge
+        objectName: "nexusFlightStateBadge"
 
         anchors.right: parent.right
         anchors.rightMargin: chromeMargin
@@ -404,6 +416,7 @@ Item {
 
         Label {
             id: stateText
+            objectName: "nexusFlightStateText"
             anchors.centerIn: parent
             text: flightStateText
             color: "#EAF0F5"
@@ -414,6 +427,7 @@ Item {
 
     Column {
         id: bottomChrome
+        objectName: "nexusBottomChrome"
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -424,6 +438,8 @@ Item {
         spacing: 6
 
         Rectangle {
+            id: telemetryBar
+            objectName: "nexusTelemetryBar"
             width: parent.width
             height: 62
             radius: 10
@@ -437,6 +453,7 @@ Item {
                 spacing: 6
 
                 NexusMetric {
+                    objectName: "nexusAltMetric"
                     label: qsTr("ALT")
                     value: activeVehicle ? factValue(activeVehicle.altitudeRelative, 1) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.altitudeRelative) : ""
@@ -444,6 +461,7 @@ Item {
                 }
 
                 NexusMetric {
+                    objectName: "nexusGroundSpeedMetric"
                     label: qsTr("GROUND SPEED")
                     value: activeVehicle ? factValue(activeVehicle.groundSpeed, 1) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.groundSpeed) : ""
@@ -451,6 +469,7 @@ Item {
                 }
 
                 NexusMetric {
+                    objectName: "nexusVertSpeedMetric"
                     label: qsTr("VERT SPEED")
                     value: activeVehicle ? factValue(activeVehicle.climbRate, 1) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.climbRate) : ""
@@ -458,6 +477,7 @@ Item {
                 }
 
                 NexusMetric {
+                    objectName: "nexusHeadingMetric"
                     label: qsTr("HEADING")
                     value: activeVehicle && !linkLost && !isNaN(Number(activeVehicle.heading.rawValue))
                            ? Math.round(Number(activeVehicle.heading.rawValue)).toString()
@@ -467,6 +487,7 @@ Item {
                 }
 
                 NexusMetric {
+                    objectName: "nexusHomeMetric"
                     label: qsTr("HOME")
                     value: activeVehicle ? factValue(activeVehicle.distanceToHome, 0) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.distanceToHome) : ""
@@ -474,6 +495,7 @@ Item {
                 }
 
                 NexusMetric {
+                    objectName: "nexusNextWpMetric"
                     label: qsTr("NEXT WP")
                     value: activeVehicle ? factValue(activeVehicle.distanceToNextWP, 0) : "--"
                     units: activeVehicle ? factUnits(activeVehicle.distanceToNextWP) : ""
@@ -483,6 +505,8 @@ Item {
         }
 
         Rectangle {
+            id: actionBar
+            objectName: "nexusActionBar"
             width: parent.width
             height: 50
             radius: 10
@@ -505,6 +529,7 @@ Item {
                 }
 
                 NexusActionButton {
+                    objectName: "nexusActionArm"
                     text: qsTr("ARM")
                     primary: true
                     visible: guidedController && guidedController.showArm
@@ -514,6 +539,7 @@ Item {
                 }
 
                 NexusActionButton {
+                    objectName: "nexusActionTakeoff"
                     text: qsTr("TAKEOFF")
                     primary: true
                     visible: guidedController && guidedController.showTakeoff
@@ -523,6 +549,7 @@ Item {
                 }
 
                 NexusActionButton {
+                    objectName: "nexusActionHold"
                     text: qsTr("HOLD")
                     visible: guidedController && guidedController.showPause
                     enabled: visible && !linkLost
@@ -531,6 +558,7 @@ Item {
                 }
 
                 NexusActionButton {
+                    objectName: "nexusActionRTL"
                     text: qsTr("RTL")
                     visible: !!activeVehicle
                     enabled: guidedController && guidedController.showRTL && !linkLost
@@ -539,6 +567,7 @@ Item {
                 }
 
                 NexusActionButton {
+                    objectName: "nexusActionLand"
                     text: qsTr("LAND")
                     critical: true
                     visible: guidedController && guidedController.showLand
@@ -575,6 +604,8 @@ Item {
         }
 
         Rectangle {
+            id: navBar
+            objectName: "nexusBottomNav"
             width: parent.width
             height: 48
             radius: 10

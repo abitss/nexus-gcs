@@ -112,7 +112,7 @@ jobs:
         timeout-minutes: 15
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}
+          build-dir: ${{ runner.temp }}/nexus-emulator-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Android
@@ -228,5 +228,6 @@ jobs:
           path: |
             ${{ runner.temp }}/nexus-emulator-build.log
             ${{ runner.temp }}/nexus-badging.txt
+            ${{ runner.temp }}/nexus-emulator-evidence
           retention-days: 7
           if-no-files-found: ignore

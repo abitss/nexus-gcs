@@ -87,3 +87,23 @@ set(CUSTOM_QT_COMPONENTS
     Core
     PARENT_SCOPE
 )
+
+
+# Task 0.3 validation tests compile only into desktop test builds.
+# They exercise the custom Fly cockpit against QGC's real test harness and
+# an externally launched PX4 SITL process without touching production paths.
+if(QGC_BUILD_TESTING AND NOT ANDROID)
+    target_sources(${CMAKE_PROJECT_NAME}
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusFlightCockpitUITest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusFlightCockpitUITest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4SITLRuntimeTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4SITLRuntimeTest.h
+    )
+    target_include_directories(${CMAKE_PROJECT_NAME}
+        PRIVATE
+            ${CMAKE_SOURCE_DIR}/test/QmlUITests
+            ${CMAKE_SOURCE_DIR}/test/UnitTestFramework
+            ${CMAKE_CURRENT_SOURCE_DIR}/test
+    )
+endif()
