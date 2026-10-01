@@ -3,6 +3,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
 #include <QtCore/QSettings>
+#include <QtCore/QDebug>
 #include <QtGui/QGuiApplication>
 
 #include "MAVLinkProtocol.h"
@@ -37,9 +38,14 @@ NexusRecoveryModel::NexusRecoveryModel(NexusPayloadModel *payload,
                 QStringLiteral("Previous NEXUS session did not record a clean shutdown. Vehicle state must be re-verified."));
     }
 
-    connect(qApp, &QCoreApplication::aboutToQuit, this, &NexusRecoveryModel::_markCleanExit);
-    connect(qGuiApp, &QGuiApplication::applicationStateChanged,
-            this, &NexusRecoveryModel::_applicationStateChanged);
+    if (qApp) {
+        connect(qApp, &QCoreApplication::aboutToQuit, this, &NexusRecoveryModel::_markCleanExit);
+    }
+    if (qGuiApp) {
+        connect(qGuiApp, &QGuiApplication::applicationStateChanged,
+                this, &NexusRecoveryModel::_applicationStateChanged);
+        _appState = _applicationStateName(qGuiApp->applicationState());
+    }
 
     auto *manager = MultiVehicleManager::instance();
     connect(manager, &MultiVehicleManager::activeVehicleChanged,
@@ -252,7 +258,7 @@ void NexusRecoveryModel::_mavlinkMessageReceived(LinkInterface *, const mavlink_
     mavlink_msg_system_time_decode(&message, &systemTime);
     if (systemTime.time_boot_ms == 0) return;
 
-    if (_haveBootCounter && systemTime.time_boot_ms + 5000U < _lastBootMs) {
+    if (_haveBootCounter && bootCounterIndicatesReboot(_lastBootMs, systemTime.time_boot_ms)) {
         _fcRebootDetected = true;
         _interruptedMission = _interruptedMission || (_planVerifier && _planVerifier->busy());
         if (_planVerifier) _planVerifier->reset();
@@ -263,6 +269,13 @@ void NexusRecoveryModel::_mavlinkMessageReceived(LinkInterface *, const mavlink_
     _lastBootMs = systemTime.time_boot_ms;
     _haveBootCounter = true;
     emit recoveryChanged();
+}
+
+bool NexusRecoveryModel::bootCounterIndicatesReboot(quint32 previousMs, quint32 currentMs)
+{
+    // Ignore small clock/report jitter; a drop greater than five seconds means
+    // the FC boot-relative clock materially reset.
+    return previousMs > currentMs && (previousMs - currentMs) > 5000U;
 }
 
 void NexusRecoveryModel::_record(const QString &type, const QString &severity, const QString &detail)
@@ -277,6 +290,7 @@ void NexusRecoveryModel::_record(const QString &type, const QString &severity, c
     while (_events.size() > 100) _events.removeLast();
 
     _lastRecoveryEvent = QStringLiteral("%1 · %2").arg(type, detail);
+    qInfo().noquote() << "NEXUS_RECOVERY" << type << severity << detail;
 
     if (_security) {
         _security->recordAudit(QStringLiteral("recovery.%1").arg(type.toLower()),
