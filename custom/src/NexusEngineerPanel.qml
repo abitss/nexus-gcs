@@ -10,6 +10,7 @@ Rectangle {
 
     property var engineerModel
     signal closeRequested()
+    signal openHealthRequested()
 
     width: Math.min(650, parent ? parent.width * 0.56 : 650)
     color: "#F60A0F14"
@@ -272,7 +273,7 @@ Rectangle {
                         detail: qsTr("EKF: %1 · GPS: %2 · IMU: %3").arg(NexusHealth.ekfDetail).arg(NexusHealth.gpsDetail).arg(NexusHealth.imuDetail)
                         state: NexusHealth.overallState
                         available: !!activeVehicle
-                        onAction: healthPanel.visible = true
+                        onAction: root.openHealthRequested()
                     }
 
                     ToolCard {
