@@ -7,6 +7,7 @@ on:
       - phase0-task0.4-plan-module
       - phase0-task0.5-health-module
       - phase0-task0.6-alerts-failsafes
+      - phase0-task0.14-device-health
       - phase0-task0.13-reports
       - phase0-task0.12-analyze-module
       - phase0-task0.11-offline-first
