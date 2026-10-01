@@ -9,4 +9,5 @@ class NexusReportsModelTest final : public UnitTest
 private slots:
     void _testLocalMetadataPersistence();
     void _testReportSchema();
+    void _testMetricHelpers();
 };
