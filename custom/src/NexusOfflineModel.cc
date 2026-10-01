@@ -1,9 +1,12 @@
 #include "NexusOfflineModel.h"
 
 #include <QtCore/QDir>
+#include <QtCore/QFileInfo>
 
 #include "AppSettings.h"
 #include "QGCMapEngineManager.h"
+#include "QGCCachedTileSet.h"
+#include "QGCFormat.h"
 #include "QGCNetworkHelper.h"
 #include "QmlObjectListModel.h"
 #include "SettingsManager.h"
@@ -81,13 +84,31 @@ bool NexusOfflineModel::localStorageReady() const
 int NexusOfflineModel::offlineMapSetCount() const
 {
     auto *manager = QGCMapEngineManager::instance();
-    return manager && manager->tileSets() ? manager->tileSets()->count() : 0;
+    if (!manager || !manager->tileSets()) return 0;
+
+    int count = 0;
+    for (qsizetype i = 0; i < manager->tileSets()->count(); ++i) {
+        auto *set = qobject_cast<QGCCachedTileSet *>(manager->tileSets()->get(i));
+        if (set && set->savedTileCount() > 0) {
+            ++count;
+        }
+    }
+    return count;
 }
 
 QString NexusOfflineModel::offlineMapCacheSize() const
 {
     auto *manager = QGCMapEngineManager::instance();
-    return manager ? manager->tileSizeStr() : QStringLiteral("--");
+    if (!manager || !manager->tileSets()) return QStringLiteral("--");
+
+    quint64 bytes = 0;
+    for (qsizetype i = 0; i < manager->tileSets()->count(); ++i) {
+        auto *set = qobject_cast<QGCCachedTileSet *>(manager->tileSets()->get(i));
+        if (set) {
+            bytes += set->savedTileSize();
+        }
+    }
+    return QGC::bigSizeToString(bytes);
 }
 
 bool NexusOfflineModel::offlineReady() const
