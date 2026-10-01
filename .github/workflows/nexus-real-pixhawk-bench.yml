@@ -133,9 +133,11 @@ jobs:
               "BATTERY",
               "MODES",
               "HOME",
+              "MISSION_BACKUP",
               "MISSION_UPLOAD_DOWNLOAD",
               "PROPS_OFF_ARM",
               "PROPS_OFF_DISARM",
+              "MISSION_RESTORE",
           ]
           stages = {row["stage"]: row["status"] for row in data.get("stages", [])}
           missing = [name for name in required if stages.get(name) != "PASS"]
