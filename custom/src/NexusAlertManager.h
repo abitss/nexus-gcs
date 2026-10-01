@@ -98,4 +98,6 @@ private:
     QHash<QString, int> _activeRows;
     bool _failsafeActive = false;
     QString _failsafeReason;
+    bool _systemCriticalActive = false;
+    QString _systemCriticalReason;
 };
