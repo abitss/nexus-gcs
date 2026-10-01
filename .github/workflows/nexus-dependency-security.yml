@@ -2,7 +2,7 @@ name: NEXUS Dependency Security
 
 on:
   pull_request:
-    branches: [develop, phase0-task0.14-device-health]
+    branches: [develop, phase0-task0.15-security, phase0-task0.14-device-health]
   workflow_dispatch:
 
 permissions:
