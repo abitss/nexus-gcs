@@ -42,6 +42,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusReportsPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusDeviceHealthPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryPanel.qml"
 )
 
 set_source_files_properties(
@@ -132,6 +133,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusSecurityPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusRecoveryPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -167,6 +172,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusDeviceHealthModel.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryModel.h
     PARENT_SCOPE
 )
 
@@ -224,6 +231,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusDeviceHealthModelTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusSecurityModelTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusSecurityModelTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusRecoveryModelTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusRecoveryModelTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
