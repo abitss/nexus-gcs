@@ -33,6 +33,10 @@ public:
 
     Q_INVOKABLE void loadForSource(const QString &sourcePath);
     Q_INVOKABLE void clear();
+    Q_INVOKABLE double routeDistanceMeters(const QVariantList &route) const;
+    Q_INVOKABLE double maxSampleValue(const QVariantList &samples) const;
+    Q_INVOKABLE double batteryUsedPercent(const QVariantList &samples) const;
+
     Q_INVOKABLE QVariantMap buildReportData(
         const QString &dateTime,
         double durationSeconds,
