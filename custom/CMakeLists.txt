@@ -27,6 +27,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusNavItem.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusActionButton.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOpsPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/PlanToolBarIndicators.qml"
 )
 
 set_source_files_properties(
@@ -57,6 +58,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOpsPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusOpsPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/PlanToolBarIndicators.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/PlanView/PlanToolBarIndicators.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -68,6 +73,8 @@ qt_add_resources(
 set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlugin.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlugin.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlanVerifier.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlanVerifier.h
     PARENT_SCOPE
 )
 

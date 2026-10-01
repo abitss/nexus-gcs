@@ -6,11 +6,12 @@ Rectangle {
 
     property string text: ""
     property bool active: false
+    signal clicked()
 
     implicitWidth: 92
     implicitHeight: 38
     radius: 8
-    color: active ? "#1B2B31" : "transparent"
+    color: mouseArea.pressed ? "#243640" : (active ? "#1B2B31" : "transparent")
     border.color: active ? "#2C9B7F" : "#25313C"
     border.width: 1
 
@@ -20,5 +21,12 @@ Rectangle {
         color: active ? "#EFFFFA" : "#98A5B0"
         font.pixelSize: 10
         font.bold: true
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
     }
 }

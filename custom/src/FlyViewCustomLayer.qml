@@ -619,7 +619,7 @@ Item {
                 spacing: 6
 
                 NexusNavItem { text: qsTr("FLIGHT"); active: true; Layout.fillWidth: true }
-                NexusNavItem { text: qsTr("PLAN"); Layout.fillWidth: true }
+                NexusNavItem { text: qsTr("PLAN"); Layout.fillWidth: true; onClicked: { if (mainWindow.allowViewSwitch()) mainWindow.showPlanView() } }
                 NexusNavItem { text: qsTr("HEALTH"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("PAYLOAD"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("ANALYZE"); Layout.fillWidth: true }
