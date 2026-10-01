@@ -145,6 +145,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusHealthModelTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAlertManagerTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAlertManagerTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPreflightModelTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPreflightModelTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
