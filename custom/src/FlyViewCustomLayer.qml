@@ -640,7 +640,7 @@ Item {
         anchors.topMargin: topChromeBottom
         anchors.bottomMargin: 8
         anchors.rightMargin: 10
-        visible: false
+        visible: recoveryModel.previousUncleanExit
         recoveryModel: NexusRecovery
         onCloseRequested: visible = false
     }
