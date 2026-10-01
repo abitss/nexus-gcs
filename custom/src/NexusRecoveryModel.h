@@ -59,6 +59,8 @@ public:
     Q_INVOKABLE void clearRecoveredEvents();
     Q_INVOKABLE bool validateRecoveryMission(const QString &path);
 
+    static bool bootCounterIndicatesReboot(quint32 previousMs, quint32 currentMs);
+
 signals:
     void recoveryChanged();
 
