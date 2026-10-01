@@ -19,6 +19,7 @@ class NexusAnalyzeModel;
 class NexusReportsModel;
 class NexusDeviceHealthModel;
 class NexusSecurityModel;
+class NexusRecoveryModel;
 
 class NexusFlyViewOptions final : public QGCFlyViewOptions
 {
@@ -89,4 +90,5 @@ private:
     NexusOfflineModel *_offlineModel = nullptr;
     NexusAnalyzeModel *_analyzeModel = nullptr;
     NexusReportsModel *_reportsModel = nullptr;
+    NexusRecoveryModel *_recoveryModel = nullptr;
 };
