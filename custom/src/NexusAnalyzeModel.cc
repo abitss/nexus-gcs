@@ -1,6 +1,7 @@
 #include "NexusAnalyzeModel.h"
 
 #include <QtCore/QDir>
+#include <algorithm>
 #include <QtCore/QSet>
 
 #include "AppSettings.h"
