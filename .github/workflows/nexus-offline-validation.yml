@@ -1,25 +1,21 @@
-name: NEXUS Alerts Validation
+name: NEXUS OFFLINE-FIRST Validation
 
 on:
   pull_request:
     branches:
-      - phase0-task0.5-health-module
-      - phase0-task0.6-alerts-failsafes
       - phase0-task0.10-engineer-mode
       - phase0-task0.9-vehicle-module
-      - phase0-task0.8-payload-video
-      - phase0-task0.7-preflight-system
-      - phase0-task0.4-plan-module
       - develop
     paths:
       - 'custom/**'
-      - '.github/workflows/nexus-alerts-validation.yml'
+      - 'scripts/validate-offline.sh'
+      - '.github/workflows/nexus-offline-validation.yml'
       - '.gitmodules'
       - 'qgroundcontrol'
   workflow_dispatch:
 
 concurrency:
-  group: nexus-alerts-validation-${{ github.ref }}
+  group: nexus-offline-validation-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -31,8 +27,8 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  alerts-validation:
-    name: Alerts + failsafes integration
+  offline-validation:
+    name: OFFLINE-FIRST local storage integration
     runs-on: ubuntu-24.04
     timeout-minutes: 120
 
@@ -54,13 +50,17 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Stage NEXUS custom build
+      - name: Stage and validate OFFLINE-FIRST architecture
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
           rm -rf custom
           mkdir -p custom
           cp -a nexus-overlay/custom/. custom/
+          bash nexus-overlay/scripts/validate-offline.sh \
+            nexus-overlay/custom/src/NexusOfflinePanel.qml \
+            nexus-overlay/custom/src/NexusOfflineModel.cc \
+            nexus-overlay/custom/src/FlyViewCustomLayer.qml
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -68,7 +68,7 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-alerts-validation
+          cache-key-suffix: nexus-offline-validation
           cpm-modules: .cache/CPM
 
       - name: Install QGC dependencies
@@ -78,7 +78,7 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-alerts-build
+          build-dir: ${{ runner.temp }}/nexus-offline-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
@@ -90,12 +90,12 @@ jobs:
         timeout-minutes: 75
         uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-alerts-build
+          build-dir: ${{ runner.temp }}/nexus-offline-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-alerts-build.log
+          output-file: nexus-offline-build.log
 
-      - name: Run alerts/failsafes tests
+      - name: Run OFFLINE-FIRST integration tests
         timeout-minutes: 10
         shell: bash
         env:
@@ -104,15 +104,18 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           QGC_TEST_MAXWARNINGS: '250'
         run: |
-          "${RUNNER_TEMP}/nexus-alerts-build/Release/NEXUS-GCS"             --unittest:NexusAlertManagerTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-alerts-test.log"
+          "${RUNNER_TEMP}/nexus-offline-build/Release/NEXUS-GCS" \
+            --unittest:NexusOfflineModelTest \
+            --allow-multiple \
+            2>&1 | tee "${RUNNER_TEMP}/nexus-offline-test.log"
 
-      - name: Upload alerts validation evidence
+      - name: Upload OFFLINE-FIRST evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-alerts-validation-evidence
+          name: nexus-offline-validation-evidence
           path: |
-            ${{ runner.temp }}/nexus-alerts-test.log
-            ${{ runner.temp }}/nexus-alerts-build/nexus-alerts-build.log
+            ${{ runner.temp }}/nexus-offline-test.log
+            ${{ runner.temp }}/nexus-offline-build/nexus-offline-build.log
           retention-days: 14
           if-no-files-found: warn
