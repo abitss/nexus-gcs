@@ -586,6 +586,23 @@ Item {
         onCloseRequested: visible = false
     }
 
+    NexusReportsPanel {
+        id: reportsPanel
+        objectName: "nexusReportsPanel"
+        anchors.top: parent.top
+        anchors.bottom: bottomChrome.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: topChromeBottom
+        anchors.bottomMargin: 8
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+        visible: false
+        analyzeModel: NexusAnalyze
+        reportsModel: NexusReports
+        onCloseRequested: visible = false
+    }
+
     NexusPreflightPanel {
         id: preflightPanel
         objectName: "nexusPreflightPanel"
@@ -806,14 +823,14 @@ Item {
                 anchors.margins: 5
                 spacing: 6
 
-                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible && !payloadPanel.visible && !vehiclePanel.visible && !engineerPanel.visible && !offlinePanel.visible && !analyzePanel.visible && !alertPanel.visible && !preflightPanel.visible; Layout.fillWidth: true; onClicked: { healthPanel.visible = false; alertPanel.visible = false; preflightPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false } }
+                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible && !payloadPanel.visible && !vehiclePanel.visible && !engineerPanel.visible && !offlinePanel.visible && !analyzePanel.visible && !reportsPanel.visible && !alertPanel.visible && !preflightPanel.visible; Layout.fillWidth: true; onClicked: { healthPanel.visible = false; alertPanel.visible = false; preflightPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; reportsPanel.visible = false } }
                 NexusNavItem { text: qsTr("PLAN"); Layout.fillWidth: true; onClicked: { if (mainWindow.allowViewSwitch()) mainWindow.showPlanView() } }
-                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; healthPanel.visible = true } }
-                NexusNavItem { text: qsTr("PAYLOAD"); active: payloadPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; payloadPanel.visible = !payloadPanel.visible } }
-                NexusNavItem { text: qsTr("ANALYZE"); active: analyzePanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = !analyzePanel.visible } }
-                NexusNavItem { text: qsTr("VEHICLE"); active: vehiclePanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; vehiclePanel.visible = !vehiclePanel.visible } }
-                NexusNavItem { text: qsTr("ENGINEER"); active: engineerPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; engineerPanel.visible = !engineerPanel.visible } }
-                NexusNavItem { text: qsTr("OFFLINE"); active: offlinePanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; analyzePanel.visible = false; offlinePanel.visible = !offlinePanel.visible } }
+                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; reportsPanel.visible = false; healthPanel.visible = true } }
+                NexusNavItem { text: qsTr("PAYLOAD"); active: payloadPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; reportsPanel.visible = false; payloadPanel.visible = !payloadPanel.visible } }
+                NexusNavItem { text: qsTr("ANALYZE"); active: analyzePanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; reportsPanel.visible = false; analyzePanel.visible = !analyzePanel.visible } }
+                NexusNavItem { text: qsTr("VEHICLE"); active: vehiclePanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; engineerPanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; reportsPanel.visible = false; vehiclePanel.visible = !vehiclePanel.visible } }
+                NexusNavItem { text: qsTr("ENGINEER"); active: engineerPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; offlinePanel.visible = false; analyzePanel.visible = false; reportsPanel.visible = false; engineerPanel.visible = !engineerPanel.visible } }
+                NexusNavItem { text: qsTr("OFFLINE"); active: offlinePanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = false; payloadPanel.visible = false; vehiclePanel.visible = false; engineerPanel.visible = false; analyzePanel.visible = false; reportsPanel.visible = false; offlinePanel.visible = !offlinePanel.visible } }
             }
         }
     }
