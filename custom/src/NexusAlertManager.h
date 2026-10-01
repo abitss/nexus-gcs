@@ -9,6 +9,7 @@
 #include "QGCMAVLink.h"
 
 class NexusHealthModel;
+class NexusDeviceHealthModel;
 class Vehicle;
 
 class NexusAlertManager final : public QAbstractListModel
@@ -34,7 +35,7 @@ public:
     };
     Q_ENUM(Roles)
 
-    explicit NexusAlertManager(NexusHealthModel *health, QObject *parent = nullptr);
+    explicit NexusAlertManager(NexusHealthModel *health, NexusDeviceHealthModel *deviceHealth = nullptr, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role) const override;
@@ -92,6 +93,7 @@ private:
     void _trimHistory();
 
     NexusHealthModel *_health = nullptr;
+    NexusDeviceHealthModel *_deviceHealth = nullptr;
     QPointer<Vehicle> _vehicle;
     QTimer _timer;
     QList<Alert> _alerts;

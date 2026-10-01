@@ -1,26 +1,21 @@
-name: NEXUS VEHICLE Validation
+name: NEXUS DEVICE HEALTH Validation
 
 on:
   pull_request:
     branches:
       - phase0-task0.13-reports
       - phase0-task0.12-analyze-module
-      - phase0-task0.11-offline-first
-      - phase0-task0.10-engineer-mode
-      - phase0-task0.9-vehicle-module
-      - phase0-task0.8-payload-video
-      - phase0-task0.7-preflight-system
       - develop
     paths:
       - 'custom/**'
-      - 'scripts/validate-vehicle.sh'
-      - '.github/workflows/nexus-vehicle-validation.yml'
+      - 'scripts/validate-device-health.sh'
+      - '.github/workflows/nexus-device-health-validation.yml'
       - '.gitmodules'
       - 'qgroundcontrol'
   workflow_dispatch:
 
 concurrency:
-  group: nexus-vehicle-validation-${{ github.ref }}
+  group: nexus-device-health-validation-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -32,8 +27,8 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  vehicle-validation:
-    name: VEHICLE configuration integration
+  device-health-validation:
+    name: DEVICE HEALTH platform integration
     runs-on: ubuntu-24.04
     timeout-minutes: 120
 
@@ -55,17 +50,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Stage and validate VEHICLE module
+      - name: Stage and validate DEVICE HEALTH architecture
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
           rm -rf custom
           mkdir -p custom
           cp -a nexus-overlay/custom/. custom/
-          bash nexus-overlay/scripts/validate-vehicle.sh \
-            nexus-overlay/custom/src/NexusVehiclePanel.qml \
-            nexus-overlay/custom/src/NexusVehicleModel.cc \
-            nexus-overlay/custom/src/FlyViewCustomLayer.qml
+          bash nexus-overlay/scripts/validate-device-health.sh             nexus-overlay/custom/src/NexusDeviceHealthPanel.qml             nexus-overlay/custom/src/NexusDeviceHealthModel.cc             nexus-overlay/custom/src/NexusAlertManager.cc             nexus-overlay/custom/src/FlyViewCustomLayer.qml
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -73,7 +65,7 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-vehicle-validation
+          cache-key-suffix: nexus-device-health-validation
           cpm-modules: .cache/CPM
 
       - name: Install QGC dependencies
@@ -83,7 +75,7 @@ jobs:
         timeout-minutes: 20
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-vehicle-build
+          build-dir: ${{ runner.temp }}/nexus-device-health-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
@@ -95,12 +87,12 @@ jobs:
         timeout-minutes: 75
         uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-vehicle-build
+          build-dir: ${{ runner.temp }}/nexus-device-health-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-vehicle-build.log
+          output-file: nexus-device-health-build.log
 
-      - name: Run VEHICLE integration tests
+      - name: Run DEVICE HEALTH integration tests
         timeout-minutes: 10
         shell: bash
         env:
@@ -109,18 +101,15 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
           QGC_TEST_MAXWARNINGS: '250'
         run: |
-          "${RUNNER_TEMP}/nexus-vehicle-build/Release/NEXUS-GCS" \
-            --unittest:NexusVehicleModelTest \
-            --allow-multiple \
-            2>&1 | tee "${RUNNER_TEMP}/nexus-vehicle-test.log"
+          "${RUNNER_TEMP}/nexus-device-health-build/Release/NEXUS-GCS"             --unittest:NexusDeviceHealthModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-device-health-test.log"
 
-      - name: Upload VEHICLE evidence
+      - name: Upload DEVICE HEALTH evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-vehicle-validation-evidence
+          name: nexus-device-health-validation-evidence
           path: |
-            ${{ runner.temp }}/nexus-vehicle-test.log
-            ${{ runner.temp }}/nexus-vehicle-build/nexus-vehicle-build.log
+            ${{ runner.temp }}/nexus-device-health-test.log
+            ${{ runner.temp }}/nexus-device-health-build/nexus-device-health-build.log
           retention-days: 14
           if-no-files-found: warn

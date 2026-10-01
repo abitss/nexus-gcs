@@ -3,6 +3,7 @@
 #include "MissionManager.h"
 #include "MultiVehicleManager.h"
 #include "NexusHealthModel.h"
+#include "NexusDeviceHealthModel.h"
 #include "QGCMAVLink.h"
 #include "SettingsManager.h"
 #include "VideoManager.h"
@@ -10,9 +11,10 @@
 #include "Vehicle.h"
 #include "VehicleLinkManager.h"
 
-NexusAlertManager::NexusAlertManager(NexusHealthModel *health, QObject *parent)
+NexusAlertManager::NexusAlertManager(NexusHealthModel *health, NexusDeviceHealthModel *deviceHealth, QObject *parent)
     : QAbstractListModel(parent)
     , _health(health)
+    , _deviceHealth(deviceHealth)
 {
     auto *manager = MultiVehicleManager::instance();
     connect(manager, &MultiVehicleManager::activeVehicleChanged,
@@ -305,6 +307,34 @@ void NexusAlertManager::_refreshSummary()
 
 void NexusAlertManager::_evaluateConditions()
 {
+    if (_deviceHealth) {
+        _setCondition(QStringLiteral("device-overheat"),
+                      _deviceHealth->overheatingWarning(),
+                      QStringLiteral("CRITICAL"),
+                      QStringLiteral("DEVICE"),
+                      QStringLiteral("Ground Station Overheating"),
+                      QStringLiteral("Tablet thermal state: %1").arg(_deviceHealth->thermalState()));
+
+        _setCondition(QStringLiteral("device-storage"),
+                      _deviceHealth->lowStorageWarning(),
+                      QStringLiteral("WARNING"),
+                      QStringLiteral("DEVICE"),
+                      QStringLiteral("Ground Station Storage Low"),
+                      QStringLiteral("Free local storage: %1").arg(_deviceHealth->storageFreeText()));
+
+        _setCondition(QStringLiteral("device-battery"),
+                      _deviceHealth->lowBatteryWarning(),
+                      QStringLiteral("WARNING"),
+                      QStringLiteral("DEVICE"),
+                      QStringLiteral("Ground Station Battery Low"),
+                      _deviceHealth->batteryPercent() >= 0
+                        ? QStringLiteral("Tablet battery: %1% · %2").arg(_deviceHealth->batteryPercent()).arg(_deviceHealth->batteryState())
+                        : QStringLiteral("Tablet battery state is degraded"));
+    } else {
+        _setCondition(QStringLiteral("device-overheat"), false, {}, {}, {}, {});
+        _setCondition(QStringLiteral("device-storage"), false, {}, {}, {}, {});
+        _setCondition(QStringLiteral("device-battery"), false, {}, {}, {}, {});
+    }
     if (!_vehicle || !_health) {
         _setCondition(QStringLiteral("telemetry"), false, {}, {}, {}, {});
         _setCondition(QStringLiteral("battery"), false, {}, {}, {}, {});
