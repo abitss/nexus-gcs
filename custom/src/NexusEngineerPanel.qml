@@ -21,6 +21,15 @@ Rectangle {
 
     readonly property var activeVehicle: QGroundControl.multiVehicleManager.activeVehicle
 
+    Connections {
+        target: engineerModel
+        function onEngineerChanged() {
+            if (!engineerModel.unlocked) {
+                QGroundControl.corePlugin.showAdvancedUI = false
+            }
+        }
+    }
+
     function openParameters() {
         if (!engineerModel.unlocked) return
         mainWindow.showVehicleConfigParametersPage()
