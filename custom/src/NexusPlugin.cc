@@ -11,6 +11,7 @@
 #include "NexusReportsModel.h"
 #include "NexusDeviceHealthModel.h"
 #include "NexusSecurityModel.h"
+#include "NexusRecoveryModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -53,10 +54,12 @@ NexusPlugin::NexusPlugin(QObject *parent)
     , _offlineModel(new NexusOfflineModel(this))
     , _analyzeModel(new NexusAnalyzeModel(this))
     , _reportsModel(new NexusReportsModel(this))
+    , _recoveryModel(new NexusRecoveryModel(_payloadModel, _deviceHealthModel, _planVerifier, _securityModel, this))
 {
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
     _showAdvancedUI = false;
+    _alertManager->setRecoveryModel(_recoveryModel);
     (void) connect(this, &QGCCorePlugin::showAdvancedUIChanged, this, &NexusPlugin::_advancedChanged);
 }
 
@@ -87,6 +90,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusReports"), _reportsModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusDeviceHealth"), _deviceHealthModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusSecurity"), _securityModel);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusRecovery"), _recoveryModel);
     return _qmlEngine;
 }
 
