@@ -38,6 +38,20 @@ QString auditFilePath()
 NexusSecurityModel::NexusSecurityModel(QObject *parent)
     : QObject(parent)
 {
+    _sessionTimer.setSingleShot(true);
+    _sessionTimer.setInterval(15 * 60 * 1000);
+    connect(&_sessionTimer, &QTimer::timeout, this, [this]() {
+        if (authenticated()) {
+            _audit(QStringLiteral("security.session.expired"), {{QStringLiteral("role"), _currentRole}});
+            _currentRole = QStringLiteral("OPERATOR");
+            emit securityChanged();
+        }
+    });
+
+    _statusTimer.setInterval(1000);
+    connect(&_statusTimer, &QTimer::timeout, this, &NexusSecurityModel::securityChanged);
+    _statusTimer.start();
+
     _audit(QStringLiteral("security.session.start"), {{QStringLiteral("role"), _currentRole}});
 }
 
@@ -65,6 +79,17 @@ bool NexusSecurityModel::_credentialConfigured(const QString &role) const
     s.beginGroup(QStringLiteral("NexusSecurity/Auth/%1").arg(role.toUpper()));
     return !s.value(QStringLiteral("salt")).toByteArray().isEmpty() &&
            !s.value(QStringLiteral("verifier")).toByteArray().isEmpty();
+}
+
+bool NexusSecurityModel::lockedOut() const
+{
+    return _lockoutUntil.isValid() && QDateTime::currentDateTimeUtc() < _lockoutUntil;
+}
+
+int NexusSecurityModel::lockoutSeconds() const
+{
+    if (!lockedOut()) return 0;
+    return qMax(0, static_cast<int>(QDateTime::currentDateTimeUtc().secsTo(_lockoutUntil)));
 }
 
 bool NexusSecurityModel::adminConfigured() const { return _credentialConfigured(QStringLiteral("ADMIN")); }
@@ -142,6 +167,11 @@ bool NexusSecurityModel::setEngineerCredential(const QString &passphrase)
 
 bool NexusSecurityModel::authenticate(const QString &role, const QString &passphrase)
 {
+    if (lockedOut()) {
+        _setError(QStringLiteral("Authentication temporarily locked. Try again in %1 seconds.").arg(lockoutSeconds()));
+        return false;
+    }
+
     const QString normalized = role.trimmed().toUpper();
     if (normalized != QStringLiteral("ENGINEER") && normalized != QStringLiteral("ADMIN")) {
         _setError(QStringLiteral("Unsupported security role."));
@@ -149,14 +179,27 @@ bool NexusSecurityModel::authenticate(const QString &role, const QString &passph
     }
 
     if (!_verifyCredential(normalized, passphrase)) {
-        _audit(QStringLiteral("security.auth.failed"), {{QStringLiteral("role"), normalized}});
-        _setError(QStringLiteral("Authentication failed."));
+        ++_failedAttempts;
+        _audit(QStringLiteral("security.auth.failed"), {
+            {QStringLiteral("role"), normalized},
+            {QStringLiteral("attempt"), _failedAttempts}
+        });
+        if (_failedAttempts >= 5) {
+            _lockoutUntil = QDateTime::currentDateTimeUtc().addSecs(60);
+            _failedAttempts = 0;
+            _setError(QStringLiteral("Too many failed attempts. Authentication locked for 60 seconds."));
+        } else {
+            _setError(QStringLiteral("Authentication failed."));
+        }
         return false;
     }
 
+    _failedAttempts = 0;
+    _lockoutUntil = QDateTime();
     _currentRole = normalized;
     _lastError.clear();
     _audit(QStringLiteral("security.auth.success"), {{QStringLiteral("role"), normalized}});
+    _sessionTimer.start();
     emit securityChanged();
     return true;
 }
@@ -166,6 +209,7 @@ void NexusSecurityModel::lock()
     if (_currentRole == QStringLiteral("OPERATOR")) return;
     _audit(QStringLiteral("security.session.lock"), {{QStringLiteral("role"), _currentRole}});
     _currentRole = QStringLiteral("OPERATOR");
+    _sessionTimer.stop();
     emit securityChanged();
 }
 
