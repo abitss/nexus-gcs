@@ -1,0 +1,115 @@
+name: NEXUS ANALYZE Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.11-offline-first
+      - phase0-task0.10-engineer-mode
+      - develop
+    paths:
+      - 'custom/**'
+      - 'scripts/validate-analyze.sh'
+      - '.github/workflows/nexus-analyze-validation.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-analyze-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  analyze-validation:
+    name: ANALYZE local flight evidence integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout pinned QGroundControl
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Stage and validate ANALYZE architecture
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+          bash nexus-overlay/scripts/validate-analyze.sh             nexus-overlay/custom/src/NexusAnalyzePanel.qml             nexus-overlay/custom/src/NexusAnalyzeModel.cc             nexus-overlay/custom/src/NexusAnalyzeGraph.qml             nexus-overlay/custom/src/FlyViewCustomLayer.qml
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-analyze-validation
+          cpm-modules: .cache/CPM
+
+      - name: Install QGC dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure NEXUS tests
+        timeout-minutes: 20
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-analyze-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - name: Build NEXUS test binary
+        timeout-minutes: 75
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-analyze-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-analyze-build.log
+
+      - name: Run ANALYZE model tests
+        timeout-minutes: 10
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '250'
+        run: |
+          "${RUNNER_TEMP}/nexus-analyze-build/Release/NEXUS-GCS"             --unittest:NexusAnalyzeModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-analyze-test.log"
+
+      - name: Upload ANALYZE evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-analyze-validation-evidence
+          path: |
+            ${{ runner.temp }}/nexus-analyze-test.log
+            ${{ runner.temp }}/nexus-analyze-build/nexus-analyze-build.log
+          retention-days: 14
+          if-no-files-found: warn
