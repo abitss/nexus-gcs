@@ -8,6 +8,7 @@
 #include "NexusEngineerModel.h"
 #include "NexusOfflineModel.h"
 #include "NexusAnalyzeModel.h"
+#include "NexusReportsModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -47,6 +48,7 @@ NexusPlugin::NexusPlugin(QObject *parent)
     , _engineerModel(new NexusEngineerModel(this))
     , _offlineModel(new NexusOfflineModel(this))
     , _analyzeModel(new NexusAnalyzeModel(this))
+    , _reportsModel(new NexusReportsModel(this))
 {
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
@@ -78,6 +80,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusEngineer"), _engineerModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusOffline"), _offlineModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusAnalyze"), _analyzeModel);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusReports"), _reportsModel);
     return _qmlEngine;
 }
 
