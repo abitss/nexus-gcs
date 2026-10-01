@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE bool verifyUpdatePackage(const QString &path, const QString &expectedSha256);
     Q_INVOKABLE bool verifyAuditTrail();
     Q_INVOKABLE QVariantList recentAudit(int limit = 100) const;
+    Q_INVOKABLE void recordAudit(const QString &action, const QVariantMap &details = {});
 
 signals:
     void securityChanged();
