@@ -39,6 +39,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOfflinePanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAnalyzeGraph.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAnalyzePanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusReportsPanel.qml"
 )
 
 set_source_files_properties(
@@ -117,6 +118,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAnalyzePanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusAnalyzePanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusReportsPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusReportsPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -146,6 +151,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOfflineModel.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAnalyzeModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAnalyzeModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusReportsModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusReportsModel.h
     PARENT_SCOPE
 )
 
@@ -197,6 +204,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusOfflineModelTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAnalyzeModelTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAnalyzeModelTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusReportsModelTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusReportsModelTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
