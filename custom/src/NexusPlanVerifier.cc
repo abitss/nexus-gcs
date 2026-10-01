@@ -229,7 +229,17 @@ QJsonObject NexusPlanVerifier::_comparablePlan(const QJsonObject &plan)
     // can legitimately change across save/load cycles and is not part of the
     // vehicle mission integrity decision.
     QJsonObject comparable;
-    comparable.insert(QStringLiteral("mission"), plan.value(QStringLiteral("mission")));
+
+    // Only mission items are transferred through the MAVLink mission protocol.
+    // Editor-only metadata (planned home, default speeds, global altitude-mode
+    // preference) may be regenerated when a vehicle plan is downloaded and must
+    // not create a false integrity mismatch.
+    const QJsonObject mission = plan.value(QStringLiteral("mission")).toObject();
+    QJsonObject missionPayload;
+    missionPayload.insert(QStringLiteral("items"), mission.value(QStringLiteral("items")));
+    comparable.insert(QStringLiteral("mission"), missionPayload);
+
+    // Fence/rally JSON is the actual payload represented by their managers.
     comparable.insert(QStringLiteral("geoFence"), plan.value(QStringLiteral("geoFence")));
     comparable.insert(QStringLiteral("rallyPoints"), plan.value(QStringLiteral("rallyPoints")));
     return comparable;
