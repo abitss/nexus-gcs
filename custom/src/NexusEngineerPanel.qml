@@ -119,6 +119,7 @@ Rectangle {
                 placeholderText: qsTr("Type ENGINEER")
                 onAccepted: {
                     if (engineerModel.unlock(text)) {
+                        QGroundControl.corePlugin.showAdvancedUI = true
                         unlockDialog.close()
                         text = ""
                     }
@@ -131,6 +132,7 @@ Rectangle {
                 enabled: engineerConfirmation.text.trim().toUpperCase() === "ENGINEER"
                 onClicked: {
                     if (engineerModel.unlock(engineerConfirmation.text)) {
+                        QGroundControl.corePlugin.showAdvancedUI = true
                         unlockDialog.close()
                         engineerConfirmation.text = ""
                     }
@@ -162,7 +164,14 @@ Rectangle {
 
             Button {
                 text: engineerModel.unlocked ? qsTr("LOCK") : qsTr("UNLOCK")
-                onClicked: engineerModel.unlocked ? engineerModel.lock() : unlockDialog.open()
+                onClicked: {
+                    if (engineerModel.unlocked) {
+                        engineerModel.lock()
+                        QGroundControl.corePlugin.showAdvancedUI = false
+                    } else {
+                        unlockDialog.open()
+                    }
+                }
             }
             Button { text: "×"; onClicked: root.closeRequested() }
         }
@@ -240,7 +249,7 @@ Rectangle {
                         title: qsTr("PARAMETER BROWSER")
                         detail: qsTr("Search, categories, Modified-only, Favorites, read-only filtering and parameter metadata including min/max/default.")
                         state: qsTr("%1 PARAMS").arg(engineerModel.parameterCount)
-                        available: !!activeVehicle
+                        available: !!activeVehicle && engineerModel.safeToWrite
                         onAction: root.openParameters()
                     }
 
@@ -248,7 +257,7 @@ Rectangle {
                         title: qsTr("BACKUP / RESTORE")
                         detail: qsTr("Use QGC's parameter Tools menu to save a complete parameter backup or load a file for review/diff before applying.")
                         state: engineerModel.safeToWrite ? qsTr("WRITE SAFE") : qsTr("READ / REVIEW")
-                        available: !!activeVehicle
+                        available: !!activeVehicle && engineerModel.safeToWrite
                         onAction: root.openParameters()
                     }
 
