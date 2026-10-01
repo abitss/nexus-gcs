@@ -83,7 +83,7 @@ void NexusPreflightModelTest::_testNoVehicleBlocks()
 
     QTRY_VERIFY_WITH_TIMEOUT(health.vehicleConnected(), TestTimeout::longMs());
 
-    disconnectMockLink(mockLink());
+    _disconnectMockLink();
     QTRY_VERIFY_WITH_TIMEOUT(!health.vehicleConnected(), TestTimeout::longMs());
 
     preflight.refresh();
