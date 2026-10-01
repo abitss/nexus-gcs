@@ -2,6 +2,9 @@
 
 #include <QtCore/QCryptographicHash>
 #include <QtCore/QSettings>
+#include <QtCore/QtMath>
+#include <QtPositioning/QGeoCoordinate>
+#include <limits>
 
 NexusReportsModel::NexusReportsModel(QObject *parent)
     : QObject(parent)
@@ -93,6 +96,59 @@ void NexusReportsModel::setMissionCompletion(const QString &value)
     _missionCompletion = value;
     _save();
     emit reportChanged();
+}
+
+double NexusReportsModel::routeDistanceMeters(const QVariantList &route) const
+{
+    if (route.size() < 2) return qQNaN();
+
+    double total = 0.0;
+    bool haveSegment = false;
+    for (qsizetype i = 1; i < route.size(); ++i) {
+        const QVariantMap aMap = route.at(i - 1).toMap();
+        const QVariantMap bMap = route.at(i).toMap();
+        const QGeoCoordinate a(aMap.value(QStringLiteral("latitude")).toDouble(),
+                               aMap.value(QStringLiteral("longitude")).toDouble());
+        const QGeoCoordinate b(bMap.value(QStringLiteral("latitude")).toDouble(),
+                               bMap.value(QStringLiteral("longitude")).toDouble());
+        if (!a.isValid() || !b.isValid()) continue;
+        total += a.distanceTo(b);
+        haveSegment = true;
+    }
+    return haveSegment ? total : qQNaN();
+}
+
+double NexusReportsModel::maxSampleValue(const QVariantList &samples) const
+{
+    if (samples.isEmpty()) return qQNaN();
+
+    double maximum = -std::numeric_limits<double>::infinity();
+    bool found = false;
+    for (const QVariant &sample : samples) {
+        const QVariantMap point = sample.toMap();
+        bool ok = false;
+        const double value = point.value(QStringLiteral("y")).toDouble(&ok);
+        if (!ok || qIsNaN(value)) continue;
+        maximum = qMax(maximum, value);
+        found = true;
+    }
+    return found ? maximum : qQNaN();
+}
+
+double NexusReportsModel::batteryUsedPercent(const QVariantList &samples) const
+{
+    if (samples.size() < 2) return qQNaN();
+
+    const QVariantMap first = samples.first().toMap();
+    const QVariantMap last = samples.last().toMap();
+    bool firstOk = false;
+    bool lastOk = false;
+    const double start = first.value(QStringLiteral("y")).toDouble(&firstOk);
+    const double end = last.value(QStringLiteral("y")).toDouble(&lastOk);
+    if (!firstOk || !lastOk || qIsNaN(start) || qIsNaN(end)) return qQNaN();
+
+    const double used = start - end;
+    return (used >= 0.0 && used <= 100.0) ? used : qQNaN();
 }
 
 QVariantMap NexusReportsModel::buildReportData(
