@@ -273,6 +273,13 @@ void NexusRecoveryModel::_mavlinkMessageReceived(LinkInterface *, const mavlink_
 
 bool NexusRecoveryModel::bootCounterIndicatesReboot(quint32 previousMs, quint32 currentMs)
 {
+    // Ignore natural uint32 rollover of MAVLink time_boot_ms (~49.7 days).
+    constexpr quint32 kHighRolloverWindow = 0xF0000000U;
+    constexpr quint32 kLowRolloverWindow  = 0x0FFFFFFFU;
+    if (previousMs >= kHighRolloverWindow && currentMs <= kLowRolloverWindow) {
+        return false;
+    }
+
     // Ignore small clock/report jitter; a drop greater than five seconds means
     // the FC boot-relative clock materially reset.
     return previousMs > currentMs && (previousMs - currentMs) > 5000U;
