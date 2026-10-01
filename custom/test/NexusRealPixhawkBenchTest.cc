@@ -335,6 +335,26 @@ void NexusRealPixhawkBenchTest::_testRealPixhawkBenchQualification()
 
     stage(QStringLiteral("PROPS_OFF_DISARM"), QStringLiteral("PASS"));
 
+    // Restore the pre-qualification mission payload and verify vehicle readback.
+    plan.loadFromFile(backupPath);
+    plan.sendToVehicle();
+    QVERIFY2(UnitTest::waitForCondition(
+                 [&] { return !plan.syncInProgress(); },
+                 120000, QStringLiteral("restore pre-qualification Pixhawk mission")),
+             "Restoring the pre-qualification mission timed out.");
+
+    plan.loadFromVehicle();
+    QVERIFY2(UnitTest::waitForCondition(
+                 [&] { return !plan.syncInProgress(); },
+                 120000, QStringLiteral("read back restored Pixhawk mission")),
+             "Readback after mission restore timed out.");
+
+    const QJsonArray restoredMissionItems =
+        plan.saveToJson().object().value(QStringLiteral("mission")).toObject().value(QStringLiteral("items")).toArray();
+    QCOMPARE(restoredMissionItems, originalMissionItems);
+    stage(QStringLiteral("MISSION_RESTORE"), QStringLiteral("PASS"),
+          QStringLiteral("Original mission-item payload restored and read back"));
+
     root.insert(QStringLiteral("facts"), facts);
     root.insert(QStringLiteral("stages"), stages);
     root.insert(QStringLiteral("qualification"), QStringLiteral("PASS"));
