@@ -109,41 +109,35 @@ Rectangle {
     Dialog {
         id: unlockDialog
         modal: true
-        title: qsTr("Enter Engineer Mode")
+        title: qsTr("Engineer Authentication")
         standardButtons: Dialog.Cancel
-
         ColumnLayout {
             width: Math.min(440, root.width - 80)
             spacing: 10
-
             Label {
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
-                text: qsTr("Engineer Mode exposes low-level vehicle configuration and diagnostic tools. It is a local session gate, not account authentication. Type ENGINEER to continue.")
+                text: qsTr("Engineer Mode requires an authenticated local ENGINEER or ADMIN role.")
             }
-
             TextField {
-                id: engineerConfirmation
+                id: engineerPassphrase
                 Layout.fillWidth: true
-                placeholderText: qsTr("Type ENGINEER")
-                onAccepted: {
-                    if (engineerModel.unlock(text)) {
-                        QGroundControl.corePlugin.showAdvancedUI = true
-                        unlockDialog.close()
-                        text = ""
-                    }
-                }
+                echoMode: TextInput.Password
+                placeholderText: qsTr("Engineer/Admin passphrase")
+                onAccepted: engineerAuthButton.clicked()
             }
-
             Button {
+                id: engineerAuthButton
                 Layout.alignment: Qt.AlignRight
-                text: qsTr("UNLOCK")
-                enabled: engineerConfirmation.text.trim().toUpperCase() === "ENGINEER"
+                text: qsTr("AUTHENTICATE")
                 onClicked: {
-                    if (engineerModel.unlock(engineerConfirmation.text)) {
+                    let ok = NexusSecurity.authenticate("ENGINEER", engineerPassphrase.text)
+                    if (!ok) ok = NexusSecurity.authenticate("ADMIN", engineerPassphrase.text)
+                    if (ok) {
+                        engineerModel.unlock("SECURITY_AUTHORIZED")
                         QGroundControl.corePlugin.showAdvancedUI = true
+                        engineerPassphrase.text = ""
                         unlockDialog.close()
-                        engineerConfirmation.text = ""
                     }
                 }
             }
@@ -176,6 +170,7 @@ Rectangle {
                 onClicked: {
                     if (engineerModel.unlocked) {
                         engineerModel.lock()
+                        NexusSecurity.lock()
                         QGroundControl.corePlugin.showAdvancedUI = false
                     } else {
                         unlockDialog.open()

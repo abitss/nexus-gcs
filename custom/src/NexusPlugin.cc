@@ -10,6 +10,7 @@
 #include "NexusAnalyzeModel.h"
 #include "NexusReportsModel.h"
 #include "NexusDeviceHealthModel.h"
+#include "NexusSecurityModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -43,6 +44,7 @@ NexusPlugin::NexusPlugin(QObject *parent)
     , _planVerifier(new NexusPlanVerifier(this))
     , _healthModel(new NexusHealthModel(this))
     , _deviceHealthModel(new NexusDeviceHealthModel(this))
+    , _securityModel(new NexusSecurityModel(this))
     , _alertManager(new NexusAlertManager(_healthModel, _deviceHealthModel, this))
     , _preflightModel(new NexusPreflightModel(_healthModel, _alertManager, this))
     , _payloadModel(new NexusPayloadModel(this))
@@ -84,6 +86,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusAnalyze"), _analyzeModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusReports"), _reportsModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusDeviceHealth"), _deviceHealthModel);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusSecurity"), _securityModel);
     return _qmlEngine;
 }
 

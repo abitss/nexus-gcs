@@ -1,0 +1,16 @@
+# NEXUS security: signing material and local credentials must never enter Git
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.der
+*.mobileprovision
+*.env
+.env.*
+!*.env.example
+local.properties
+signing.properties
+secrets.properties
+nexus-release-*

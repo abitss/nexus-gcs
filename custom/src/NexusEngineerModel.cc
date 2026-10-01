@@ -44,7 +44,7 @@ int NexusEngineerModel::parameterCount() const
 
 bool NexusEngineerModel::unlock(const QString &confirmation)
 {
-    const bool accepted = confirmation.trimmed().compare(QStringLiteral("ENGINEER"), Qt::CaseInsensitive) == 0;
+    const bool accepted = confirmation == QStringLiteral("SECURITY_AUTHORIZED");
     if (_unlocked != accepted) {
         _unlocked = accepted;
         emit engineerChanged();
