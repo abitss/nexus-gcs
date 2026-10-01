@@ -3,6 +3,8 @@
 #include <QtCore/QObject>
 #include <QtCore/QVariantList>
 #include <QtCore/QVariantMap>
+#include <QtCore/QDateTime>
+#include <QtCore/QTimer>
 
 class NexusSecurityModel final : public QObject
 {
@@ -15,6 +17,8 @@ class NexusSecurityModel final : public QObject
     Q_PROPERTY(bool canAdmin READ canAdmin NOTIFY securityChanged)
     Q_PROPERTY(QString auditPath READ auditPath CONSTANT)
     Q_PROPERTY(QString lastError READ lastError NOTIFY securityChanged)
+    Q_PROPERTY(bool lockedOut READ lockedOut NOTIFY securityChanged)
+    Q_PROPERTY(int lockoutSeconds READ lockoutSeconds NOTIFY securityChanged)
 
 public:
     explicit NexusSecurityModel(QObject *parent = nullptr);
@@ -27,6 +31,8 @@ public:
     bool canAdmin() const { return _currentRole == QStringLiteral("ADMIN"); }
     QString auditPath() const;
     QString lastError() const { return _lastError; }
+    bool lockedOut() const;
+    int lockoutSeconds() const;
 
     Q_INVOKABLE bool bootstrapAdmin(const QString &passphrase);
     Q_INVOKABLE bool setEngineerCredential(const QString &passphrase);
@@ -51,4 +57,8 @@ private:
 
     QString _currentRole = QStringLiteral("OPERATOR");
     QString _lastError;
+    int _failedAttempts = 0;
+    QDateTime _lockoutUntil;
+    QTimer _sessionTimer;
+    QTimer _statusTimer;
 };
