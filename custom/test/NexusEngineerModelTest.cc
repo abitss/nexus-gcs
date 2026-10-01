@@ -15,13 +15,13 @@ void NexusEngineerModelTest::_testProtectedEntryAndRelock()
     QVERIFY(!model.unlock(QStringLiteral("wrong")));
     QCOMPARE(model.unlocked(), false);
 
-    QVERIFY(model.unlock(QStringLiteral("ENGINEER")));
+    QVERIFY(model.unlock(QStringLiteral("SECURITY_AUTHORIZED")));
     QCOMPARE(model.unlocked(), true);
 
     model.lock();
     QCOMPARE(model.unlocked(), false);
 
-    QVERIFY(model.unlock(QStringLiteral("engineer")));
+    QVERIFY(model.unlock(QStringLiteral("SECURITY_AUTHORIZED")));
     simulateConnectionRemoved();
     QTRY_VERIFY_WITH_TIMEOUT(!model.connected(), TestTimeout::longMs());
     QCOMPARE(model.unlocked(), false);
