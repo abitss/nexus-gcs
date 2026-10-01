@@ -195,6 +195,8 @@ void NexusAlertManager::_setVehicle(Vehicle *vehicle)
     _vehicle = vehicle;
     _failsafeActive = false;
     _failsafeReason.clear();
+    _systemCriticalActive = false;
+    _systemCriticalReason.clear();
 
     if (_vehicle) {
         connect(_vehicle, &Vehicle::mavlinkMessageReceived,
@@ -308,6 +310,7 @@ void NexusAlertManager::_evaluateConditions()
         _setCondition(QStringLiteral("home"), false, {}, {}, {}, {});
         _setCondition(QStringLiteral("geofence"), false, {}, {}, {}, {});
         _setCondition(QStringLiteral("failsafe"), false, {}, {}, {}, {});
+        _setCondition(QStringLiteral("autopilot-state"), false, {}, {}, {}, {});
         return;
     }
 
@@ -364,8 +367,15 @@ void NexusAlertManager::_evaluateConditions()
                   QStringLiteral("CRITICAL"),
                   QStringLiteral("AUTOPILOT"),
                   QStringLiteral("Failsafe Active"),
-                  _failsafeReason.isEmpty() ? QStringLiteral("Autopilot reports a critical/emergency state")
+                  _failsafeReason.isEmpty() ? QStringLiteral("Autopilot explicitly reported an active failsafe")
                                             : _failsafeReason);
+
+    _setCondition(QStringLiteral("autopilot-state"),
+                  _systemCriticalActive,
+                  QStringLiteral("CRITICAL"),
+                  QStringLiteral("AUTOPILOT"),
+                  QStringLiteral("Autopilot Critical State"),
+                  _systemCriticalReason);
 }
 
 void NexusAlertManager::_mavlinkMessageReceived(const mavlink_message_t &message)
@@ -375,20 +385,14 @@ void NexusAlertManager::_mavlinkMessageReceived(const mavlink_message_t &message
     mavlink_heartbeat_t heartbeat{};
     mavlink_msg_heartbeat_decode(&message, &heartbeat);
 
-    const bool critical = heartbeat.system_status == MAV_STATE_CRITICAL ||
-                          heartbeat.system_status == MAV_STATE_EMERGENCY;
-    if (critical) {
-        _failsafeActive = true;
-        _failsafeReason = heartbeat.system_status == MAV_STATE_EMERGENCY
-                        ? QStringLiteral("Autopilot system state: EMERGENCY")
-                        : QStringLiteral("Autopilot system state: CRITICAL");
-    } else if (heartbeat.system_status == MAV_STATE_ACTIVE ||
-               heartbeat.system_status == MAV_STATE_STANDBY) {
-        // Heartbeat state is authoritative for clearing system-level critical state.
-        if (_failsafeReason.startsWith(QStringLiteral("Autopilot system state:"))) {
-            _failsafeActive = false;
-            _failsafeReason.clear();
-        }
+    _systemCriticalActive = heartbeat.system_status == MAV_STATE_CRITICAL ||
+                            heartbeat.system_status == MAV_STATE_EMERGENCY;
+    if (_systemCriticalActive) {
+        _systemCriticalReason = heartbeat.system_status == MAV_STATE_EMERGENCY
+                              ? QStringLiteral("Autopilot system state: EMERGENCY")
+                              : QStringLiteral("Autopilot system state: CRITICAL");
+    } else {
+        _systemCriticalReason.clear();
     }
     _evaluateConditions();
 }
