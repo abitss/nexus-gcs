@@ -47,9 +47,11 @@ A hardware run passes only when the evidence JSON contains PASS for:
 5. BATTERY
 6. MODES
 7. HOME
-8. MISSION_UPLOAD_DOWNLOAD
-9. PROPS_OFF_ARM
-10. PROPS_OFF_DISARM
+8. MISSION_BACKUP
+9. MISSION_UPLOAD_DOWNLOAD
+10. PROPS_OFF_ARM
+11. PROPS_OFF_DISARM
+12. MISSION_RESTORE
 
 ## Evidence
 
@@ -79,9 +81,13 @@ The run writes `nexus-real-pixhawk-bench.json` containing:
 
 ## Mission validation
 
-The test uploads a small two-waypoint mission and uses `NexusPlanVerifier` to download the vehicle copy and compare the flight-critical payload.
+The test first downloads and snapshots the aircraft's existing mission-item payload.
+
+It then uploads a small two-waypoint qualification mission and uses `NexusPlanVerifier` to download the vehicle copy and compare the flight-critical payload.
 
 The mission is never started.
+
+After ARM/DISARM command-path qualification, the pre-test mission is reloaded, sent back to the Pixhawk, downloaded again, and its mission-item payload must match the original snapshot before PASS is allowed.
 
 A successful upload alone is insufficient. The vehicle readback must match.
 
