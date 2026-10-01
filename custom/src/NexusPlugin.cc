@@ -9,6 +9,7 @@
 #include "NexusOfflineModel.h"
 #include "NexusAnalyzeModel.h"
 #include "NexusReportsModel.h"
+#include "NexusDeviceHealthModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -41,7 +42,8 @@ NexusPlugin::NexusPlugin(QObject *parent)
     , _options(new NexusOptions(this, this))
     , _planVerifier(new NexusPlanVerifier(this))
     , _healthModel(new NexusHealthModel(this))
-    , _alertManager(new NexusAlertManager(_healthModel, this))
+    , _deviceHealthModel(new NexusDeviceHealthModel(this))
+    , _alertManager(new NexusAlertManager(_healthModel, _deviceHealthModel, this))
     , _preflightModel(new NexusPreflightModel(_healthModel, _alertManager, this))
     , _payloadModel(new NexusPayloadModel(this))
     , _vehicleModel(new NexusVehicleModel(this))
@@ -81,6 +83,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusOffline"), _offlineModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusAnalyze"), _analyzeModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusReports"), _reportsModel);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusDeviceHealth"), _deviceHealthModel);
     return _qmlEngine;
 }
 
