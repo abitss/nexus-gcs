@@ -68,7 +68,34 @@ Item {
                                           ? qsTr("WP %1").arg(missionIndex)
                                           : qsTr("IDLE")
 
-    readonly property string preflightText: {
+    function updateCentralPreflightMission() {
+        if (!planMasterController) {
+            NexusPreflight.updateMission(false, true, false, "NO MISSION", "Manual flight available")
+            return
+        }
+        const status = NexusPlanVerifier.validationStatus(planMasterController)
+        const hasMission = !!planMasterController.containsItems
+        const valid = !hasMission || !!status.ready
+        NexusPreflight.updateMission(hasMission,
+                                     valid,
+                                     NexusPlanVerifier.verified,
+                                     status.state || "INVALID",
+                                     status.message || "")
+    }
+
+    Timer {
+        interval: 400
+        running: true
+        repeat: true
+        onTriggered: root.updateCentralPreflightMission()
+    }
+
+    readonly property string preflightText: NexusPreflight.overallState
+    readonly property color centralizedPreflightAccent: preflightText === "BLOCKED" ? "#E25555"
+                                                     : preflightText === "WARNING" ? "#D6A84A"
+                                                     : "#2C9B7F"
+
+    readonly property string legacyPreflightText: {
         if (!activeVehicle || linkLost) return qsTr("UNKNOWN")
         if (activeVehicle.armed) return qsTr("ARMED")
         if (preflightBlocked) return qsTr("BLOCKED")
@@ -76,9 +103,7 @@ Item {
         return qsTr("READY")
     }
 
-    readonly property color preflightAccent: preflightBlocked ? "#E25555"
-                                                              : (preflightWarning ? "#D6A84A"
-                                                                                  : (activeVehicle && !linkLost ? "#2C9B7F" : "#6F7E8C"))
+    readonly property color preflightAccent: centralizedPreflightAccent
 
     readonly property string videoText: {
         if (!QGroundControl.videoManager.hasVideo) return qsTr("VIDEO OFF")
@@ -409,6 +434,42 @@ Item {
     }
 
     Rectangle {
+        id: preflightBadge
+        objectName: "nexusPreflightBadge"
+
+        anchors.right: stateBadge.left
+        anchors.rightMargin: 8
+        anchors.bottom: bottomChrome.top
+        anchors.bottomMargin: 8
+
+        implicitWidth: preflightBadgeText.implicitWidth + 26
+        height: 34
+        radius: 8
+        color: "#D70C1117"
+        border.color: centralizedPreflightAccent
+        border.width: 1
+
+        Label {
+            id: preflightBadgeText
+            anchors.centerIn: parent
+            text: qsTr("PREFLIGHT · %1").arg(NexusPreflight.overallState)
+            color: centralizedPreflightAccent
+            font.pixelSize: 10
+            font.bold: true
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                alertPanel.visible = false
+                healthPanel.visible = false
+                preflightPanel.visible = true
+            }
+        }
+    }
+
+    Rectangle {
         id: stateBadge
         objectName: "nexusFlightStateBadge"
 
@@ -434,6 +495,15 @@ Item {
             font.pixelSize: 10
             font.bold: true
         }
+    }
+
+    NexusPreflightPanel {
+        id: preflightPanel
+        objectName: "nexusPreflightPanel"
+        anchors.fill: parent
+        visible: false
+        preflightModel: NexusPreflight
+        onCloseRequested: visible = false
     }
 
     NexusAlertPanel {
@@ -647,9 +717,9 @@ Item {
                 anchors.margins: 5
                 spacing: 6
 
-                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible; Layout.fillWidth: true; onClicked: { healthPanel.visible = false; alertPanel.visible = false } }
+                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible; Layout.fillWidth: true; onClicked: { healthPanel.visible = false; alertPanel.visible = false; preflightPanel.visible = false } }
                 NexusNavItem { text: qsTr("PLAN"); Layout.fillWidth: true; onClicked: { if (mainWindow.allowViewSwitch()) mainWindow.showPlanView() } }
-                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; healthPanel.visible = true } }
+                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; preflightPanel.visible = false; healthPanel.visible = true } }
                 NexusNavItem { text: qsTr("PAYLOAD"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("ANALYZE"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("VEHICLE"); Layout.fillWidth: true }
