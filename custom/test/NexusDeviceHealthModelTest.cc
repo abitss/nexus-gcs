@@ -39,3 +39,19 @@ void NexusDeviceHealthModelTest::_testPlatformStateContract()
     model.setOperationalScreenAwake(false);
     QCOMPARE(model.keepScreenAwake(), false);
 }
+
+void NexusDeviceHealthModelTest::_testWarningThresholds()
+{
+    QVERIFY(NexusDeviceHealthModel::batteryWarningFor(20, QStringLiteral("ON BATTERY")));
+    QVERIFY(!NexusDeviceHealthModel::batteryWarningFor(21, QStringLiteral("ON BATTERY")));
+    QVERIFY(!NexusDeviceHealthModel::batteryWarningFor(10, QStringLiteral("CHARGING")));
+
+    constexpr quint64 GiB = 1024ULL * 1024ULL * 1024ULL;
+    QVERIFY(NexusDeviceHealthModel::storageWarningFor(1 * GiB, 64 * GiB));
+    QVERIFY(NexusDeviceHealthModel::storageWarningFor(2 * GiB, 100 * GiB));
+    QVERIFY(!NexusDeviceHealthModel::storageWarningFor(10 * GiB, 64 * GiB));
+
+    QVERIFY(NexusDeviceHealthModel::thermalWarningFor(45.0, QStringLiteral("NORMAL")));
+    QVERIFY(NexusDeviceHealthModel::thermalWarningFor(qQNaN(), QStringLiteral("SEVERE")));
+    QVERIFY(!NexusDeviceHealthModel::thermalWarningFor(39.0, QStringLiteral("NORMAL")));
+}
