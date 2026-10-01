@@ -15,6 +15,12 @@ NexusEngineerModel::NexusEngineerModel(QObject *parent)
     auto *manager = MultiVehicleManager::instance();
     connect(manager, &MultiVehicleManager::activeVehicleChanged,
             this, &NexusEngineerModel::_activeVehicleChanged);
+
+    _refreshTimer.setInterval(400);
+    _refreshTimer.setTimerType(Qt::CoarseTimer);
+    connect(&_refreshTimer, &QTimer::timeout, this, &NexusEngineerModel::engineerChanged);
+    _refreshTimer.start();
+
     _setVehicle(manager->activeVehicle());
 }
 
