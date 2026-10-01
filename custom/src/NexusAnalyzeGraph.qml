@@ -3,6 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtGraphs
 
+import QGroundControl
+import QGroundControl.Controls
+
 Rectangle {
     id: root
 
@@ -112,12 +115,17 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             theme: GraphsTheme {
-                backgroundVisible: false
-                plotAreaBackgroundVisible: false
+                colorScheme: GraphsTheme.ColorScheme.Dark
+                backgroundColor: "#0E151B"
+                backgroundVisible: true
+                plotAreaBackgroundColor: "#0E151B"
                 grid.mainColor: "#22303A"
-                axisX.mainColor: "#60717E"
-                axisY.mainColor: "#60717E"
+                grid.subColor: "#18232B"
+                grid.mainWidth: 1
+                labelBackgroundVisible: false
                 labelTextColor: "#9CA8B1"
+                axisXLabelFont.family: ScreenTools.fixedFontFamily
+                axisYLabelFont.family: ScreenTools.fixedFontFamily
             }
 
             axisX: ValueAxis {
