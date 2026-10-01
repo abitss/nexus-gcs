@@ -1,5 +1,6 @@
 #include "NexusRealPixhawkBenchTest.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QFile>
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
@@ -138,6 +139,8 @@ void NexusRealPixhawkBenchTest::_testRealPixhawkBenchQualification()
 
     // Count actual MAVLink HEARTBEAT frames from the discovered system.
     int heartbeatCount = 0;
+    QElapsedTimer heartbeatTimer;
+    heartbeatTimer.start();
     const QMetaObject::Connection heartbeatConnection =
         connect(vehicle, &Vehicle::mavlinkMessageReceived, this,
                 [&](const mavlink_message_t &message) {
@@ -151,9 +154,13 @@ void NexusRealPixhawkBenchTest::_testRealPixhawkBenchQualification()
                  10000, QStringLiteral("real Pixhawk heartbeat stream")),
              "Fewer than three HEARTBEAT frames were observed from the Pixhawk.");
     disconnect(heartbeatConnection);
+    const double heartbeatSeconds = qMax(0.001, heartbeatTimer.elapsed() / 1000.0);
+    const double heartbeatHz = heartbeatCount / heartbeatSeconds;
+    QVERIFY2(heartbeatHz >= 0.5, "Observed Pixhawk heartbeat stream is below 0.5 Hz.");
     facts.insert(QStringLiteral("heartbeatCountObserved"), heartbeatCount);
+    facts.insert(QStringLiteral("heartbeatRateHz"), heartbeatHz);
     stage(QStringLiteral("HEARTBEAT"), QStringLiteral("PASS"),
-          QStringLiteral("%1 HEARTBEAT frames observed").arg(heartbeatCount));
+          QStringLiteral("%1 HEARTBEAT frames · %2 Hz").arg(heartbeatCount).arg(heartbeatHz, 0, 'f', 2));
 
     QVERIFY2(UnitTest::waitForCondition(
                  [&] {
