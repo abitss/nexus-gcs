@@ -32,6 +32,7 @@ Rectangle {
     }
 
     component SetupCard: Rectangle {
+        id: setupCard
         property string title
         property string detail
         property string state
@@ -79,7 +80,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignRight
                 text: actionText
                 enabled: available && actionEnabled
-                onClicked: parent.parent.parent.action()
+                onClicked: setupCard.action()
             }
         }
     }
@@ -210,7 +211,7 @@ Rectangle {
                 Label { text: vehicleModel.uidText; color: "#C8D1D8"; font.pixelSize: 9; elide: Text.ElideMiddle; Layout.fillWidth: true }
                 Label { text: vehicleModel.firmwareGitHash; color: "#C8D1D8"; font.pixelSize: 9; elide: Text.ElideMiddle; Layout.fillWidth: true }
                 Label {
-                    text: vehicleModel.armed ? qsTr("ARMED") : (vehicleModel.flying ? qsTr("FLYING") : qsTr("DISARMED"))
+                    text: vehicleModel.flying ? qsTr("FLYING") : (vehicleModel.armed ? qsTr("ARMED") : qsTr("DISARMED"))
                     color: vehicleModel.armed || vehicleModel.flying ? "#D6A84A" : "#2C9B7F"
                     font.pixelSize: 10
                     font.bold: true
