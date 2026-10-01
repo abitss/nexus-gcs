@@ -99,7 +99,11 @@ Item {
         return activeVehicle.flightMode
     }
 
+    readonly property string centralizedAlertText: NexusAlerts.currentMessage
+    readonly property string centralizedAlertSeverity: NexusAlerts.highestSeverity
+
     readonly property string alertText: {
+        if (centralizedAlertText.length > 0) return centralizedAlertText
         if (!activeVehicle) return qsTr("No active vehicle. Connect a UAV to begin.")
         if (linkLost) return qsTr("Vehicle communication lost. Live telemetry is hidden until the link recovers.")
         if (batteryCritical) return qsTr("Aircraft battery critically low.")
@@ -114,6 +118,7 @@ Item {
     }
 
     readonly property string alertSeverity: {
+        if (centralizedAlertSeverity !== "NONE") return centralizedAlertSeverity
         if (!activeVehicle) return "INFO"
         if (linkLost || batteryCritical || preflightBlocked) return "CRITICAL"
         if (batteryWarning || !gpsHealthy || preflightWarning) return "WARNING"
@@ -310,6 +315,12 @@ Item {
         border.color: alertAccent
         border.width: 1
 
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: alertPanel.visible = true
+        }
+
         Row {
             anchors.left: parent.left
             anchors.right: parent.right
@@ -423,6 +434,15 @@ Item {
             font.pixelSize: 10
             font.bold: true
         }
+    }
+
+    NexusAlertPanel {
+        id: alertPanel
+        objectName: "nexusAlertPanel"
+        anchors.fill: parent
+        visible: false
+        alertManager: NexusAlerts
+        onCloseRequested: visible = false
     }
 
     NexusHealthPanel {
@@ -627,9 +647,9 @@ Item {
                 anchors.margins: 5
                 spacing: 6
 
-                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible; Layout.fillWidth: true; onClicked: healthPanel.visible = false }
+                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible; Layout.fillWidth: true; onClicked: { healthPanel.visible = false; alertPanel.visible = false } }
                 NexusNavItem { text: qsTr("PLAN"); Layout.fillWidth: true; onClicked: { if (mainWindow.allowViewSwitch()) mainWindow.showPlanView() } }
-                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: healthPanel.visible = true }
+                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: { alertPanel.visible = false; healthPanel.visible = true } }
                 NexusNavItem { text: qsTr("PAYLOAD"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("ANALYZE"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("VEHICLE"); Layout.fillWidth: true }

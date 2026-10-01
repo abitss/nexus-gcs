@@ -30,6 +30,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PlanToolBarIndicators.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthCard.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
 )
 
 set_source_files_properties(
@@ -72,6 +73,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusHealthPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusAlertPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -87,6 +92,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlanVerifier.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.h
     PARENT_SCOPE
 )
 
