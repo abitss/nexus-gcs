@@ -1,9 +1,11 @@
 #include "NexusPlugin.h"
+#include "NexusPlanVerifier.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
 #include <QtGui/QColor>
 #include <QtQml/QQmlApplicationEngine>
+#include <QtQml/QQmlContext>
 
 Q_APPLICATION_STATIC(NexusPlugin, _nexusPluginInstance);
 
@@ -28,6 +30,7 @@ bool NexusOptions::showFirmwareUpgrade() const
 NexusPlugin::NexusPlugin(QObject *parent)
     : QGCCorePlugin(parent)
     , _options(new NexusOptions(this, this))
+    , _planVerifier(new NexusPlanVerifier(this))
 {
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
@@ -50,6 +53,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine = QGCCorePlugin::createQmlApplicationEngine(parent);
     _urlInterceptor = new NexusOverrideInterceptor();
     _qmlEngine->addUrlInterceptor(_urlInterceptor);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusPlanVerifier"), _planVerifier);
     return _qmlEngine;
 }
 

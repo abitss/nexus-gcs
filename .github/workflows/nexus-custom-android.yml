@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - phase0-task0.2-nexus-custom-foundation
+      - phase0-task0.3-flight-cockpit
     paths:
       - 'custom/**'
       - 'scripts/stage-custom.sh'

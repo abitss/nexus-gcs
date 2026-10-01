@@ -27,6 +27,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusNavItem.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusActionButton.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOpsPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/PlanToolBarIndicators.qml"
 )
 
 set_source_files_properties(
@@ -57,6 +58,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusOpsPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusOpsPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/PlanToolBarIndicators.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/PlanView/PlanToolBarIndicators.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -68,6 +73,8 @@ qt_add_resources(
 set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlugin.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlugin.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlanVerifier.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlanVerifier.h
     PARENT_SCOPE
 )
 
@@ -99,11 +106,16 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusFlightCockpitUITest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4SITLRuntimeTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4SITLRuntimeTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPlanEditingTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPlanEditingTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4PlanSITLTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4PlanSITLTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
             ${CMAKE_SOURCE_DIR}/test/QmlUITests
             ${CMAKE_SOURCE_DIR}/test/UnitTestFramework
+            ${CMAKE_SOURCE_DIR}/test/UnitTestFramework/BaseClasses
             ${CMAKE_CURRENT_SOURCE_DIR}/test
     )
 endif()
