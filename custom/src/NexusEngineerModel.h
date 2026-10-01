@@ -4,6 +4,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
 #include <QtCore/QStringList>
+#include <QtCore/QTimer>
 #include <QtCore/QVariant>
 
 class ParameterManager;
@@ -66,5 +67,6 @@ private:
     QString _snapshotALabel = QStringLiteral("Snapshot A");
     QString _snapshotBLabel = QStringLiteral("Snapshot B");
     int _snapshotDiffCount = 0;
+    QTimer _refreshTimer;
     QStringList _snapshotDiffSummary;
 };
