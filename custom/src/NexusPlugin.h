@@ -17,6 +17,7 @@ class NexusEngineerModel;
 class NexusOfflineModel;
 class NexusAnalyzeModel;
 class NexusReportsModel;
+class NexusDeviceHealthModel;
 
 class NexusFlyViewOptions final : public QGCFlyViewOptions
 {
@@ -77,6 +78,7 @@ private:
     NexusOverrideInterceptor *_urlInterceptor = nullptr;
     NexusPlanVerifier *_planVerifier = nullptr;
     NexusHealthModel *_healthModel = nullptr;
+    NexusDeviceHealthModel *_deviceHealthModel = nullptr;
     NexusAlertManager *_alertManager = nullptr;
     NexusPreflightModel *_preflightModel = nullptr;
     NexusPayloadModel *_payloadModel = nullptr;
