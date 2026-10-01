@@ -425,6 +425,15 @@ Item {
         }
     }
 
+    NexusHealthPanel {
+        id: healthPanel
+        objectName: "nexusHealthPanel"
+        anchors.fill: parent
+        visible: false
+        healthModel: NexusHealth
+        onCloseRequested: visible = false
+    }
+
     Column {
         id: bottomChrome
         objectName: "nexusBottomChrome"
@@ -618,9 +627,9 @@ Item {
                 anchors.margins: 5
                 spacing: 6
 
-                NexusNavItem { text: qsTr("FLIGHT"); active: true; Layout.fillWidth: true }
+                NexusNavItem { text: qsTr("FLIGHT"); active: !healthPanel.visible; Layout.fillWidth: true; onClicked: healthPanel.visible = false }
                 NexusNavItem { text: qsTr("PLAN"); Layout.fillWidth: true; onClicked: { if (mainWindow.allowViewSwitch()) mainWindow.showPlanView() } }
-                NexusNavItem { text: qsTr("HEALTH"); Layout.fillWidth: true }
+                NexusNavItem { text: qsTr("HEALTH"); active: healthPanel.visible; Layout.fillWidth: true; onClicked: healthPanel.visible = true }
                 NexusNavItem { text: qsTr("PAYLOAD"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("ANALYZE"); Layout.fillWidth: true }
                 NexusNavItem { text: qsTr("VEHICLE"); Layout.fillWidth: true }
