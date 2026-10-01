@@ -1,0 +1,158 @@
+name: NEXUS Real Pixhawk Bench Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      serial_port:
+        description: Real Pixhawk serial device, for example /dev/ttyACM0
+        required: true
+        type: string
+      baud:
+        description: Serial baud rate
+        required: true
+        default: '115200'
+        type: choice
+        options:
+          - '115200'
+          - '57600'
+          - '921600'
+      props_removed:
+        description: Confirm all propellers are physically removed
+        required: true
+        default: 'NO'
+        type: choice
+        options:
+          - 'NO'
+          - 'YES'
+      kill_switch_confirmed:
+        description: Confirm emergency/kill-switch procedure is known and ready
+        required: true
+        default: 'NO'
+        type: choice
+        options:
+          - 'NO'
+          - 'YES'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  pixhawk-bench:
+    name: Physical Pixhawk props-off qualification
+    if: inputs.props_removed == 'YES' && inputs.kill_switch_confirmed == 'YES'
+    runs-on: [self-hosted, linux, nexus-pixhawk-bench]
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Reconfirm bench safety contract
+        shell: bash
+        run: |
+          test "${{ inputs.props_removed }}" = "YES"
+          test "${{ inputs.kill_switch_confirmed }}" = "YES"
+          test -e "${{ inputs.serial_port }}"
+          bash nexus-overlay/scripts/validate-real-pixhawk.sh             nexus-overlay/custom/test/NexusRealPixhawkBenchTest.cc             nexus-overlay/docs/REAL_PIXHAWK_QUALIFICATION.md             nexus-overlay/.github/workflows/nexus-real-pixhawk-bench.yml
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-real-pixhawk-bench
+          cpm-modules: .cache/CPM
+
+      - uses: ./.github/actions/install-dependencies
+
+      - uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-real-pixhawk-bench-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-real-pixhawk-bench-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-real-pixhawk-bench-build.log
+
+      - name: Run physical Pixhawk bench qualification
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          NEXUS_REAL_PIXHAWK_PORT: ${{ inputs.serial_port }}
+          NEXUS_REAL_PIXHAWK_BAUD: ${{ inputs.baud }}
+          NEXUS_PROPS_REMOVED: ${{ inputs.props_removed }}
+          NEXUS_KILL_SWITCH_CONFIRMED: ${{ inputs.kill_switch_confirmed }}
+          NEXUS_PIXHAWK_BENCH_EVIDENCE: ${{ runner.temp }}/nexus-real-pixhawk-bench.json
+        shell: bash
+        run: |
+          set -o pipefail
+          "${RUNNER_TEMP}/nexus-real-pixhawk-bench-build/Release/NEXUS-GCS"             --unittest:NexusRealPixhawkBenchTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-real-pixhawk-bench.log"
+
+      - name: Validate bench evidence
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os
+          path = os.path.join(os.environ["RUNNER_TEMP"], "nexus-real-pixhawk-bench.json")
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+          required = [
+              "USB_TELEMETRY_CONNECTION",
+              "HEARTBEAT",
+              "PARAMETERS",
+              "GPS",
+              "BATTERY",
+              "MODES",
+              "HOME",
+              "MISSION_UPLOAD_DOWNLOAD",
+              "PROPS_OFF_ARM",
+              "PROPS_OFF_DISARM",
+          ]
+          stages = {row["stage"]: row["status"] for row in data.get("stages", [])}
+          missing = [name for name in required if stages.get(name) != "PASS"]
+          if missing:
+              raise SystemExit("Bench qualification missing/failed stages: " + ", ".join(missing))
+          if data.get("qualification") != "PASS":
+              raise SystemExit("Bench qualification did not finish PASS")
+          print("Real Pixhawk bench qualification: PASS")
+          PY
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nexus-real-pixhawk-bench-evidence
+          path: |
+            ${{ runner.temp }}/nexus-real-pixhawk-bench.json
+            ${{ runner.temp }}/nexus-real-pixhawk-bench.log
+            ${{ runner.temp }}/nexus-real-pixhawk-bench-build/nexus-real-pixhawk-bench-build.log
+          retention-days: 30
+          if-no-files-found: warn
