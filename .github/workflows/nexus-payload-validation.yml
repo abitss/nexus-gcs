@@ -3,6 +3,7 @@ name: NEXUS PAYLOAD Validation
 on:
   pull_request:
     branches:
+      - phase0-task0.8-payload-video
       - phase0-task0.7-preflight-system
       - phase0-task0.6-alerts-failsafes
       - develop
