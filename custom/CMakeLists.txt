@@ -30,6 +30,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/PlanToolBarIndicators.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthCard.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
 )
 
 set_source_files_properties(
@@ -72,6 +73,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusHealthPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusAlertPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -87,6 +92,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusPlanVerifier.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusHealthModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusAlertManager.h
     PARENT_SCOPE
 )
 
@@ -124,6 +131,8 @@ if(QGC_BUILD_TESTING AND NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusPX4PlanSITLTest.h
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusHealthModelTest.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusHealthModelTest.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAlertManagerTest.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/NexusAlertManagerTest.h
     )
     target_include_directories(${CMAKE_PROJECT_NAME}
         PRIVATE
