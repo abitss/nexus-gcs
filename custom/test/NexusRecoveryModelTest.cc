@@ -17,3 +17,11 @@ void NexusRecoveryModelTest::_testCleanStateContract()
     model.clearRecoveredEvents();
     QVERIFY(!model.lastRecoveryEvent().isEmpty());
 }
+
+void NexusRecoveryModelTest::_testBootCounterRebootDetection()
+{
+    QVERIFY(!NexusRecoveryModel::bootCounterIndicatesReboot(10000U, 9990U));
+    QVERIFY(!NexusRecoveryModel::bootCounterIndicatesReboot(10000U, 15000U));
+    QVERIFY(!NexusRecoveryModel::bootCounterIndicatesReboot(10000U, 5000U));
+    QVERIFY(NexusRecoveryModel::bootCounterIndicatesReboot(60000U, 1000U));
+}
