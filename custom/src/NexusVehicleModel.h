@@ -88,7 +88,6 @@ public:
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE bool rebootVehicle();
-    Q_INVOKABLE void clearRebootRequiredForTest();
 
 signals:
     void vehicleChanged();
