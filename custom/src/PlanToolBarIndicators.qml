@@ -211,7 +211,7 @@ RowLayout {
     QGCButton {
         objectName: "nexusPlanDownloadButton"
         text: qsTr("Download")
-        iconSource: "/res/DownloadFromVehicle.svg"
+        iconSource: "/res/Download.svg"
         enabled: !_syncInProgress && !_controllerOffline
         visible: !_syncInProgress
         onClicked: { toolbarButtonClicked(); _downloadClicked() }
