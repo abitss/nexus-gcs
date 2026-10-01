@@ -10,6 +10,7 @@
 
 class NexusHealthModel;
 class NexusDeviceHealthModel;
+class NexusRecoveryModel;
 class Vehicle;
 
 class NexusAlertManager final : public QAbstractListModel
@@ -36,6 +37,7 @@ public:
     Q_ENUM(Roles)
 
     explicit NexusAlertManager(NexusHealthModel *health, NexusDeviceHealthModel *deviceHealth = nullptr, QObject *parent = nullptr);
+    void setRecoveryModel(NexusRecoveryModel *recovery);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role) const override;
@@ -94,6 +96,7 @@ private:
 
     NexusHealthModel *_health = nullptr;
     NexusDeviceHealthModel *_deviceHealth = nullptr;
+    NexusRecoveryModel *_recovery = nullptr;
     QPointer<Vehicle> _vehicle;
     QTimer _timer;
     QList<Alert> _alerts;

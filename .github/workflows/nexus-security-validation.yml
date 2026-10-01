@@ -3,6 +3,7 @@ name: NEXUS SECURITY Validation
 on:
   pull_request:
     branches:
+      - phase0-task0.15-security
       - phase0-task0.14-device-health
       - phase0-task0.13-reports
       - develop

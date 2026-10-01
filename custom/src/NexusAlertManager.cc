@@ -4,6 +4,7 @@
 #include "MultiVehicleManager.h"
 #include "NexusHealthModel.h"
 #include "NexusDeviceHealthModel.h"
+#include "NexusRecoveryModel.h"
 #include "QGCMAVLink.h"
 #include "SettingsManager.h"
 #include "VideoManager.h"
@@ -26,6 +27,18 @@ NexusAlertManager::NexusAlertManager(NexusHealthModel *health, NexusDeviceHealth
     _timer.start();
 
     _setVehicle(manager->activeVehicle());
+    _evaluateConditions();
+}
+
+void NexusAlertManager::setRecoveryModel(NexusRecoveryModel *recovery)
+{
+    if (_recovery == recovery) return;
+    if (_recovery) disconnect(_recovery, nullptr, this, nullptr);
+    _recovery = recovery;
+    if (_recovery) {
+        connect(_recovery, &NexusRecoveryModel::recoveryChanged,
+                this, &NexusAlertManager::_evaluateConditions);
+    }
     _evaluateConditions();
 }
 
@@ -307,6 +320,19 @@ void NexusAlertManager::_refreshSummary()
 
 void NexusAlertManager::_evaluateConditions()
 {
+    if (_recovery) {
+        const QString state = _recovery->overallState();
+        _setCondition(QStringLiteral("recovery-state"),
+                      state != QStringLiteral("NOMINAL"),
+                      state == QStringLiteral("RECOVERY REQUIRED") ? QStringLiteral("CRITICAL") : QStringLiteral("WARNING"),
+                      QStringLiteral("RECOVERY"),
+                      state == QStringLiteral("RECOVERY REQUIRED")
+                          ? QStringLiteral("Recovery Action Required")
+                          : QStringLiteral("Recovery Degraded"),
+                      _recovery->lastRecoveryEvent());
+    } else {
+        _setCondition(QStringLiteral("recovery-state"), false, {}, {}, {}, {});
+    }
     if (_deviceHealth) {
         _setCondition(QStringLiteral("device-overheat"),
                       _deviceHealth->overheatingWarning(),

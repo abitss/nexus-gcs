@@ -390,6 +390,12 @@ bool NexusSecurityModel::verifyUpdatePackage(const QString &path, const QString 
     return true;
 }
 
+void NexusSecurityModel::recordAudit(const QString &action, const QVariantMap &details)
+{
+    _audit(action, details);
+    emit securityChanged();
+}
+
 void NexusSecurityModel::_setError(const QString &error)
 {
     _lastError = error;

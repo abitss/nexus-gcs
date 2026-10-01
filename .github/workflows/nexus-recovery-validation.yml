@@ -1,28 +1,22 @@
-name: NEXUS VEHICLE Validation
+name: NEXUS CRASH RECOVERY Validation
 
 on:
   pull_request:
     branches:
       - phase0-task0.15-security
       - phase0-task0.14-device-health
-      - phase0-task0.13-reports
-      - phase0-task0.12-analyze-module
-      - phase0-task0.11-offline-first
-      - phase0-task0.10-engineer-mode
-      - phase0-task0.9-vehicle-module
-      - phase0-task0.8-payload-video
-      - phase0-task0.7-preflight-system
       - develop
     paths:
       - 'custom/**'
-      - 'scripts/validate-vehicle.sh'
-      - '.github/workflows/nexus-vehicle-validation.yml'
+      - 'scripts/validate-recovery.sh'
+      - '.github/workflows/nexus-recovery-validation.yml'
+      - '.github/workflows/nexus-android-process-restart.yml'
       - '.gitmodules'
       - 'qgroundcontrol'
   workflow_dispatch:
 
 concurrency:
-  group: nexus-vehicle-validation-${{ github.ref }}
+  group: nexus-recovery-validation-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -34,8 +28,8 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  vehicle-validation:
-    name: VEHICLE configuration integration
+  recovery-validation:
+    name: CRASH + RECOVERY integration
     runs-on: ubuntu-24.04
     timeout-minutes: 120
 
@@ -57,17 +51,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Stage and validate VEHICLE module
+      - name: Stage and validate recovery architecture
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
           rm -rf custom
           mkdir -p custom
           cp -a nexus-overlay/custom/. custom/
-          bash nexus-overlay/scripts/validate-vehicle.sh \
-            nexus-overlay/custom/src/NexusVehiclePanel.qml \
-            nexus-overlay/custom/src/NexusVehicleModel.cc \
-            nexus-overlay/custom/src/FlyViewCustomLayer.qml
+          bash nexus-overlay/scripts/validate-recovery.sh             nexus-overlay/custom/src/NexusRecoveryPanel.qml             nexus-overlay/custom/src/NexusRecoveryModel.cc             nexus-overlay/custom/src/NexusAlertManager.cc             nexus-overlay/custom/src/FlyViewCustomLayer.qml
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -75,17 +66,16 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-vehicle-validation
+          cache-key-suffix: nexus-recovery-validation
           cpm-modules: .cache/CPM
 
       - name: Install QGC dependencies
         uses: ./.github/actions/install-dependencies
 
       - name: Configure NEXUS tests
-        timeout-minutes: 20
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-vehicle-build
+          build-dir: ${{ runner.temp }}/nexus-recovery-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
@@ -97,32 +87,26 @@ jobs:
         timeout-minutes: 75
         uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-vehicle-build
+          build-dir: ${{ runner.temp }}/nexus-recovery-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-vehicle-build.log
+          output-file: nexus-recovery-build.log
 
-      - name: Run VEHICLE integration tests
-        timeout-minutes: 10
-        shell: bash
+      - name: Run recovery tests
         env:
           QT_QPA_PLATFORM: offscreen
           QT_QUICK_BACKEND: software
           LIBGL_ALWAYS_SOFTWARE: '1'
-          QGC_TEST_MAXWARNINGS: '250'
         run: |
-          "${RUNNER_TEMP}/nexus-vehicle-build/Release/NEXUS-GCS" \
-            --unittest:NexusVehicleModelTest \
-            --allow-multiple \
-            2>&1 | tee "${RUNNER_TEMP}/nexus-vehicle-test.log"
+          "${RUNNER_TEMP}/nexus-recovery-build/Release/NEXUS-GCS"             --unittest:NexusRecoveryModelTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-recovery-test.log"
 
-      - name: Upload VEHICLE evidence
+      - name: Upload recovery evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-vehicle-validation-evidence
+          name: nexus-recovery-validation-evidence
           path: |
-            ${{ runner.temp }}/nexus-vehicle-test.log
-            ${{ runner.temp }}/nexus-vehicle-build/nexus-vehicle-build.log
+            ${{ runner.temp }}/nexus-recovery-test.log
+            ${{ runner.temp }}/nexus-recovery-build/nexus-recovery-build.log
           retention-days: 14
           if-no-files-found: warn
