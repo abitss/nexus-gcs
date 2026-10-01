@@ -112,7 +112,7 @@ jobs:
         timeout-minutes: 15
         uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-emulator-build
+          build-dir: ${{ runner.temp }}
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Android
@@ -174,6 +174,35 @@ jobs:
           grep -F "package: name='${NEXUS_PACKAGE}'" "${RUNNER_TEMP}/nexus-badging.txt"
           grep -F "application-label:'NEXUS GCS'" "${RUNNER_TEMP}/nexus-badging.txt"
 
+      - name: Reclaim disk for Android system image
+        shell: bash
+        run: |
+          echo "Disk before cleanup:"
+          df -h /
+
+          cp "${RUNNER_TEMP}/nexus-emulator-build/nexus-emulator-build.log"              "${RUNNER_TEMP}/nexus-emulator-build.log" 2>/dev/null || true
+
+          # The APK is already copied outside the build tree. The emulator smoke
+          # test no longer needs Qt, the NDK, compiler cache, CPM cache or Gradle
+          # build caches. Reclaim them before sdkmanager installs the system image.
+          rm -rf "${RUNNER_TEMP}/nexus-emulator-build"
+          rm -rf "${GITHUB_WORKSPACE}/.qt"
+          rm -rf "${GITHUB_WORKSPACE}/.ccache"
+          rm -rf "${GITHUB_WORKSPACE}/.cache/CPM"
+          rm -rf "${ANDROID_SDK_ROOT}/ndk"
+          rm -rf "${GRADLE_USER_HOME}/caches"
+          rm -rf "${GRADLE_USER_HOME}/wrapper/dists"
+
+          echo "Disk after cleanup:"
+          df -h /
+
+          available_kb="$(df --output=avail -k / | tail -1 | tr -d ' ')"
+          min_kb=$((10 * 1024 * 1024))
+          if [ "${available_kb}" -lt "${min_kb}" ]; then
+            echo "::error::Less than 10 GiB free before Android emulator system-image install."
+            exit 1
+          fi
+
       - name: Android emulator boot test
         uses: ./.github/actions/android-emulator-test
         with:
@@ -197,9 +226,7 @@ jobs:
         with:
           name: nexus-emulator-build-diagnostics
           path: |
-            ${{ runner.temp }}/nexus-emulator-build/nexus-emulator-build.log
-            ${{ runner.temp }}/nexus-emulator-build/CMakeFiles/CMakeOutput.log
-            ${{ runner.temp }}/nexus-emulator-build/CMakeFiles/CMakeError.log
+            ${{ runner.temp }}/nexus-emulator-build.log
             ${{ runner.temp }}/nexus-badging.txt
           retention-days: 7
           if-no-files-found: ignore
