@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - phase0-task0.3-flight-cockpit
+      - phase0-task0.4-plan-module
       - develop
     paths:
       - 'custom/**'
