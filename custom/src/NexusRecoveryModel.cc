@@ -3,6 +3,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
 #include <QtCore/QSettings>
+#include <QtGui/QGuiApplication>
 
 #include "MAVLinkProtocol.h"
 #include "MultiVehicleManager.h"
@@ -37,7 +38,7 @@ NexusRecoveryModel::NexusRecoveryModel(NexusPayloadModel *payload,
     }
 
     connect(qApp, &QCoreApplication::aboutToQuit, this, &NexusRecoveryModel::_markCleanExit);
-    connect(qApp, &QGuiApplication::applicationStateChanged,
+    connect(qGuiApp, &QGuiApplication::applicationStateChanged,
             this, &NexusRecoveryModel::_applicationStateChanged);
 
     auto *manager = MultiVehicleManager::instance();
