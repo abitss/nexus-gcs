@@ -32,6 +32,12 @@ Rectangle {
             }
             Label {
                 Layout.fillWidth: true
+                visible: securityModel.lockedOut
+                text: qsTr("Locked for %1 seconds").arg(securityModel.lockoutSeconds)
+                color: "#E0B85F"
+            }
+            Label {
+                Layout.fillWidth: true
                 visible: securityModel.lastError.length > 0
                 text: securityModel.lastError
                 color: "#E26A6A"
@@ -46,6 +52,38 @@ Rectangle {
                     if (securityModel.authenticate(authDialog.role, passphrase.text)) {
                         passphrase.text = ""
                         authDialog.close()
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: engineerCredentialDialog
+        modal: true
+        title: qsTr("Set Engineer Credential")
+        standardButtons: Dialog.Cancel
+        ColumnLayout {
+            width: Math.min(420, root.width - 80)
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Admin-only. Configure or rotate the local Engineer passphrase.")
+                wrapMode: Text.WordWrap
+            }
+            TextField {
+                id: newEngineerPass
+                Layout.fillWidth: true
+                echoMode: TextInput.Password
+                placeholderText: qsTr("Minimum 10 characters")
+            }
+            Button {
+                Layout.alignment: Qt.AlignRight
+                text: qsTr("SAVE ENGINEER CREDENTIAL")
+                enabled: securityModel.canAdmin && newEngineerPass.text.length >= 10
+                onClicked: {
+                    if (securityModel.setEngineerCredential(newEngineerPass.text)) {
+                        newEngineerPass.text = ""
+                        engineerCredentialDialog.close()
                     }
                 }
             }
@@ -140,6 +178,11 @@ Rectangle {
                     visible: securityModel.adminConfigured
                     text: qsTr("ADMIN")
                     onClicked: { authDialog.role = "ADMIN"; authDialog.open() }
+                }
+                Button {
+                    visible: securityModel.canAdmin
+                    text: securityModel.engineerConfigured ? qsTr("ROTATE ENGINEER") : qsTr("SET ENGINEER")
+                    onClicked: engineerCredentialDialog.open()
                 }
                 Button {
                     visible: securityModel.authenticated
