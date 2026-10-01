@@ -124,7 +124,9 @@ jobs:
           set -euo pipefail
           apk="$(find "${RUNNER_TEMP}/nexus-production-build/android-build" -maxdepth 1 -name '*.apk' -print -quit)"
           test -n "$apk"
-          apksigner verify --verbose --print-certs "$apk" | tee "${RUNNER_TEMP}/apksigner.txt"
+          apksigner_bin="$(find "$ANDROID_SDK_ROOT/build-tools" -type f -name apksigner -print | sort -V | tail -1)"
+          test -x "$apksigner_bin"
+          "$apksigner_bin" verify --verbose --print-certs "$apk" | tee "${RUNNER_TEMP}/apksigner.txt"
           actual="$(grep -i 'Signer #1 certificate SHA-256 digest:' "${RUNNER_TEMP}/apksigner.txt" | head -1 | cut -d: -f2- | tr -d ' :\r\n' | tr '[:lower:]' '[:upper:]')"
           expected="$(printf '%s' "$CERT_SHA256" | tr -d ' :\r\n' | tr '[:lower:]' '[:upper:]')"
           test -n "$actual"
@@ -143,6 +145,12 @@ jobs:
         shell: bash
         run: |
           rm -f "${RUNNER_TEMP}/nexus-release.keystore"
+          {
+            echo "QT_ANDROID_KEYSTORE_PATH="
+            echo "QT_ANDROID_KEYSTORE_ALIAS="
+            echo "QT_ANDROID_KEYSTORE_STORE_PASS="
+            echo "QT_ANDROID_KEYSTORE_KEY_PASS="
+          } >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v7
         with:
