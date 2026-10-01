@@ -14,6 +14,7 @@ class NexusPreflightModel;
 class NexusPayloadModel;
 class NexusVehicleModel;
 class NexusEngineerModel;
+class NexusOfflineModel;
 
 class NexusFlyViewOptions final : public QGCFlyViewOptions
 {
@@ -79,4 +80,5 @@ private:
     NexusPayloadModel *_payloadModel = nullptr;
     NexusVehicleModel *_vehicleModel = nullptr;
     NexusEngineerModel *_engineerModel = nullptr;
+    NexusOfflineModel *_offlineModel = nullptr;
 };
