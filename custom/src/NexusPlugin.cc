@@ -5,6 +5,7 @@
 #include "NexusPreflightModel.h"
 #include "NexusPayloadModel.h"
 #include "NexusVehicleModel.h"
+#include "NexusEngineerModel.h"
 
 #include <QtCore/QApplicationStatic>
 #include <QtCore/QFile>
@@ -41,6 +42,7 @@ NexusPlugin::NexusPlugin(QObject *parent)
     , _preflightModel(new NexusPreflightModel(_healthModel, _alertManager, this))
     , _payloadModel(new NexusPayloadModel(this))
     , _vehicleModel(new NexusVehicleModel(this))
+    , _engineerModel(new NexusEngineerModel(this))
 {
     // Operator mode is intentionally the default. QGC's advanced-mode mechanism
     // remains available for engineering/setup workflows.
@@ -69,6 +71,7 @@ QQmlApplicationEngine *NexusPlugin::createQmlApplicationEngine(QObject *parent)
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusPreflight"), _preflightModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusPayload"), _payloadModel);
     _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusVehicle"), _vehicleModel);
+    _qmlEngine->rootContext()->setContextProperty(QStringLiteral("NexusEngineer"), _engineerModel);
     return _qmlEngine;
 }
 
