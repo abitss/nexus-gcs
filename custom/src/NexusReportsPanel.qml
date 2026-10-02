@@ -174,7 +174,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Label { text: qsTr("REPORTS"); color: "#F4F8FA"; font.pixelSize: 20; font.bold: true }
-            Label { text: qsTr("POST-FLIGHT EVIDENCE"); color: "#7E8D97"; font.pixelSize: 9; font.bold: true }
+            Label { text: qsTr("POST-FLIGHT EVIDENCE"); color: "#A8B5BD"; font.pixelSize: 9; font.bold: true }
             Item { Layout.fillWidth: true }
             Button {
                 text: qsTr("REFRESH REPORT")
@@ -208,7 +208,7 @@ Rectangle {
                     text: analyzeModel.selectedFirmwareLog ? qsTr("EVIDENCE READY")
                          : (analyzeModel.selectedReplayOnly ? qsTr("TLOG REPLAY ONLY") : qsTr("NO SOURCE"))
                     color: analyzeModel.selectedFirmwareLog ? "#7FC5AD" : "#D3AF5E"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
@@ -232,7 +232,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("MISSION ID"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("MISSION ID"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.missionId
@@ -246,7 +246,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("OPERATOR"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("OPERATOR"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.operatorName
@@ -260,7 +260,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("AIRCRAFT"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("AIRCRAFT"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.aircraft
@@ -274,7 +274,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("FIRMWARE"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("FIRMWARE"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.firmware
@@ -288,7 +288,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("MISSION COMPLETION"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("MISSION COMPLETION"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         ComboBox {
                             Layout.fillWidth: true
                             model: [qsTr("NOT RECORDED"), qsTr("COMPLETED"), qsTr("PARTIAL"), qsTr("ABORTED"), qsTr("FAILED")]
@@ -302,7 +302,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("DATE / TIME"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("DATE / TIME"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         Label {
                             Layout.fillWidth: true
                             text: logParser.parseComplete && logParser.startTime
@@ -337,7 +337,7 @@ Rectangle {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 3
-                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: "#7F8E97"; font.pixelSize: 8; font.bold: true }
+                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: "#7F8E97"; font.pixelSize: 9; font.bold: true }
                                 Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.value; color: "#EFF4F7"; font.pixelSize: 13; font.bold: true }
                             }
                         }
@@ -427,7 +427,7 @@ Rectangle {
                                 Layout.fillWidth: true
                                 text: Number(modelData.time).toFixed(1) + "s · " + modelData.description
                                 color: "#C7D1D7"
-                                font.pixelSize: 8
+                                font.pixelSize: 9
                                 wrapMode: Text.WordWrap
                             }
                         }
@@ -436,7 +436,7 @@ Rectangle {
                             visible: warningRows.length === 0
                             text: qsTr("No warnings/errors recorded in this log.")
                             color: "#81909A"
-                            font.pixelSize: 8
+                            font.pixelSize: 9
                         }
                     }
                 }
@@ -461,8 +461,8 @@ Rectangle {
                             Label { text: qsTr("EXPORT PIPELINE"); color: "#DDE6EB"; font.pixelSize: 10; font.bold: true }
                             Label {
                                 text: qsTr("Report schema v1.0 is ready for future PDF, CSV and KML exporters. Export buttons remain intentionally disabled until exporter implementations are added and validated.")
-                                color: "#83919A"
-                                font.pixelSize: 8
+                                color: "#AAB7BF"
+                                font.pixelSize: 9
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
