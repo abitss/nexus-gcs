@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0] — V1 Production Acceptance Target
+
+### Added
+- Unified V1 final-acceptance gate across software, simulation, real hardware, HIL, offline, failure, field, security and production-signing evidence.
+- Machine-readable final acceptance report tied to one exact NEXUS source revision.
+- Protected human security-review approval gate.
+- Dedicated V1 failure-matrix regression gate.
+- Final production identity `nexus-v1.0.0`.
+
+### Acceptance
+- V1.0.0 is released only after every required final-acceptance gate reports PASS.
+- Missing, mismatched or stale evidence blocks promotion.
+
+
 All notable NEXUS GCS product changes are recorded here.
 
 The format follows a human-reviewed release history rather than automatically treating every Git commit as a user-visible product change.
