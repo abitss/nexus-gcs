@@ -77,7 +77,7 @@ Rectangle {
 
             Item { Layout.fillHeight: true }
 
-            Button {
+            NexusActionButton {
                 Layout.alignment: Qt.AlignRight
                 text: actionText
                 enabled: available && actionEnabled
@@ -165,7 +165,7 @@ Rectangle {
                     }
                 }
 
-                Button {
+                NexusActionButton {
                     text: qsTr("REBOOT")
                     enabled: vehicleModel.safeToReboot
                     onClicked: rebootDialog.open()
