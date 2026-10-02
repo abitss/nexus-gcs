@@ -6,7 +6,7 @@ Rectangle {
     id: root
     property var model
     signal closeRequested()
-    width: Math.min(720, parent ? parent.width * 0.62 : 720)
+    width: parent ? Math.min(760, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.64)) : 720
     color: "#F70A0F14"; radius: 12; border.color: "#2B3944"; z: 7200
 
     ColumnLayout {
