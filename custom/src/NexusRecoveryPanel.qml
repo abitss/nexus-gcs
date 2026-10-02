@@ -165,7 +165,7 @@ Rectangle {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Button {
+                    NexusActionButton {
                         text: qsTr("ACK MISSION INTERRUPTION")
                         enabled: recoveryModel.interruptedMission
                         onClicked: recoveryModel.acknowledgeInterruptedMission()
