@@ -181,7 +181,7 @@ Rectangle {
                 enabled: analyzeModel.selectedFirmwareLog
                 onClicked: root.loadSelected()
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
