@@ -46,6 +46,11 @@ if get("release.product")!="NEXUS GCS" or get("release.version")!="1.0.0":
 if get("aircraft.autopilot")!="PX4":
     fail("V1 operational profile currently supports the qualified PX4 path only")
 
+for path in ["aircraft.mavlinkSystemId","aircraft.mavlinkComponentId"]:
+    v=get(path)
+    if isinstance(v,bool) or not isinstance(v,int) or v<1 or v>255:
+        fail(path+" must be an integer from 1 to 255")
+
 for path,n in [
     ("release.sourceSha",40),
     ("release.apkSha256",64),
