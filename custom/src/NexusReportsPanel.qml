@@ -180,7 +180,7 @@ Rectangle {
             Label { text: qsTr("REPORTS"); color: "#F4F8FA"; font.pixelSize: 20; font.bold: true }
             Label { text: qsTr("POST-FLIGHT EVIDENCE"); color: "#A8B5BD"; font.pixelSize: 9; font.bold: true }
             Item { Layout.fillWidth: true }
-            Button {
+            NexusActionButton {
                 text: qsTr("REFRESH REPORT")
                 enabled: analyzeModel.selectedFirmwareLog
                 onClicked: root.loadSelected()
@@ -503,9 +503,9 @@ Rectangle {
                             }
                         }
 
-                        Button { text: "PDF"; enabled: false }
-                        Button { text: "CSV"; enabled: false }
-                        Button { text: "KML"; enabled: false }
+                        NexusActionButton { text: "PDF"; enabled: false }
+                        NexusActionButton { text: "CSV"; enabled: false }
+                        NexusActionButton { text: "KML"; enabled: false }
                     }
                 }
             }
