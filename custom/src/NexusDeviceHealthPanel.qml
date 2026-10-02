@@ -8,7 +8,7 @@ Rectangle {
     property var deviceModel
     signal closeRequested()
 
-    width: Math.min(620, parent ? parent.width * 0.52 : 620)
+    width: parent ? Math.min(680, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.56)) : 620
     color: "#F60A0F14"
     border.color: "#2B3944"
     border.width: 1
