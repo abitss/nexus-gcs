@@ -95,7 +95,7 @@ Rectangle {
                     Item { Layout.fillWidth: true }
                     Label { text: payloadModel.latencyState; color: "#9BA8B2"; font.pixelSize: 9; font.bold: true }
                 }
-                Label { text: payloadModel.latencyDetail; color: "#788792"; font.pixelSize: 8; elide: Text.ElideRight; Layout.fillWidth: true }
+                Label { text: payloadModel.latencyDetail; color: "#788792"; font.pixelSize: 9; elide: Text.ElideRight; Layout.fillWidth: true }
             }
         }
 
@@ -232,8 +232,8 @@ Rectangle {
                 Label {
                     Layout.fillWidth: true
                     text: qsTr("FPS is shown only when reported by the camera stream. Latency status reports pipeline mode/jitter configuration, not an invented end-to-end measurement.")
-                    color: "#74828D"
-                    font.pixelSize: 8
+                    color: "#9AAAB4"
+                    font.pixelSize: 9
                     wrapMode: Text.WordWrap
                 }
             }
