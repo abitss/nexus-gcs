@@ -70,6 +70,18 @@ jobs:
           FIELD_JSON="$(find "${RUNNER_TEMP}/operator-field" -type f -name 'nexus-field-*.json' -print -quit)"
           test -n "$FIELD_JSON"
           python3 scripts/validate-operational-field-evidence.py "$FIELD_JSON"
+          python3 - "${{ inputs.profile_path }}" "$FIELD_JSON" <<\'PY\'
+          import json,sys
+          profile=json.load(open(sys.argv[1],encoding="utf-8"))
+          field=json.load(open(sys.argv[2],encoding="utf-8"))
+          aircraft=profile["aircraft"]
+          if field.get("sourceSha")!=profile["release"]["sourceSha"]:
+              raise SystemExit("Operator review field source SHA differs from locked profile")
+          if field.get("mavlinkSystemId")!=aircraft["mavlinkSystemId"]:
+              raise SystemExit("Operator review field MAVLink system ID differs from locked profile")
+          if field.get("mavlinkComponentId")!=aircraft["mavlinkComponentId"]:
+              raise SystemExit("Operator review field MAVLink component ID differs from locked profile")
+          PY
 
       - name: Create operator approval evidence
         env:
