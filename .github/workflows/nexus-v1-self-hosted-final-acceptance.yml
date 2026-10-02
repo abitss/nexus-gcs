@@ -1,0 +1,163 @@
+name: NEXUS GCS V1 Self-Hosted Final Acceptance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  final-acceptance:
+    if: inputs.acceptance_confirm == 'ACCEPT V1'
+    runs-on: [self-hosted, linux, nexus-v1-acceptance]
+    environment: production-release
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NEXUS_ANDROID_CERT_SHA256: ${{ secrets.NEXUS_ANDROID_CERT_SHA256 }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify V1 release identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate-release.py .
+          python3 - <<'PY'
+          import json
+          d=json.load(open("release/release.json"))
+          assert d["version"]=="1.0.0"
+          assert d["releaseTag"]=="nexus-v1.0.0"
+          PY
+
+      - name: Verify all gate runs use this exact source
+        shell: bash
+        env:
+          BUILD_ID: ${{ inputs.build_run_id }}
+          EMULATOR_ID: ${{ inputs.emulator_run_id }}
+          SITL_ID: ${{ inputs.sitl_run_id }}
+          BENCH_ID: ${{ inputs.pixhawk_bench_run_id }}
+          HIL_ID: ${{ inputs.hil_run_id }}
+          OFFLINE_ID: ${{ inputs.offline_run_id }}
+          FAILURE_ID: ${{ inputs.failure_matrix_run_id }}
+          FIELD_ID: ${{ inputs.field_qa_run_id }}
+          SECURITY_ID: ${{ inputs.security_review_run_id }}
+          RELEASE_ID: ${{ inputs.signed_release_run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/v1-evidence"
+          python3 - <<'PY'
+          import json,os,subprocess
+          expected={
+            "BUILD":({"NEXUS Custom Android","NEXUS V1 Self-Hosted Software Gate"},os.environ["BUILD_ID"]),
+            "EMULATOR":({"NEXUS Android Emulator Smoke","NEXUS V1 Self-Hosted Android Emulator"},os.environ["EMULATOR_ID"]),
+            "PX4 SITL":({"NEXUS PX4 Full Qualification"},os.environ["SITL_ID"]),
+            "PIXHAWK BENCH":({"NEXUS Real Pixhawk Bench Qualification"},os.environ["BENCH_ID"]),
+            "HIL":({"NEXUS PX4 HIL Hardware Qualification"},os.environ["HIL_ID"]),
+            "OFFLINE":({"NEXUS OFFLINE-FIRST Validation"},os.environ["OFFLINE_ID"]),
+            "FAILURE-MATRIX":({"NEXUS V1 Failure Matrix"},os.environ["FAILURE_ID"]),
+            "FIELD QA":({"NEXUS Controlled Field Evidence Validation"},os.environ["FIELD_ID"]),
+            "SECURITY REVIEW":({"NEXUS V1 Security Review"},os.environ["SECURITY_ID"]),
+            "SIGNED RELEASE APK":({"NEXUS Production Android Release"},os.environ["RELEASE_ID"]),
+          }
+          rows={}
+          for gate,(names,rid) in expected.items():
+            raw=subprocess.check_output(["gh","api",f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{rid}"],text=True)
+            d=json.loads(raw)
+            if d["name"] not in names: raise SystemExit(f"{gate}: workflow mismatch {d['name']}")
+            if d["conclusion"]!="success": raise SystemExit(f"{gate}: conclusion {d['conclusion']}")
+            if d["head_sha"]!=os.environ["GITHUB_SHA"]: raise SystemExit(f"{gate}: source SHA mismatch")
+            rows[gate]={"workflow":d["name"],"run_id":int(rid),"conclusion":"success","head_sha":d["head_sha"]}
+          out=os.path.join(os.environ["RUNNER_TEMP"],"v1-evidence","run-metadata.json")
+          open(out,"w").write(json.dumps(rows,indent=2)+"\n")
+          PY
+
+      - name: Download evidence artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="${RUNNER_TEMP}/v1-evidence"
+          download() { gh run download "$1" -n "$2" -D "$ROOT/$3"; }
+          download "${{ inputs.sitl_run_id }}" nexus-px4-full-qualification-evidence sitl
+          download "${{ inputs.pixhawk_bench_run_id }}" nexus-real-pixhawk-bench-evidence bench
+          download "${{ inputs.hil_run_id }}" nexus-px4-hil-evidence hil
+          download "${{ inputs.failure_matrix_run_id }}" nexus-v1-failure-matrix-evidence failure
+          download "${{ inputs.field_qa_run_id }}" nexus-controlled-field-evidence field
+          download "${{ inputs.security_review_run_id }}" nexus-v1-security-review-evidence security
+          download "${{ inputs.signed_release_run_id }}" "nexus-gcs-1.0.0-production" release
+
+      - name: Validate field evidence against field thresholds
+        shell: bash
+        run: |
+          set -euo pipefail
+          FIELD_JSON="$(find "${RUNNER_TEMP}/v1-evidence/field" -type f -name 'nexus-field-*.json' -print -quit)"
+          test -n "$FIELD_JSON"
+          python3 scripts/validate-field-evidence.py "$FIELD_JSON"
+
+      - name: Execute final fail-closed acceptance
+        shell: bash
+        run: |
+          python3 scripts/validate-v1-acceptance.py . "${RUNNER_TEMP}/v1-evidence" "$GITHUB_SHA"
+
+      - name: Create human-readable acceptance summary
+        shell: bash
+        run: |
+          cat > "${RUNNER_TEMP}/v1-evidence/NEXUS-GCS-V1.0.0-FINAL-ACCEPTANCE.md" <<EOF
+          # NEXUS GCS V1.0.0 — FINAL ACCEPTANCE
+
+          **Status: ACCEPTED**
+
+          Source SHA: `$GITHUB_SHA`
+
+          BUILD PASS
+
+          ↓
+
+          EMULATOR PASS
+
+          ↓
+
+          PX4 SITL PASS
+
+          ↓
+
+          PIXHAWK BENCH PASS
+
+          ↓
+
+          HIL PASS
+
+          ↓
+
+          OFFLINE PASS
+
+          ↓
+
+          FAILURE-MATRIX PASS
+
+          ↓
+
+          FIELD QA PASS
+
+          ↓
+
+          SECURITY REVIEW PASS
+
+          ↓
+
+          SIGNED RELEASE APK PASS
+
+          ↓
+
+          **NEXUS GCS V1.0.0 ACCEPTED**
+          EOF
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nexus-gcs-v1.0.0-final-acceptance
+          path: |
+            ${{ runner.temp }}/v1-evidence/NEXUS-GCS-V1.0.0-FINAL-ACCEPTANCE.json
+            ${{ runner.temp }}/v1-evidence/NEXUS-GCS-V1.0.0-FINAL-ACCEPTANCE.md
+            ${{ runner.temp }}/v1-evidence/run-metadata.json
+          retention-days: 90
+          if-no-files-found: error
