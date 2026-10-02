@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -10,9 +11,9 @@ Rectangle {
     property string detail: "--"
 
     implicitWidth: 220
-    implicitHeight: 112
-    radius: 10
-    color: "#10171E"
+    implicitHeight: 116
+    radius: T.radiusMedium
+    color: T.surface
     border.width: 1
     border.color: state === "CRITICAL" ? "#D95151"
                  : state === "DEGRADED" ? "#D6A84A"
@@ -21,15 +22,15 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 6
+        anchors.margins: T.space12
+        spacing: T.space6
 
         RowLayout {
             Layout.fillWidth: true
             Label {
                 text: root.title
-                color: "#B9C4CC"
-                font.pixelSize: 10
+                color: T.textSecondary
+                font.pixelSize: T.textBody
                 font.bold: true
             }
             Item { Layout.fillWidth: true }
@@ -39,7 +40,7 @@ Rectangle {
                        : root.state === "DEGRADED" ? "#F0D49A"
                        : root.state === "NOMINAL" ? "#A8F3D6"
                        : "#91A0AC"
-                font.pixelSize: 10
+                font.pixelSize: T.textBody
                 font.bold: true
             }
         }
@@ -47,8 +48,8 @@ Rectangle {
         Label {
             Layout.fillWidth: true
             text: root.detail
-            color: "#E5EBF0"
-            font.pixelSize: 10
+            color: T.textPrimary
+            font.pixelSize: T.textBody
             wrapMode: Text.WordWrap
             maximumLineCount: 3
             elide: Text.ElideRight
