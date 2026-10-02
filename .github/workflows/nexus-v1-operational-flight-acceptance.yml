@@ -126,8 +126,34 @@ jobs:
           set -euo pipefail
           ROOT="${RUNNER_TEMP}/operational-evidence"
           gh run download "${{ inputs.v1_acceptance_run_id }}"             -n nexus-gcs-v1.0.0-final-acceptance             -D "$ROOT/v1"
+          gh run download "${{ inputs.bench_run_id }}"             -n nexus-real-pixhawk-bench-evidence             -D "$ROOT/bench"
+          gh run download "${{ inputs.hil_run_id }}"             -n nexus-px4-hil-evidence             -D "$ROOT/hil"
+          gh run download "${{ inputs.field_qa_run_id }}"             -n nexus-controlled-field-evidence             -D "$ROOT/field"
           gh run download "${{ inputs.operator_review_run_id }}"             -n nexus-operational-operator-review             -D "$ROOT/operator"
           gh run download "${{ inputs.engineer_review_run_id }}"             -n nexus-operational-engineer-review             -D "$ROOT/engineer"
+
+      - name: Revalidate raw physical evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          FIELD_JSON="$(find "${RUNNER_TEMP}/operational-evidence/field" -type f -name 'nexus-field-*.json' -print -quit)"
+          test -n "$FIELD_JSON"
+          python3 scripts/validate-operational-field-evidence.py "$FIELD_JSON"
+
+          python3 - <<'PY'
+          import json,glob,os
+          root=os.path.join(os.environ["RUNNER_TEMP"],"operational-evidence")
+          bench_files=glob.glob(os.path.join(root,"bench","**","nexus-real-pixhawk-bench.json"),recursive=True)
+          hil_files=glob.glob(os.path.join(root,"hil","**","nexus-px4-hil.json"),recursive=True)
+          if len(bench_files)!=1 or len(hil_files)!=1:
+              raise SystemExit("Expected exactly one bench and one HIL evidence JSON")
+          bench=json.load(open(bench_files[0],encoding="utf-8"))
+          hil=json.load(open(hil_files[0],encoding="utf-8"))
+          if bench.get("qualification")!="PASS":
+              raise SystemExit("Real Pixhawk bench evidence is not PASS")
+          if hil.get("qualification")!="PASS":
+              raise SystemExit("HIL evidence is not PASS")
+          PY
 
       - name: Execute fail-closed operational acceptance
         shell: bash
