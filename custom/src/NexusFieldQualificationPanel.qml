@@ -54,21 +54,77 @@ Rectangle {
             }
         }
 
-        Label { text: qsTr("TEST CARDS"); color: "#EEF3F6"; font.bold: true }
-        TextArea { id: notes; Layout.fillWidth: true; placeholderText: qsTr("Operator notes / anomaly / expected behavior") }
         RowLayout {
-            NexusActionButton { text: qsTr("PASS TELEMETRY"); onClicked: model.markCard("OUTDOOR_TELEMETRY","PASS",notes.text) }
-            NexusActionButton { text: qsTr("PASS GPS"); onClicked: model.markCard("GPS_BEHAVIOR","PASS",notes.text) }
-            NexusActionButton { text: qsTr("PASS MISSION"); onClicked: model.markCard("MISSION_EXECUTION","PASS",notes.text) }
-            NexusActionButton { text: qsTr("PASS LINK"); onClicked: model.markCard("LINK_DEGRADATION","PASS",notes.text) }
-            NexusActionButton { text: qsTr("PASS FAILSAFE"); onClicked: model.markCard("FAILSAFE_BEHAVIOR","PASS",notes.text) }
+            Layout.fillWidth: true
+            Label { text: qsTr("OPERATIONAL TEST CARDS"); color: "#EEF3F6"; font.bold: true }
+            Item { Layout.fillWidth: true }
+            Label {
+                text: qsTr("PASS only after the card is physically completed and reviewed")
+                color: "#D6A84A"
+                font.pixelSize: 9
+            }
         }
+
+        TextArea {
+            id: notes
+            Layout.fillWidth: true
+            placeholderText: qsTr("Required evidence / operator notes / anomaly / expected behavior")
+        }
+
+        GridLayout {
+            Layout.fillWidth: true
+            columns: root.width >= 680 ? 3 : 2
+            columnSpacing: 8
+            rowSpacing: 8
+
+            Repeater {
+                model: [
+                    ["PASS TELEMETRY", "OUTDOOR_TELEMETRY"],
+                    ["PASS GPS", "GPS_BEHAVIOR"],
+                    ["PASS HOVER", "CONTROLLED_HOVER"],
+                    ["PASS MODES", "MODE_TRANSITIONS"],
+                    ["PASS MISSION", "MISSION_EXECUTION"],
+                    ["PASS LINK", "LINK_DEGRADATION"],
+                    ["PASS FAILSAFE", "FAILSAFE_BEHAVIOR"],
+                    ["PASS RTL / LAND", "RTL_LAND"],
+                    ["PASS RECONNECT", "RECONNECT_RECOVERY"],
+                    ["PASS ABORT PATH", "ABORT_PATH"],
+                    ["PASS STABILITY", "APP_STABILITY"],
+                    ["PASS PERFORMANCE", "PERFORMANCE"],
+                    ["PASS THERMAL", "THERMAL_BEHAVIOR"],
+                    ["PASS POST-FLIGHT", "POST_FLIGHT_REVIEW"]
+                ]
+
+                NexusActionButton {
+                    Layout.fillWidth: true
+                    text: qsTr(modelData[0])
+                    enabled: model.running && model.phase === "FIELD"
+                    onClicked: {
+                        model.markCard(modelData[1], "PASS", notes.text)
+                        notes.clear()
+                    }
+                }
+            }
+        }
+
         RowLayout {
-            NexusActionButton { text: qsTr("PASS STABILITY"); onClicked: model.markCard("APP_STABILITY","PASS",notes.text) }
-            NexusActionButton { text: qsTr("PASS PERFORMANCE"); onClicked: model.markCard("PERFORMANCE","PASS",notes.text) }
-            NexusActionButton { text: qsTr("PASS THERMAL"); onClicked: model.markCard("THERMAL_BEHAVIOR","PASS",notes.text) }
-            NexusActionButton { text: qsTr("FAIL / ABORT"); onClicked: model.markCard("OPERATOR_ABORT","FAIL",notes.text) }
-            NexusActionButton { text: qsTr("EXPORT"); enabled: !model.running; onClicked: exportPath.text = model.exportDefault() }
+            Layout.fillWidth: true
+            NexusActionButton {
+                Layout.fillWidth: true
+                text: qsTr("FAIL / ABORT")
+                enabled: model.running
+                critical: true
+                onClicked: {
+                    model.markCard("OPERATOR_ABORT", "FAIL", notes.text)
+                    notes.clear()
+                }
+            }
+            NexusActionButton {
+                Layout.fillWidth: true
+                text: qsTr("EXPORT EVIDENCE")
+                enabled: !model.running
+                onClicked: exportPath.text = model.exportDefault()
+            }
         }
         Label { id: exportPath; Layout.fillWidth: true; color: "#AAB7BF"; font.pixelSize: 9; elide: Text.ElideMiddle }
         Label { Layout.fillWidth: true; text: qsTr("Field mode records evidence only. It never induces RF loss or overrides PX4 failsafes."); color: "#D6A84A"; font.pixelSize: 9 }
