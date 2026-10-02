@@ -1,13 +1,13 @@
 {
   "product": "NEXUS GCS",
-  "version": "0.1.0",
-  "releaseTag": "nexus-v0.1.0",
+  "version": "1.0.0",
+  "releaseTag": "nexus-v1.0.0",
   "androidPackage": "com.abitss.nexusgcs",
   "androidAbi": "arm64-v8a",
   "buildType": "Release",
   "channel": "production",
   "qgcBaseline": "25185047e855937d694a0174c1541d8f7d794a74",
   "minimumSupportedAndroid": "Defined by pinned QGroundControl/Qt baseline",
-  "qualificationBoundary": "Release engineering complete does not replace real-aircraft qualification gates.",
-  "artifactBaseName": "NEXUS-GCS-0.1.0-arm64-v8a"
+  "qualificationBoundary": "V1.0.0 promotion requires the complete final acceptance chain: build, emulator, PX4 SITL, real Pixhawk bench, HIL, offline, failure matrix, field QA, security review and signed production APK.",
+  "artifactBaseName": "NEXUS-GCS-1.0.0-arm64-v8a"
 }
