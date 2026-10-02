@@ -154,6 +154,23 @@ jobs:
           if hil.get("qualification")!="PASS":
               raise SystemExit("HIL evidence is not PASS")
           PY
+          BENCH_JSON="$(find "${RUNNER_TEMP}/operational-evidence/bench" -type f -name 'nexus-real-pixhawk-bench.json' -print -quit)"
+          HIL_JSON="$(find "${RUNNER_TEMP}/operational-evidence/hil" -type f -name 'nexus-px4-hil.json' -print -quit)"
+          python3 scripts/validate-operational-hardware-evidence.py \
+            "${{ inputs.profile_path }}" "$BENCH_JSON" "$HIL_JSON" "$GITHUB_SHA"
+
+          python3 - "${{ inputs.profile_path }}" "$FIELD_JSON" <<'PY'
+          import json,sys
+          profile=json.load(open(sys.argv[1],encoding="utf-8"))
+          field=json.load(open(sys.argv[2],encoding="utf-8"))
+          aircraft=profile["aircraft"]
+          if field.get("sourceSha")!=profile["release"]["sourceSha"]:
+              raise SystemExit("Operational field evidence source SHA differs from locked profile")
+          if field.get("mavlinkSystemId")!=aircraft["mavlinkSystemId"]:
+              raise SystemExit("Operational field evidence MAVLink system ID differs from locked profile")
+          if field.get("mavlinkComponentId")!=aircraft["mavlinkComponentId"]:
+              raise SystemExit("Operational field evidence MAVLink component ID differs from locked profile")
+          PY
 
       - name: Verify reviewers approved these exact physical runs
         env:
