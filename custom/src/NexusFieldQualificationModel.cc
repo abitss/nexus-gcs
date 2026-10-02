@@ -31,14 +31,14 @@ NexusFieldQualificationModel::NexusFieldQualificationModel(NexusDeviceHealthMode
 
 int NexusFieldQualificationModel::durationSeconds() const
 {
-    return _running && _session.isValid() ? static_cast<int>(_session.elapsed()/1000) : 0;
+    return _running && _session.isValid() ? static_cast<int>(_session.elapsed()/1000) : _lastDurationSeconds;
 }
 
 bool NexusFieldQualificationModel::startSession(const QString &phase)
 {
     const QString p=phase.trimmed().toUpper();
     if (p!="HIL" && p!="FIELD") return false;
-    _running=true; _phase=p; _session.restart(); _loop.restart();
+    _running=true; _phase=p; _lastDurationSeconds=0; _session.restart(); _loop.restart();
     _heartbeatCount=0; _heartbeatRateHz=0; _maxEventLoopLagMs=0; _cards.clear();
     _maxDeviceTempC=qQNaN(); _minRamAvailableMb=-1; _recoveryEventCount=0;
     emit changed();
@@ -47,6 +47,7 @@ bool NexusFieldQualificationModel::startSession(const QString &phase)
 
 void NexusFieldQualificationModel::stopSession()
 {
+    if (_running && _session.isValid()) _lastDurationSeconds=static_cast<int>(_session.elapsed()/1000);
     _running=false;
     emit changed();
 }
