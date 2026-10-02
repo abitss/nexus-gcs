@@ -60,6 +60,9 @@ jobs:
           import json, os
           with open("nexus-overlay/release/release.json","r",encoding="utf-8") as f:
               d=json.load(f)
+          actual_qgc=os.popen("git rev-parse HEAD").read().strip()
+          if actual_qgc != d["qgcBaseline"]:
+              raise SystemExit(f"QGC baseline mismatch: expected {d['qgcBaseline']}, got {actual_qgc}")
           with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as out:
               out.write(f"NEXUS_VERSION={d['version']}\n")
               out.write(f"NEXUS_RELEASE_TAG={d['releaseTag']}\n")
@@ -69,7 +72,6 @@ jobs:
           if os.environ.get("GITHUB_REF_TYPE")=="tag" and ref != d["releaseTag"]:
               raise SystemExit(f"tag {ref} does not match release metadata {d['releaseTag']}")
           PY
-          test "$(git rev-parse HEAD)" = "$QGC_BASELINE_SHA"
 
       - name: Create local QGC build-version tag
         shell: bash
