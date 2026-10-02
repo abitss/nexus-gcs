@@ -155,6 +155,31 @@ jobs:
               raise SystemExit("HIL evidence is not PASS")
           PY
 
+      - name: Verify reviewers approved these exact physical runs
+        env:
+          BENCH_RUN: ${{ inputs.bench_run_id }}
+          HIL_RUN: ${{ inputs.hil_run_id }}
+          FIELD_RUN: ${{ inputs.field_qa_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,glob,os
+          root=os.path.join(os.environ["RUNNER_TEMP"],"operational-evidence")
+          op_files=glob.glob(os.path.join(root,"operator","**","nexus-operational-operator-review.json"),recursive=True)
+          eng_files=glob.glob(os.path.join(root,"engineer","**","nexus-operational-engineer-review.json"),recursive=True)
+          if len(op_files)!=1 or len(eng_files)!=1:
+              raise SystemExit("Expected exactly one operator and one engineer review artifact")
+          op=json.load(open(op_files[0],encoding="utf-8"))
+          eng=json.load(open(eng_files[0],encoding="utf-8"))
+          if op.get("fieldQaRunId")!=int(os.environ["FIELD_RUN"]):
+              raise SystemExit("Operator review references a different field run")
+          if eng.get("benchRunId")!=int(os.environ["BENCH_RUN"]):
+              raise SystemExit("Engineer review references a different bench run")
+          if eng.get("hilRunId")!=int(os.environ["HIL_RUN"]):
+              raise SystemExit("Engineer review references a different HIL run")
+          PY
+
       - name: Execute fail-closed operational acceptance
         shell: bash
         run: |
