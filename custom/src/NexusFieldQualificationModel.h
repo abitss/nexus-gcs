@@ -75,6 +75,7 @@ private:
     QElapsedTimer _session;
     QElapsedTimer _loop;
     bool _running=false;
+    int _lastDurationSeconds=0;
     QString _phase=QStringLiteral("IDLE");
     int _heartbeatCount=0;
     double _heartbeatRateHz=0;
