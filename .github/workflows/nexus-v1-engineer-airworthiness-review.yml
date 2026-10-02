@@ -1,0 +1,106 @@
+name: NEXUS V1 Engineer Airworthiness Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile_path:
+        description: Path to LOCKED operational aircraft profile JSON
+        required: true
+        type: string
+      bench_run_id:
+        description: Successful real Pixhawk bench run ID
+        required: true
+        type: string
+      hil_run_id:
+        description: Successful real Pixhawk HIL run ID
+        required: true
+        type: string
+      engineer_decision:
+        description: Type APPROVE CONFIGURATION
+        required: true
+        type: string
+      engineer_notes:
+        description: Engineering limitations / observations
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  engineer-review:
+    if: inputs.engineer_decision == 'APPROVE CONFIGURATION'
+    runs-on: [self-hosted, linux, nexus-operational-approval]
+    environment: operational-flight-engineer
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate locked aircraft profile
+        run: |
+          set -euo pipefail
+          test -f "${{ inputs.profile_path }}"
+          python3 scripts/validate-operational-profile.py "${{ inputs.profile_path }}"
+
+      - name: Verify hardware qualification runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BENCH_RUN: ${{ inputs.bench_run_id }}
+          HIL_RUN: ${{ inputs.hil_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,subprocess
+          expected=[
+            ("NEXUS Real Pixhawk Bench Qualification",os.environ["BENCH_RUN"]),
+            ("NEXUS PX4 HIL Hardware Qualification",os.environ["HIL_RUN"]),
+          ]
+          for name,rid in expected:
+            raw=subprocess.check_output(["gh","api",f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{rid}"],text=True)
+            d=json.loads(raw)
+            assert d["name"]==name,(d["name"],name)
+            assert d["conclusion"]=="success",d["conclusion"]
+            assert d["head_sha"]==os.environ["GITHUB_SHA"],(d["head_sha"],os.environ["GITHUB_SHA"])
+          PY
+
+      - name: Create engineer approval evidence
+        env:
+          PROFILE: ${{ inputs.profile_path }}
+          BENCH_RUN: ${{ inputs.bench_run_id }}
+          HIL_RUN: ${{ inputs.hil_run_id }}
+          NOTES: ${{ inputs.engineer_notes }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,os,datetime
+          p=os.environ["PROFILE"]
+          raw=open(p,"rb").read()
+          profile=json.loads(raw)
+          out={
+            "schemaVersion":"1.0",
+            "gate":"ENGINEER AIRWORTHINESS REVIEW",
+            "status":"PASS",
+            "sourceSha":os.environ["GITHUB_SHA"],
+            "profileSha256":hashlib.sha256(raw).hexdigest(),
+            "aircraftAcceptanceId":profile["aircraft"]["acceptanceId"],
+            "benchRunId":int(os.environ["BENCH_RUN"]),
+            "hilRunId":int(os.environ["HIL_RUN"]),
+            "engineer":os.environ["GITHUB_ACTOR"],
+            "approvedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "notes":os.environ.get("NOTES","")
+          }
+          path=os.path.join(os.environ["RUNNER_TEMP"],"nexus-operational-engineer-review.json")
+          open(path,"w").write(json.dumps(out,indent=2)+"\n")
+          PY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nexus-operational-engineer-review
+          path: ${{ runner.temp }}/nexus-operational-engineer-review.json
+          retention-days: 365
+          if-no-files-found: error
