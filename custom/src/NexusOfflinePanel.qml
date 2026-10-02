@@ -51,7 +51,7 @@ Rectangle {
                 Label {
                     text: card.state
                     color: card.healthy ? "#78B7A1" : "#D6A84A"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
@@ -60,7 +60,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: card.detail
                 color: "#85939E"
-                font.pixelSize: 8
+                font.pixelSize: 9
                 elide: Text.ElideMiddle
             }
 
@@ -139,7 +139,7 @@ Rectangle {
                     Label {
                         text: qsTr("CLOUD REQUIRED: NO")
                         color: "#86A7B8"
-                        font.pixelSize: 8
+                        font.pixelSize: 9
                         font.bold: true
                     }
                 }
