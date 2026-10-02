@@ -1,6 +1,15 @@
 name: NEXUS Custom Android
 
 on:
+  push:
+    branches:
+      - release/v1-operational-acceptance
+    paths:
+      - 'custom/**'
+      - 'scripts/stage-custom.sh'
+      - '.github/workflows/nexus-custom-android.yml'
+      - '.gitmodules'
+      - 'qgroundcontrol'
   pull_request:
     branches:
       - develop
