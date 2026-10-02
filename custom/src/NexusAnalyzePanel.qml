@@ -85,7 +85,7 @@ Rectangle {
             Label { text: qsTr("ANALYZE"); color: "#F5F8FA"; font.pixelSize: 20; font.bold: true }
             Label {
                 text: qsTr("LOCAL FLIGHT EVIDENCE")
-                color: "#7F8F99"
+                color: "#A8B5BD"
                 font.pixelSize: 9
                 font.bold: true
             }
@@ -156,11 +156,11 @@ Rectangle {
                                 }
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    Label { text: modelData.type; color: "#7FA7BB"; font.pixelSize: 7; font.bold: true }
+                                    Label { text: modelData.type; color: "#7FA7BB"; font.pixelSize: 9; font.bold: true }
                                     Item { Layout.fillWidth: true }
-                                    Label { text: modelData.sizeText; color: "#74818A"; font.pixelSize: 7 }
+                                    Label { text: modelData.sizeText; color: "#9AAAB4"; font.pixelSize: 9 }
                                 }
-                                Label { text: modelData.dateText; color: "#7D8A93"; font.pixelSize: 7 }
+                                Label { text: modelData.dateText; color: "#A4B1B9"; font.pixelSize: 9 }
                             }
                         }
                     }
@@ -215,8 +215,8 @@ Rectangle {
                                 Label { text: analyzeModel.selectedName; color: "#EEF3F6"; font.pixelSize: 13; font.bold: true; elide: Text.ElideMiddle; Layout.fillWidth: true }
                                 Label {
                                     text: analyzeModel.selectedType + " · " + analyzeModel.selectedDate + " · " + analyzeModel.selectedSize
-                                    color: "#83919A"
-                                    font.pixelSize: 8
+                                    color: "#AAB7BF"
+                                    font.pixelSize: 9
                                 }
                             }
                             Button {
@@ -241,7 +241,7 @@ Rectangle {
                                 verticalAlignment: Text.AlignVCenter
                                 text: qsTr("Telemetry .tlog selected. QGC performs authoritative live replay for this format. Static Nexus route/timeline graphs are available for PX4 ULog and DataFlash firmware logs.")
                                 color: "#D1C77D"
-                                font.pixelSize: 8
+                                font.pixelSize: 9
                             }
                         }
 
@@ -325,7 +325,7 @@ Rectangle {
                                               .arg(logParser.minTimestamp.toFixed(1))
                                               .arg(logParser.maxTimestamp.toFixed(1))
                                         color: "#82919A"
-                                        font.pixelSize: 8
+                                        font.pixelSize: 9
                                     }
 
                                     Label {
@@ -346,7 +346,7 @@ Rectangle {
                                                 anchors.margins: 7
                                                 Label { text: modelData.mode; color: "#DCE5EA"; font.pixelSize: 9; font.bold: true }
                                                 Item { Layout.fillWidth: true }
-                                                Label { text: Number(modelData.start).toFixed(1) + "s → " + Number(modelData.end).toFixed(1) + "s"; color: "#7E8B94"; font.pixelSize: 8 }
+                                                Label { text: Number(modelData.start).toFixed(1) + "s → " + Number(modelData.end).toFixed(1) + "s"; color: "#7E8B94"; font.pixelSize: 9 }
                                             }
                                         }
                                     }
@@ -367,16 +367,16 @@ Rectangle {
                                             RowLayout {
                                                 anchors.fill: parent
                                                 anchors.margins: 7
-                                                Label { text: Number(modelData.time).toFixed(1) + "s"; color: "#78A8BF"; font.pixelSize: 8; font.bold: true }
+                                                Label { text: Number(modelData.time).toFixed(1) + "s"; color: "#78A8BF"; font.pixelSize: 9; font.bold: true }
                                                 Label {
                                                     id: eventText
                                                     Layout.fillWidth: true
                                                     text: modelData.description
                                                     color: "#C9D3D9"
-                                                    font.pixelSize: 8
+                                                    font.pixelSize: 9
                                                     wrapMode: Text.WordWrap
                                                 }
-                                                Label { text: modelData.type; color: "#7D8A93"; font.pixelSize: 7 }
+                                                Label { text: modelData.type; color: "#A4B1B9"; font.pixelSize: 9 }
                                             }
                                         }
                                     }
