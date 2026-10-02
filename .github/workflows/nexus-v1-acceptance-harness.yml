@@ -53,6 +53,8 @@ jobs:
           grep -Fq 'head_sha' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'conclusion' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'NEXUS_ANDROID_CERT_SHA256' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'NEXUS V1 Self-Hosted Software Gate' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'NEXUS V1 Self-Hosted Android Emulator' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'scripts/validate-field-evidence.py' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'scripts/validate-v1-acceptance.py' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'field QA app source SHA mismatch' scripts/validate-v1-acceptance.py
