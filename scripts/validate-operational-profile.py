@@ -56,10 +56,13 @@ for path,n in [
     if not re.fullmatch(r"[0-9A-Fa-f]{%d}"%n, get(path)):
         fail(path+f" must be {n} hex characters")
 
-for path in ["aircraft.missionBaselineSha256","aircraft.geofenceBaselineSha256"]:
-    v=nonplaceholder(path)
-    if v!="NONE" and not re.fullmatch(r"[0-9A-Fa-f]{64}",v):
-        fail(path+" must be 64 hex characters or NONE")
+mission_hash=nonplaceholder("aircraft.missionBaselineSha256")
+if mission_hash!="NONE" and not re.fullmatch(r"[0-9A-Fa-f]{64}",mission_hash):
+    fail("aircraft.missionBaselineSha256 must be 64 hex characters or NONE")
+
+geofence_hash=nonplaceholder("aircraft.geofenceBaselineSha256")
+if not re.fullmatch(r"[0-9A-Fa-f]{64}",geofence_hash):
+    fail("aircraft.geofenceBaselineSha256 must be a real 64-character hash")
 
 env=get("operationalEnvelope")
 numeric_positive=[
@@ -86,6 +89,11 @@ if env["rtlAltitudeM"] > env["maxAltitudeM"]:
     fail("rtlAltitudeM cannot exceed maxAltitudeM")
 if env.get("visualLineOfSightRequired") is not True:
     fail("V1 operational acceptance requires visual line of sight")
+
+for k in ["rcLoss","telemetryLoss","lowBattery","geofence"]:
+    v=str(get("requiredFailsafes."+k)).strip().upper()
+    if v in {"NONE","DISABLED","OFF","UNKNOWN","UNCONFIGURED"}:
+        fail("requiredFailsafes."+k+" cannot be disabled or unknown")
 
 missions=get("scope.approvedMissionTypes")
 if not isinstance(missions,list) or not missions:
