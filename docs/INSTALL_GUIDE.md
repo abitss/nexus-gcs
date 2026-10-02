@@ -1,12 +1,12 @@
-# NEXUS GCS 0.1.0 — Installation Guide
+# NEXUS GCS 1.0.0 — Installation Guide
 
 ## 1. Release files
 
 A production release bundle should contain:
 
-- `NEXUS-GCS-0.1.0-arm64-v8a.apk`
-- `NEXUS-GCS-0.1.0-arm64-v8a.apk.sha256`
-- `NEXUS-GCS-0.1.0-arm64-v8a.signing.txt`
+- `NEXUS-GCS-1.0.0-arm64-v8a.apk`
+- `NEXUS-GCS-1.0.0-arm64-v8a.apk.sha256`
+- `NEXUS-GCS-1.0.0-arm64-v8a.signing.txt`
 - `release-manifest.json`
 - release notes and documentation
 
@@ -31,13 +31,13 @@ The exact Android minimum/target SDK is inherited from the pinned QGroundControl
 On Linux/macOS:
 
 ```bash
-sha256sum NEXUS-GCS-0.1.0-arm64-v8a.apk
+sha256sum NEXUS-GCS-1.0.0-arm64-v8a.apk
 ```
 
 or on macOS where `sha256sum` is unavailable:
 
 ```bash
-shasum -a 256 NEXUS-GCS-0.1.0-arm64-v8a.apk
+shasum -a 256 NEXUS-GCS-1.0.0-arm64-v8a.apk
 ```
 
 Compare the output exactly with the provided `.sha256` file.
@@ -47,7 +47,7 @@ Compare the output exactly with the provided `.sha256` file.
 If Android SDK Build Tools are installed:
 
 ```bash
-apksigner verify --verbose --print-certs NEXUS-GCS-0.1.0-arm64-v8a.apk
+apksigner verify --verbose --print-certs NEXUS-GCS-1.0.0-arm64-v8a.apk
 ```
 
 Compare the certificate SHA-256 fingerprint with the trusted release fingerprint supplied by the NEXUS release owner.
@@ -78,7 +78,7 @@ If sideloading is allowed by organizational policy:
 ADB installation may be used on an engineering bench:
 
 ```bash
-adb install -r NEXUS-GCS-0.1.0-arm64-v8a.apk
+adb install -r NEXUS-GCS-1.0.0-arm64-v8a.apk
 ```
 
 ## 6. First launch
