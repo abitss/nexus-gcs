@@ -2,15 +2,17 @@
 import hashlib, json, os, re, sys
 from pathlib import Path
 
-if len(sys.argv) != 7:
-    raise SystemExit("usage: validate-operational-acceptance.py <repo-root> <profile.json> <parameter-file> <evidence-root> <expected-source-sha> <trusted-cert-sha256>")
+if len(sys.argv) != 9:
+    raise SystemExit("usage: validate-operational-acceptance.py <repo-root> <profile.json> <parameter-file> <mission-file-or-NONE> <geofence-file> <evidence-root> <expected-source-sha> <trusted-cert-sha256>")
 
 root=Path(sys.argv[1])
 profile_path=Path(sys.argv[2])
 parameter_path=Path(sys.argv[3])
-ev=Path(sys.argv[4])
-expected_sha=sys.argv[5]
-trusted_cert=re.sub(r"[^0-9A-F]","",sys.argv[6].upper())
+mission_arg=sys.argv[4]
+geofence_path=Path(sys.argv[5])
+ev=Path(sys.argv[6])
+expected_sha=sys.argv[7]
+trusted_cert=re.sub(r"[^0-9A-F]","",sys.argv[8].upper())
 
 def fail(msg):
     raise SystemExit("OPERATIONAL FLIGHT ACCEPTANCE BLOCKED: "+msg)
@@ -42,6 +44,25 @@ if not parameter_path.is_file():
 param_sha=sha256_file(parameter_path)
 if param_sha.lower()!=aircraft["parameterFileSha256"].lower():
     fail("parameter baseline SHA-256 mismatch")
+
+if not geofence_path.is_file():
+    fail("geofence baseline file not found")
+geofence_sha=sha256_file(geofence_path)
+if geofence_sha.lower()!=aircraft["geofenceBaselineSha256"].lower():
+    fail("geofence baseline SHA-256 mismatch")
+
+mission_declared=aircraft["missionBaselineSha256"]
+if mission_declared=="NONE":
+    if mission_arg!="NONE":
+        fail("profile declares no mission baseline but a mission file was supplied")
+    mission_sha="NONE"
+else:
+    mission_path=Path(mission_arg)
+    if not mission_path.is_file():
+        fail("mission baseline file not found")
+    mission_sha=sha256_file(mission_path)
+    if mission_sha.lower()!=mission_declared.lower():
+        fail("mission baseline SHA-256 mismatch")
 
 def unique_json(name):
     hits=list(ev.rglob(name))
@@ -98,6 +119,8 @@ certificate={
     "flightController":aircraft["flightController"],
     "px4FirmwareVersion":aircraft["firmwareVersion"],
     "parameterFileSha256":param_sha,
+    "missionBaselineSha256":mission_sha,
+    "geofenceBaselineSha256":geofence_sha,
     "apkSha256":release["apkSha256"],
     "signingCertSha256":release["signingCertSha256"],
     "qgcBaselineSha":release["qgcBaselineSha"],
@@ -113,6 +136,8 @@ certificate={
         "NEXUS APK/source/signing certificate changes",
         "PX4 firmware changes",
         "parameter baseline hash changes",
+        "mission baseline changes when a mission baseline is approved",
+        "geofence baseline hash changes",
         "airframe/propulsion/power/control-link configuration changes",
         "required failsafe configuration changes",
         "operation outside the approved envelope",
