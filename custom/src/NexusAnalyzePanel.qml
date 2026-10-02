@@ -8,6 +8,7 @@ import QGroundControl
 import QGroundControl.Controls
 import QGroundControl.FlightMap
 import QGroundControl.LogViewer
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -15,7 +16,7 @@ Rectangle {
     property var analyzeModel
     signal closeRequested()
 
-    width: Math.min(980, parent ? parent.width * 0.88 : 980)
+    width: parent ? Math.min(1040, Math.max(360, parent.width - 20)) : 980
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -178,20 +179,30 @@ Rectangle {
                     anchors.margins: 9
                     spacing: 7
 
-                    Item {
+                    NexusStateView {
                         visible: analyzeModel.selectedPath.length === 0
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 8
-                            Label { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("SELECT A FLIGHT"); color: "#657580"; font.pixelSize: 24; font.bold: true }
-                            Label { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("Choose a local telemetry or firmware log from Flight History."); color: "#7C8992"; font.pixelSize: 10 }
-                        }
+                        state: analyzeModel.flightCount > 0 ? "empty" : "empty"
+                        title: analyzeModel.flightCount > 0 ? qsTr("Select a flight") : qsTr("No local flight history")
+                        message: analyzeModel.flightCount > 0
+                                 ? qsTr("Choose a telemetry or firmware log from Flight History to inspect route, timeline and graphs.")
+                                 : qsTr("Flight logs stored on this device will appear here after a flight or imported evidence session.")
+                        actionText: qsTr("REFRESH")
+                        onAction: analyzeModel.refreshHistory()
+                    }
+
+                    NexusStateView {
+                        visible: pendingLog.length > 0 && analyzeModel.selectedFirmwareLog && !logParser.parseComplete
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        state: "loading"
+                        title: qsTr("Parsing flight evidence")
+                        message: qsTr("Building route, event timeline and graph data from the selected log.")
                     }
 
                     ColumnLayout {
-                        visible: analyzeModel.selectedPath.length > 0
+                        visible: analyzeModel.selectedPath.length > 0 && !(pendingLog.length > 0 && analyzeModel.selectedFirmwareLog && !logParser.parseComplete)
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         spacing: 7
