@@ -12,7 +12,7 @@ Rectangle {
     signal openPayloadRequested()
     signal openEngineerRequested()
 
-    width: Math.min(640, parent ? parent.width * 0.54 : 640)
+    width: parent ? Math.min(700, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.56)) : 640
     color: "#F60A0F14"
     border.color: "#2A3742"
     border.width: 1
