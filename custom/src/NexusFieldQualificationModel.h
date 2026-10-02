@@ -4,6 +4,9 @@
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
 #include <QtCore/QVariantList>
+#include <QtCore/QtMath>
+
+#include "MAVLinkMessageType.h"
 
 class NexusDeviceHealthModel;
 class NexusRecoveryModel;
