@@ -75,7 +75,7 @@ Rectangle {
                             : recoveryModel.overallState === "DEGRADED" ? "#D6A84A" : "#2C9B7F"
                 Label { anchors.centerIn: parent; text: recoveryModel.overallState; color: parent.border.color; font.pixelSize: 8; font.bold: true }
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         ScrollView {
