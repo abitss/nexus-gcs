@@ -22,14 +22,14 @@ runs=json.loads((ev/"run-metadata.json").read_text())
 expected_names={
     "BUILD":{"NEXUS Custom Android","NEXUS V1 Self-Hosted Software Gate"},
     "EMULATOR":{"NEXUS Android Emulator Smoke","NEXUS V1 Self-Hosted Android Emulator"},
-    "PX4 SITL":{"NEXUS PX4 Full Qualification"},
+    "PX4 SITL":{"NEXUS PX4 Full Qualification","NEXUS V1 Self-Hosted PX4 SITL Qualification"},
     "PIXHAWK BENCH":{"NEXUS Real Pixhawk Bench Qualification"},
     "HIL":{"NEXUS PX4 HIL Hardware Qualification"},
-    "OFFLINE":{"NEXUS OFFLINE-FIRST Validation"},
-    "FAILURE-MATRIX":{"NEXUS V1 Failure Matrix"},
+    "OFFLINE":{"NEXUS OFFLINE-FIRST Validation","NEXUS V1 Self-Hosted OFFLINE Validation"},
+    "FAILURE-MATRIX":{"NEXUS V1 Failure Matrix","NEXUS V1 Self-Hosted Failure Matrix"},
     "FIELD QA":{"NEXUS Controlled Field Evidence Validation"},
-    "SECURITY REVIEW":{"NEXUS V1 Security Review"},
-    "SIGNED RELEASE APK":{"NEXUS Production Android Release"},
+    "SECURITY REVIEW":{"NEXUS V1 Security Review","NEXUS V1 Self-Hosted Security Review"},
+    "SIGNED RELEASE APK":{"NEXUS Production Android Release","NEXUS V1 Self-Hosted Production Android Release"},
 }
 for gate,names in expected_names.items():
     d=runs.get(gate)
