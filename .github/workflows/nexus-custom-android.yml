@@ -9,6 +9,7 @@ on:
       - phase0-task0.4-plan-module
       - phase0-task0.5-health-module
       - phase0-task0.6-alerts-failsafes
+      - phase0-task0.21-release-engineering
       - phase0-task0.20-final-ux-polish
       - phase0-task0.19-hil-controlled-field
       - phase0-task0.18-real-pixhawk-validation
@@ -143,6 +144,7 @@ jobs:
             -DQT_ANDROID_ABIS=${{ env.QT_ANDROID_ABIS }}
             -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
             -DQT_ANDROID_SIGN_APK=ON
+            -DNEXUS_SOURCE_SHA=${{ github.sha }}
 
       - name: Build NEXUS Android
         timeout-minutes: 75

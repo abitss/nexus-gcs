@@ -1,4 +1,4 @@
-# NEXUS GCS 0.1.0 — Operator Guide
+# NEXUS GCS 1.0.0 — Operator Guide
 
 ## Mission
 

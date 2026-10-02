@@ -68,6 +68,7 @@ QString NexusFieldQualificationModel::exportJson(const QString &path) const
 {
     QJsonObject root{
         {QStringLiteral("schemaVersion"), QStringLiteral("1.0")},
+        {QStringLiteral("sourceSha"), QStringLiteral(NEXUS_SOURCE_SHA)},
         {QStringLiteral("phase"), _phase},
         {QStringLiteral("durationSeconds"), durationSeconds()},
         {QStringLiteral("heartbeatRateHz"), _heartbeatRateHz},

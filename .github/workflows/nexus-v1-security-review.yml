@@ -1,0 +1,89 @@
+name: NEXUS V1 Security Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      security_validation_run_id:
+        description: Successful NEXUS SECURITY Validation run ID for this exact V1 source
+        required: true
+        type: string
+      review_decision:
+        description: Type APPROVE V1 after reviewing security evidence
+        required: true
+        type: string
+      review_notes:
+        description: Security review notes / exceptions
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  review:
+    if: inputs.review_decision == 'APPROVE V1'
+    runs-on: ubuntu-24.04
+    environment: v1-security-review
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source is V1.0.0
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open("release/release.json"))
+          assert d["version"]=="1.0.0", d
+          assert d["releaseTag"]=="nexus-v1.0.0", d
+          PY
+
+      - name: Verify security validation run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.security_validation_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" > "${RUNNER_TEMP}/security-run.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ["RUNNER_TEMP"],"security-run.json")))
+          assert d["name"]=="NEXUS SECURITY Validation", d["name"]
+          assert d["conclusion"]=="success", d["conclusion"]
+          assert d["head_sha"]==os.environ["GITHUB_SHA"], (d["head_sha"],os.environ["GITHUB_SHA"])
+          PY
+
+      - name: Create protected security review evidence
+        env:
+          RUN_ID: ${{ inputs.security_validation_run_id }}
+          NOTES: ${{ inputs.review_notes }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os,datetime
+          out={
+            "schemaVersion":"1.0",
+            "gate":"SECURITY REVIEW",
+            "status":"PASS",
+            "version":"1.0.0",
+            "sourceSha":os.environ["GITHUB_SHA"],
+            "securityValidationRunId":os.environ["RUN_ID"],
+            "reviewer":os.environ["GITHUB_ACTOR"],
+            "reviewedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "notes":os.environ.get("NOTES","")
+          }
+          p=os.path.join(os.environ["RUNNER_TEMP"],"nexus-v1-security-review.json")
+          open(p,"w").write(json.dumps(out,indent=2)+"\n")
+          PY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nexus-v1-security-review-evidence
+          path: ${{ runner.temp }}/nexus-v1-security-review.json
+          retention-days: 90
+          if-no-files-found: error

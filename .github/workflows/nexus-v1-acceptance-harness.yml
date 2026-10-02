@@ -1,0 +1,75 @@
+name: NEXUS V1 Acceptance Harness
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.21-release-engineering
+      - develop
+    paths:
+      - 'release/**'
+      - 'docs/V1_FINAL_ACCEPTANCE.md'
+      - 'scripts/validate-v1-acceptance.py'
+      - '.github/workflows/nexus-v1-*.yml'
+      - '.github/workflows/nexus-production-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify V1 release identity
+        shell: bash
+        run: |
+          python3 scripts/validate-release.py .
+          python3 - <<'PY'
+          import json
+          d=json.load(open("release/release.json"))
+          assert d["version"]=="1.0.0"
+          assert d["releaseTag"]=="nexus-v1.0.0"
+          assert d["artifactBaseName"]=="NEXUS-GCS-1.0.0-arm64-v8a"
+          PY
+
+      - name: Verify required acceptance gates are encoded
+        shell: bash
+        run: |
+          set -euo pipefail
+          for gate in             'BUILD'             'EMULATOR'             'PX4 SITL'             'PIXHAWK BENCH'             'HIL'             'OFFLINE'             'FAILURE-MATRIX'             'FIELD QA'             'SECURITY REVIEW'             'SIGNED RELEASE APK'; do
+            grep -Fq ""$gate"" scripts/validate-v1-acceptance.py
+          done
+
+      - name: Verify final acceptance is fail closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'head_sha' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'conclusion' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'NEXUS_ANDROID_CERT_SHA256' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'scripts/validate-field-evidence.py' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'scripts/validate-v1-acceptance.py' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'field QA app source SHA mismatch' scripts/validate-v1-acceptance.py
+          grep -Fq 'NEXUS_SOURCE_SHA' custom/src/NexusFieldQualificationModel.cc
+          grep -Fq 'environment: production-release' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'environment: v1-security-review' .github/workflows/nexus-v1-security-review.yml
+
+      - name: Verify failure matrix breadth
+        shell: bash
+        run: |
+          for test in NexusPlanEditingTest NexusAlertManagerTest NexusPreflightModelTest NexusDeviceHealthModelTest NexusSecurityModelTest NexusRecoveryModelTest NexusOfflineModelTest; do
+            grep -Fq "$test" .github/workflows/nexus-v1-failure-matrix.yml
+          done
+
+      - name: Verify acceptance documentation
+        shell: bash
+        run: |
+          test -s docs/V1_FINAL_ACCEPTANCE.md
+          grep -Fq 'NEXUS GCS V1.0.0 ACCEPTED' docs/V1_FINAL_ACCEPTANCE.md
+          grep -Fq 'one source SHA' docs/V1_FINAL_ACCEPTANCE.md

@@ -162,6 +162,7 @@ jobs:
             -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
             -DQT_ANDROID_SIGN_APK=ON
             -DQGC_STABLE_BUILD=ON
+            -DNEXUS_SOURCE_SHA=${{ github.sha }}
 
       - name: Build production APK
         timeout-minutes: 85

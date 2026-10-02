@@ -3,6 +3,7 @@ name: NEXUS PAYLOAD Validation
 on:
   pull_request:
     branches:
+      - phase0-task0.21-release-engineering
       - phase0-task0.20-final-ux-polish
       - phase0-task0.19-hil-controlled-field
       - phase0-task0.18-real-pixhawk-validation
