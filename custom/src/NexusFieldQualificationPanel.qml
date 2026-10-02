@@ -15,7 +15,7 @@ Rectangle {
             Layout.fillWidth: true
             ColumnLayout {
                 Label { text: qsTr("HIL + FIELD QUALIFICATION"); color: "#F6FAFC"; font.pixelSize: 19; font.bold: true }
-                Label { text: qsTr("OBSERVE · MEASURE · ABORT ON ANOMALY"); color: "#83919A"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("OBSERVE · MEASURE · ABORT ON ANOMALY"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             }
             Item { Layout.fillWidth: true }
             NexusIconButton { text: "×"; onClicked: root.closeRequested() }
@@ -47,7 +47,7 @@ Rectangle {
                     Layout.fillWidth: true; implicitHeight: 66; radius: 8; color: "#10171E"; border.color: "#293740"
                     Column {
                         anchors.centerIn: parent; spacing: 3
-                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData[0]; color: "#83919A"; font.pixelSize: 8; font.bold: true }
+                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData[0]; color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData[1]; color: "#EDF3F6"; font.pixelSize: 11; font.bold: true }
                     }
                 }
@@ -70,7 +70,7 @@ Rectangle {
             Button { text: qsTr("FAIL / ABORT"); onClicked: model.markCard("OPERATOR_ABORT","FAIL",notes.text) }
             Button { text: qsTr("EXPORT"); enabled: !model.running; onClicked: exportPath.text = model.exportDefault() }
         }
-        Label { id: exportPath; Layout.fillWidth: true; color: "#83919A"; font.pixelSize: 8; elide: Text.ElideMiddle }
-        Label { Layout.fillWidth: true; text: qsTr("Field mode records evidence only. It never induces RF loss or overrides PX4 failsafes."); color: "#D6A84A"; font.pixelSize: 8 }
+        Label { id: exportPath; Layout.fillWidth: true; color: "#AAB7BF"; font.pixelSize: 9; elide: Text.ElideMiddle }
+        Label { Layout.fillWidth: true; text: qsTr("Field mode records evidence only. It never induces RF loss or overrides PX4 failsafes."); color: "#D6A84A"; font.pixelSize: 9 }
     }
 }
