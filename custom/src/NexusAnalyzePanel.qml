@@ -92,7 +92,7 @@ Rectangle {
             Item { Layout.fillWidth: true }
             Button { text: qsTr("REFRESH"); onClicked: analyzeModel.refreshHistory() }
             Button { text: qsTr("QGC LOG VIEWER"); onClicked: root.openDeepAnalysis() }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         RowLayout {
