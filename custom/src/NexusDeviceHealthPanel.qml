@@ -8,7 +8,7 @@ Rectangle {
     property var deviceModel
     signal closeRequested()
 
-    width: Math.min(620, parent ? parent.width * 0.52 : 620)
+    width: parent ? Math.min(680, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.56)) : 620
     color: "#F60A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -45,7 +45,7 @@ Rectangle {
                     color: card.state === "CRITICAL" ? "#E36A6A"
                          : card.state === "WARNING" ? "#E0B85F"
                          : "#78B7A1"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
@@ -54,10 +54,10 @@ Rectangle {
                 Layout.fillWidth: true
                 text: card.detail
                 color: "#83919B"
-                font.pixelSize: 8
+                font.pixelSize: 9
                 elide: Text.ElideRight
             }
-            Button {
+            NexusActionButton {
                 visible: card.actionText.length > 0
                 text: card.actionText
                 Layout.alignment: Qt.AlignRight
@@ -100,7 +100,7 @@ Rectangle {
                     font.bold: true
                 }
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         ScrollView {

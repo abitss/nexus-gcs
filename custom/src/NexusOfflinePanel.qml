@@ -12,7 +12,7 @@ Rectangle {
     signal openPayloadRequested()
     signal openEngineerRequested()
 
-    width: Math.min(640, parent ? parent.width * 0.54 : 640)
+    width: parent ? Math.min(700, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.56)) : 640
     color: "#F60A0F14"
     border.color: "#2A3742"
     border.width: 1
@@ -51,7 +51,7 @@ Rectangle {
                 Label {
                     text: card.state
                     color: card.healthy ? "#78B7A1" : "#D6A84A"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
@@ -60,13 +60,13 @@ Rectangle {
                 Layout.fillWidth: true
                 text: card.detail
                 color: "#85939E"
-                font.pixelSize: 8
+                font.pixelSize: 9
                 elide: Text.ElideMiddle
             }
 
             Item { Layout.fillHeight: true }
 
-            Button {
+            NexusActionButton {
                 visible: card.buttonText.length > 0
                 Layout.alignment: Qt.AlignRight
                 text: card.buttonText
@@ -112,7 +112,7 @@ Rectangle {
                 }
             }
 
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
@@ -139,7 +139,7 @@ Rectangle {
                     Label {
                         text: qsTr("CLOUD REQUIRED: NO")
                         color: "#86A7B8"
-                        font.pixelSize: 8
+                        font.pixelSize: 9
                         font.bold: true
                     }
                 }

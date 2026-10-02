@@ -69,7 +69,7 @@ Rectangle {
                     }
                 }
 
-                Button {
+                NexusActionButton {
                     text: qsTr("RETURN TO FLIGHT")
                     onClicked: root.closeRequested()
                 }

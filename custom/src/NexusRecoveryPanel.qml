@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
     property var recoveryModel
     signal closeRequested()
 
-    width: Math.min(700, parent ? parent.width * 0.60 : 700)
+    width: parent ? Math.min(740, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.62)) : 700
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -26,7 +27,16 @@ Rectangle {
         color: "#10171E"
         border.color: state === "CRITICAL" ? "#D95151"
                     : state === "WARNING" ? "#D6A84A" : "#293740"
-        ColumnLayout {
+        NexusConfirmDialog {
+        id: clearRecoveryDialog
+        heading: qsTr("Clear recovered event history?")
+        message: qsTr("This clears the in-memory Recovery timeline only. Security audit evidence remains intact.")
+        confirmText: qsTr("CLEAR EVENTS")
+        critical: true
+        onConfirmed: recoveryModel.clearRecoveredEvents()
+    }
+
+    ColumnLayout {
             anchors.fill: parent
             anchors.margins: 9
             spacing: 3
@@ -38,11 +48,11 @@ Rectangle {
                     text: card.value
                     color: card.state === "CRITICAL" ? "#E36A6A"
                          : card.state === "WARNING" ? "#E0B85F" : "#7FC5AD"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
-            Label { Layout.fillWidth: true; text: card.detail; color: "#83919A"; font.pixelSize: 8; wrapMode: Text.WordWrap }
+            Label { Layout.fillWidth: true; text: card.detail; color: "#AAB7BF"; font.pixelSize: 9; wrapMode: Text.WordWrap }
         }
     }
 
@@ -55,7 +65,7 @@ Rectangle {
             Layout.fillWidth: true
             ColumnLayout {
                 Label { text: qsTr("CRASH + RECOVERY"); color: "#F6FAFC"; font.pixelSize: 19; font.bold: true }
-                Label { text: qsTr("DETECT · PRESERVE · RESTORE · VERIFY"); color: "#83919A"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("DETECT · PRESERVE · RESTORE · VERIFY"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -63,9 +73,9 @@ Rectangle {
                 color: "#0D141A"
                 border.color: recoveryModel.overallState === "RECOVERY REQUIRED" ? "#D95151"
                             : recoveryModel.overallState === "DEGRADED" ? "#D6A84A" : "#2C9B7F"
-                Label { anchors.centerIn: parent; text: recoveryModel.overallState; color: parent.border.color; font.pixelSize: 8; font.bold: true }
+                Label { anchors.centerIn: parent; text: recoveryModel.overallState; color: parent.border.color; font.pixelSize: 9; font.bold: true }
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         ScrollView {
@@ -155,14 +165,14 @@ Rectangle {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Button {
+                    NexusActionButton {
                         text: qsTr("ACK MISSION INTERRUPTION")
                         enabled: recoveryModel.interruptedMission
                         onClicked: recoveryModel.acknowledgeInterruptedMission()
                     }
-                    Button {
+                    NexusActionButton {
                         text: qsTr("CLEAR RECOVERED EVENTS")
-                        onClicked: recoveryModel.clearRecoveredEvents()
+                        onClicked: clearRecoveryDialog.open()
                     }
                     Item { Layout.fillWidth: true }
                 }
@@ -181,14 +191,14 @@ Rectangle {
                         RowLayout {
                             anchors.fill: parent
                             anchors.margins: 7
-                            Label { text: modelData.time; color: "#72838E"; font.pixelSize: 7 }
-                            Label { text: modelData.type; color: "#9FC0D1"; font.pixelSize: 8; font.bold: true }
+                            Label { text: modelData.time; color: "#9AAAB4"; font.pixelSize: 9 }
+                            Label { text: modelData.type; color: "#9FC0D1"; font.pixelSize: 9; font.bold: true }
                             Label {
                                 id: eventText
                                 Layout.fillWidth: true
                                 text: modelData.detail
                                 color: "#C9D3D9"
-                                font.pixelSize: 8
+                                font.pixelSize: 9
                                 wrapMode: Text.WordWrap
                             }
                         }

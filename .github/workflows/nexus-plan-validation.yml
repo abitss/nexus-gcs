@@ -7,6 +7,7 @@ on:
       - phase0-task0.4-plan-module
       - phase0-task0.5-health-module
       - phase0-task0.6-alerts-failsafes
+      - phase0-task0.19-hil-controlled-field
       - phase0-task0.18-real-pixhawk-validation
       - phase0-task0.17-px4-validation
       - phase0-task0.16-crash-recovery

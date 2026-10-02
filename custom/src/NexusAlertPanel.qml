@@ -50,16 +50,16 @@ Rectangle {
                 }
             }
 
-            Button {
+            NexusActionButton {
                 text: qsTr("ACK ALL")
                 enabled: alertManager.unacknowledgedCount > 0
                 onClicked: alertManager.acknowledgeAll()
             }
-            Button {
+            NexusActionButton {
                 text: qsTr("CLEAR HISTORY")
                 onClicked: alertManager.clearInactiveHistory()
             }
-            Button {
+            NexusActionButton {
                 text: qsTr("RETURN")
                 onClicked: root.closeRequested()
             }
@@ -136,7 +136,7 @@ Rectangle {
                         Label { Layout.fillWidth: true; text: message; color: "#B8C3CC"; font.pixelSize: 10; elide: Text.ElideRight }
                     }
 
-                    Button {
+                    NexusActionButton {
                         text: acknowledged ? qsTr("ACKED") : qsTr("ACK")
                         enabled: active && !acknowledged
                         onClicked: alertManager.acknowledge(index)

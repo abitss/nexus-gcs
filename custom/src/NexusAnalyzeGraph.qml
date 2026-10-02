@@ -104,7 +104,7 @@ Rectangle {
             Label {
                 text: root.available ? root.resolvedField : qsTr("UNAVAILABLE IN LOG")
                 color: root.available ? "#7FA7BB" : "#697680"
-                font.pixelSize: 7
+                font.pixelSize: 9
                 elide: Text.ElideLeft
                 Layout.maximumWidth: root.width * 0.58
             }

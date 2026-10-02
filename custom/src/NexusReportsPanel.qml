@@ -8,6 +8,7 @@ import QGroundControl
 import QGroundControl.Controls
 import QGroundControl.FlightMap
 import QGroundControl.LogViewer
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -16,7 +17,7 @@ Rectangle {
     property var reportsModel
     signal closeRequested()
 
-    width: Math.min(940, parent ? parent.width * 0.86 : 940)
+    width: parent ? Math.min(1040, Math.max(360, parent.width - 20)) : 940
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -32,6 +33,7 @@ Rectangle {
     property var eventRows: []
     property var routePoints: []
     property var reportData: ({})
+    property string parserError: ""
 
     function unavailable(value, suffix) {
         return isNaN(value) ? qsTr("UNAVAILABLE") : Number(value).toFixed(1) + (suffix || "")
@@ -145,6 +147,7 @@ Rectangle {
         eventRows = []
         routePoints = []
         reportData = ({})
+        parserError = ""
 
         reportsModel.loadForSource(analyzeModel.selectedPath)
         if (!analyzeModel.selectedFirmwareLog) return
@@ -159,9 +162,10 @@ Rectangle {
         function onParseFileFinished(filePath, ok, errorMessage) {
             if (filePath !== pendingLog) return
             if (!ok) {
-                QGroundControl.showMessageDialog(root, qsTr("Reports"), errorMessage)
+                root.parserError = errorMessage
                 return
             }
+            root.parserError = ""
             root.rebuildEvidence()
         }
     }
@@ -174,14 +178,14 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Label { text: qsTr("REPORTS"); color: "#F4F8FA"; font.pixelSize: 20; font.bold: true }
-            Label { text: qsTr("POST-FLIGHT EVIDENCE"); color: "#7E8D97"; font.pixelSize: 9; font.bold: true }
+            Label { text: qsTr("POST-FLIGHT EVIDENCE"); color: "#A8B5BD"; font.pixelSize: 9; font.bold: true }
             Item { Layout.fillWidth: true }
-            Button {
+            NexusActionButton {
                 text: qsTr("REFRESH REPORT")
                 enabled: analyzeModel.selectedFirmwareLog
                 onClicked: root.loadSelected()
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
@@ -208,17 +212,48 @@ Rectangle {
                     text: analyzeModel.selectedFirmwareLog ? qsTr("EVIDENCE READY")
                          : (analyzeModel.selectedReplayOnly ? qsTr("TLOG REPLAY ONLY") : qsTr("NO SOURCE"))
                     color: analyzeModel.selectedFirmwareLog ? "#7FC5AD" : "#D3AF5E"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
+        }
+
+        NexusStateView {
+            visible: analyzeModel.selectedPath.length === 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "empty"
+            title: qsTr("Select flight evidence")
+            message: qsTr("Choose a flight in ANALYZE first. Reports are generated only from explicit local evidence, never from guessed values.")
+        }
+
+        NexusStateView {
+            visible: pendingLog.length > 0 && !logParser.parseComplete && parserError.length === 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "loading"
+            title: qsTr("Building report")
+            message: qsTr("Parsing the selected flight log and deriving route, duration, warnings, events and supported metrics.")
+        }
+
+        NexusStateView {
+            visible: parserError.length > 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "error"
+            title: qsTr("Report could not be generated")
+            message: parserError
+            actionText: qsTr("RETRY")
+            onAction: root.loadSelected()
         }
 
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            visible: analyzeModel.selectedPath.length > 0
+            visible: analyzeModel.selectedPath.length > 0 &&
+                     (pendingLog.length === 0 || logParser.parseComplete) &&
+                     parserError.length === 0
 
             ColumnLayout {
                 width: parent.width
@@ -232,7 +267,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("MISSION ID"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("MISSION ID"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.missionId
@@ -246,7 +281,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("OPERATOR"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("OPERATOR"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.operatorName
@@ -260,7 +295,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("AIRCRAFT"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("AIRCRAFT"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.aircraft
@@ -274,7 +309,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("FIRMWARE"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("FIRMWARE"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         TextField {
                             Layout.fillWidth: true
                             text: reportsModel.firmware
@@ -288,7 +323,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("MISSION COMPLETION"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("MISSION COMPLETION"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         ComboBox {
                             Layout.fillWidth: true
                             model: [qsTr("NOT RECORDED"), qsTr("COMPLETED"), qsTr("PARTIAL"), qsTr("ABORTED"), qsTr("FAILED")]
@@ -302,7 +337,7 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: qsTr("DATE / TIME"); color: "#84929B"; font.pixelSize: 8; font.bold: true }
+                        Label { text: qsTr("DATE / TIME"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
                         Label {
                             Layout.fillWidth: true
                             text: logParser.parseComplete && logParser.startTime
@@ -337,7 +372,7 @@ Rectangle {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 3
-                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: "#7F8E97"; font.pixelSize: 8; font.bold: true }
+                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: "#7F8E97"; font.pixelSize: 9; font.bold: true }
                                 Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.value; color: "#EFF4F7"; font.pixelSize: 13; font.bold: true }
                             }
                         }
@@ -427,7 +462,7 @@ Rectangle {
                                 Layout.fillWidth: true
                                 text: Number(modelData.time).toFixed(1) + "s · " + modelData.description
                                 color: "#C7D1D7"
-                                font.pixelSize: 8
+                                font.pixelSize: 9
                                 wrapMode: Text.WordWrap
                             }
                         }
@@ -436,7 +471,7 @@ Rectangle {
                             visible: warningRows.length === 0
                             text: qsTr("No warnings/errors recorded in this log.")
                             color: "#81909A"
-                            font.pixelSize: 8
+                            font.pixelSize: 9
                         }
                     }
                 }
@@ -461,16 +496,16 @@ Rectangle {
                             Label { text: qsTr("EXPORT PIPELINE"); color: "#DDE6EB"; font.pixelSize: 10; font.bold: true }
                             Label {
                                 text: qsTr("Report schema v1.0 is ready for future PDF, CSV and KML exporters. Export buttons remain intentionally disabled until exporter implementations are added and validated.")
-                                color: "#83919A"
-                                font.pixelSize: 8
+                                color: "#AAB7BF"
+                                font.pixelSize: 9
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
                         }
 
-                        Button { text: "PDF"; enabled: false }
-                        Button { text: "CSV"; enabled: false }
-                        Button { text: "KML"; enabled: false }
+                        NexusActionButton { text: "PDF"; enabled: false }
+                        NexusActionButton { text: "CSV"; enabled: false }
+                        NexusActionButton { text: "KML"; enabled: false }
                     }
                 }
             }

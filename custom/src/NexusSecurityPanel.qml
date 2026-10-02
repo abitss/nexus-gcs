@@ -7,7 +7,7 @@ Rectangle {
     property var securityModel
     signal closeRequested()
 
-    width: Math.min(660, parent ? parent.width * 0.56 : 660)
+    width: parent ? Math.min(720, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.58)) : 660
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -43,7 +43,7 @@ Rectangle {
                 color: "#E26A6A"
                 wrapMode: Text.WordWrap
             }
-            Button {
+            NexusActionButton {
                 id: authButton
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("AUTHENTICATE")
@@ -76,7 +76,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 placeholderText: qsTr("Minimum 10 characters")
             }
-            Button {
+            NexusActionButton {
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("SAVE ENGINEER CREDENTIAL")
                 enabled: securityModel.canAdmin && newEngineerPass.text.length >= 10
@@ -108,7 +108,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 placeholderText: qsTr("Minimum 10 characters")
             }
-            Button {
+            NexusActionButton {
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("CREATE ADMIN")
                 enabled: bootstrapPass.text.length >= 10
@@ -131,7 +131,7 @@ Rectangle {
             Layout.fillWidth: true
             ColumnLayout {
                 Label { text: qsTr("SECURITY"); color: "#F6FAFC"; font.pixelSize: 19; font.bold: true }
-                Label { text: qsTr("LOCAL TRUST + RELEASE INTEGRITY"); color: "#83919A"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("LOCAL TRUST + RELEASE INTEGRITY"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -140,7 +140,7 @@ Rectangle {
                 border.color: securityModel.currentRole === "OPERATOR" ? "#60717E" : "#2C9B7F"
                 Label { anchors.centerIn: parent; text: securityModel.currentRole; color: parent.border.color; font.pixelSize: 9; font.bold: true }
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
@@ -161,30 +161,30 @@ Rectangle {
                         text: securityModel.adminConfigured
                               ? qsTr("Local Admin credential configured. Engineer/Admin sessions require offline passphrase authentication.")
                               : qsTr("No local Admin credential exists yet. Bootstrap is required before privileged roles can be secured.")
-                        color: "#87949D"; font.pixelSize: 8; wrapMode: Text.WordWrap
+                        color: "#87949D"; font.pixelSize: 9; wrapMode: Text.WordWrap
                     }
                 }
-                Button {
+                NexusActionButton {
                     visible: !securityModel.adminConfigured
                     text: qsTr("BOOTSTRAP ADMIN")
                     onClicked: bootstrapDialog.open()
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.adminConfigured
                     text: qsTr("ENGINEER")
                     onClicked: { authDialog.role = "ENGINEER"; authDialog.open() }
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.adminConfigured
                     text: qsTr("ADMIN")
                     onClicked: { authDialog.role = "ADMIN"; authDialog.open() }
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.canAdmin
                     text: securityModel.engineerConfigured ? qsTr("ROTATE ENGINEER") : qsTr("SET ENGINEER")
                     onClicked: engineerCredentialDialog.open()
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.authenticated
                     text: qsTr("LOCK")
                     onClicked: securityModel.lock()
@@ -226,9 +226,9 @@ Rectangle {
                                 Layout.fillWidth: true
                                 Label { text: modelData.title; color: "#EDF3F6"; font.pixelSize: 10; font.bold: true }
                                 Item { Layout.fillWidth: true }
-                                Label { text: modelData.value; color: "#7FC5AD"; font.pixelSize: 8; font.bold: true }
+                                Label { text: modelData.value; color: "#7FC5AD"; font.pixelSize: 9; font.bold: true }
                             }
-                            Label { Layout.fillWidth: true; text: modelData.detail; color: "#83919A"; font.pixelSize: 8; wrapMode: Text.WordWrap }
+                            Label { Layout.fillWidth: true; text: modelData.detail; color: "#AAB7BF"; font.pixelSize: 9; wrapMode: Text.WordWrap }
                         }
                     }
                 }

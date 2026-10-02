@@ -68,16 +68,16 @@ Rectangle {
             columnSpacing: 12
             rowSpacing: 6
 
-            Label { text: qsTr("NEXT WP"); color: "#7F8C98"; font.pixelSize: 9; font.bold: true }
+            Label { text: qsTr("NEXT WP"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             Label { text: root.nextWaypointText; color: "#E8EEF3"; font.pixelSize: 10; Layout.alignment: Qt.AlignRight }
 
-            Label { text: qsTr("HOME"); color: "#7F8C98"; font.pixelSize: 9; font.bold: true }
+            Label { text: qsTr("HOME"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             Label { text: root.homeText; color: "#E8EEF3"; font.pixelSize: 10; Layout.alignment: Qt.AlignRight }
 
-            Label { text: qsTr("HOME ETA"); color: "#7F8C98"; font.pixelSize: 9; font.bold: true }
+            Label { text: qsTr("HOME ETA"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             Label { text: root.homeEtaText; color: "#E8EEF3"; font.pixelSize: 10; Layout.alignment: Qt.AlignRight }
 
-            Label { text: qsTr("BAT TIME"); color: "#7F8C98"; font.pixelSize: 9; font.bold: true }
+            Label { text: qsTr("BAT TIME"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             Label { text: root.batteryTimeText; color: "#E8EEF3"; font.pixelSize: 10; Layout.alignment: Qt.AlignRight }
         }
 
@@ -100,7 +100,7 @@ Rectangle {
 
             Label {
                 text: qsTr("PREFLIGHT")
-                color: "#7F8C98"
+                color: "#AAB7BF"
                 font.pixelSize: 9
                 font.bold: true
             }

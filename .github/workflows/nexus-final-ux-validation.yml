@@ -1,20 +1,20 @@
-name: NEXUS Real Pixhawk Harness Validation
+name: NEXUS Final UX Validation
 
 on:
   pull_request:
     branches:
       - phase0-task0.19-hil-controlled-field
       - phase0-task0.18-real-pixhawk-validation
-      - phase0-task0.17-px4-validation
-      - phase0-task0.16-crash-recovery
       - develop
     paths:
       - 'custom/**'
-      - 'docs/REAL_PIXHAWK_QUALIFICATION.md'
-      - 'scripts/validate-real-pixhawk.sh'
-      - '.github/workflows/nexus-real-pixhawk-harness.yml'
-      - '.github/workflows/nexus-real-pixhawk-bench.yml'
+      - 'scripts/validate-ux-polish.py'
+      - '.github/workflows/nexus-final-ux-validation.yml'
   workflow_dispatch:
+
+concurrency:
+  group: nexus-final-ux-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -25,11 +25,10 @@ env:
   QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
 
 jobs:
-  harness:
-    name: Real Pixhawk harness compile + safety contract
+  ux-contract:
+    name: UX contract + Linux QML compile
     runs-on: ubuntu-24.04
     timeout-minutes: 120
-
     steps:
       - uses: actions/checkout@v7
         with:
@@ -46,10 +45,11 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Validate real-hardware safety contract
-        shell: bash
+      - name: Validate UX contract
+        run: python3 nexus-overlay/scripts/validate-ux-polish.py nexus-overlay
+
+      - name: Stage NEXUS
         run: |
-          bash nexus-overlay/scripts/validate-real-pixhawk.sh             nexus-overlay/custom/test/NexusRealPixhawkBenchTest.cc             nexus-overlay/docs/REAL_PIXHAWK_QUALIFICATION.md             nexus-overlay/.github/workflows/nexus-real-pixhawk-bench.yml
           rm -rf custom
           mkdir -p custom
           cp -a nexus-overlay/custom/. custom/
@@ -59,43 +59,40 @@ jobs:
           qt-host: linux
           qt-arch: linux_gcc_64
           build-type: ${{ env.BUILD_TYPE }}
-          cache-key-suffix: nexus-real-pixhawk-harness
+          cache-key-suffix: nexus-final-ux
           cpm-modules: .cache/CPM
 
       - uses: ./.github/actions/install-dependencies
 
       - uses: ./.github/actions/cmake-configure
         with:
-          build-dir: ${{ runner.temp }}/nexus-real-pixhawk-build
+          build-dir: ${{ runner.temp }}/nexus-final-ux-build
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
-          extra-args: >-
-            -DQGC_BUILD_TESTING=ON
-            -DQGC_TEST_ONSCREEN=OFF
+          extra-args: -DQGC_BUILD_TESTING=ON -DQGC_TEST_ONSCREEN=OFF
 
       - uses: ./.github/actions/cmake-build
         with:
-          build-dir: ${{ runner.temp }}/nexus-real-pixhawk-build
+          build-dir: ${{ runner.temp }}/nexus-final-ux-build
           build-type: ${{ env.BUILD_TYPE }}
           parallel-jobs: '2'
-          output-file: nexus-real-pixhawk-harness-build.log
+          output-file: nexus-final-ux-build.log
 
-      - name: Verify hardware test refuses cloud execution
+      - name: Run cockpit UI regression
         env:
           QT_QPA_PLATFORM: offscreen
           QT_QUICK_BACKEND: software
-        shell: bash
+          LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          set -o pipefail
-          "${RUNNER_TEMP}/nexus-real-pixhawk-build/Release/NEXUS-GCS"             --unittest:NexusRealPixhawkBenchTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-real-pixhawk-harness.log"
+          "${RUNNER_TEMP}/nexus-final-ux-build/Release/NEXUS-GCS"             --unittest:NexusFlightCockpitUITest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-final-ux-test.log"
 
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: nexus-real-pixhawk-harness-evidence
+          name: nexus-final-ux-evidence
           path: |
-            ${{ runner.temp }}/nexus-real-pixhawk-harness.log
-            ${{ runner.temp }}/nexus-real-pixhawk-build/nexus-real-pixhawk-harness-build.log
+            ${{ runner.temp }}/nexus-final-ux-test.log
+            ${{ runner.temp }}/nexus-final-ux-build/nexus-final-ux-build.log
           retention-days: 14
           if-no-files-found: warn
