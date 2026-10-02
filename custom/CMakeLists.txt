@@ -44,6 +44,10 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusFieldQualificationPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusStateView.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusConfirmDialog.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusIconButton.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusTokens.js"
 )
 
 set_source_files_properties(
@@ -141,6 +145,22 @@ set_source_files_properties(
 set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusFieldQualificationPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusFieldQualificationPanel.qml"
+)
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusStateView.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusStateView.qml"
+)
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusConfirmDialog.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusConfirmDialog.qml"
+)
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusIconButton.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusIconButton.qml"
+)
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusTokens.js"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusTokens.js"
 )
 
 qt_add_resources(
