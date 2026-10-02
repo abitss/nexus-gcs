@@ -8,6 +8,7 @@ import QGroundControl
 import QGroundControl.Controls
 import QGroundControl.FlightMap
 import QGroundControl.LogViewer
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -16,7 +17,7 @@ Rectangle {
     property var reportsModel
     signal closeRequested()
 
-    width: Math.min(940, parent ? parent.width * 0.86 : 940)
+    width: parent ? Math.min(1040, Math.max(360, parent.width - 20)) : 940
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -32,6 +33,7 @@ Rectangle {
     property var eventRows: []
     property var routePoints: []
     property var reportData: ({})
+    property string parserError: ""
 
     function unavailable(value, suffix) {
         return isNaN(value) ? qsTr("UNAVAILABLE") : Number(value).toFixed(1) + (suffix || "")
@@ -145,6 +147,7 @@ Rectangle {
         eventRows = []
         routePoints = []
         reportData = ({})
+        parserError = ""
 
         reportsModel.loadForSource(analyzeModel.selectedPath)
         if (!analyzeModel.selectedFirmwareLog) return
@@ -159,9 +162,10 @@ Rectangle {
         function onParseFileFinished(filePath, ok, errorMessage) {
             if (filePath !== pendingLog) return
             if (!ok) {
-                QGroundControl.showMessageDialog(root, qsTr("Reports"), errorMessage)
+                root.parserError = errorMessage
                 return
             }
+            root.parserError = ""
             root.rebuildEvidence()
         }
     }
@@ -214,11 +218,42 @@ Rectangle {
             }
         }
 
+        NexusStateView {
+            visible: analyzeModel.selectedPath.length === 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "empty"
+            title: qsTr("Select flight evidence")
+            message: qsTr("Choose a flight in ANALYZE first. Reports are generated only from explicit local evidence, never from guessed values.")
+        }
+
+        NexusStateView {
+            visible: pendingLog.length > 0 && !logParser.parseComplete && parserError.length === 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "loading"
+            title: qsTr("Building report")
+            message: qsTr("Parsing the selected flight log and deriving route, duration, warnings, events and supported metrics.")
+        }
+
+        NexusStateView {
+            visible: parserError.length > 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "error"
+            title: qsTr("Report could not be generated")
+            message: parserError
+            actionText: qsTr("RETRY")
+            onAction: root.loadSelected()
+        }
+
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            visible: analyzeModel.selectedPath.length > 0
+            visible: analyzeModel.selectedPath.length > 0 &&
+                     (pendingLog.length === 0 || logParser.parseComplete) &&
+                     parserError.length === 0
 
             ColumnLayout {
                 width: parent.width
