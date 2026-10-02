@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -7,36 +8,36 @@ Rectangle {
     property string label: ""
     property string value: "--"
     property string units: ""
-    property color foregroundColor: "#F3F7FA"
-    property color mutedColor: "#7F8C98"
+    property color foregroundColor: T.textPrimary
+    property color mutedColor: T.textMuted
 
-    implicitWidth: 118
-    implicitHeight: 52
-    radius: 8
-    color: "#CC0B0F14"
-    border.color: "#263441"
+    implicitWidth: 120
+    implicitHeight: 56
+    radius: T.radiusSmall
+    color: "#E60A141B"
+    border.color: T.borderSubtle
     border.width: 1
 
     Column {
         anchors.centerIn: parent
-        spacing: 2
+        spacing: T.space2
 
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.label
             color: root.mutedColor
-            font.pixelSize: 9
+            font.pixelSize: T.textCaption
             font.bold: true
         }
 
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 4
+            spacing: T.space4
 
             Label {
                 text: root.value
                 color: root.foregroundColor
-                font.pixelSize: 16
+                font.pixelSize: T.textMetric
                 font.bold: true
             }
 
@@ -44,7 +45,7 @@ Rectangle {
                 visible: root.units.length > 0
                 text: root.units
                 color: root.mutedColor
-                font.pixelSize: 10
+                font.pixelSize: T.textCaption
                 anchors.baseline: parent.children[0].baseline
             }
         }
