@@ -53,6 +53,12 @@ grep -Fq 'NEXUS_ANDROID_CERT_SHA256' .github/workflows/nexus-v1-final-acceptance
 grep -Fq 'environment: v1-security-review' .github/workflows/nexus-v1-security-review.yml
 echo "V1 acceptance contract: PASS"
 
+say "Self-hosted fallback workflow set"
+for f in   .github/workflows/nexus-v1-self-hosted-software.yml   .github/workflows/nexus-v1-self-hosted-emulator.yml   .github/workflows/nexus-v1-self-hosted-px4-sitl.yml   .github/workflows/nexus-v1-self-hosted-offline.yml   .github/workflows/nexus-v1-self-hosted-failure-matrix.yml   .github/workflows/nexus-v1-self-hosted-security-validation.yml   .github/workflows/nexus-v1-self-hosted-security-review.yml   .github/workflows/nexus-v1-self-hosted-production-release.yml   .github/workflows/nexus-v1-self-hosted-final-acceptance.yml; do
+  test -s "$f"
+done
+echo "Self-hosted fallback workflows: PASS"
+
 say "HIL + field architecture"
 bash scripts/validate-hil-field.sh   custom/src/NexusFieldQualificationModel.cc   custom/src/NexusFieldQualificationPanel.qml   custom/test/NexusPX4HILQualificationTest.cc   docs/HIL_FIELD_QUALIFICATION.md
 
