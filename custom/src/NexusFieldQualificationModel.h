@@ -19,6 +19,8 @@ class NexusFieldQualificationModel final : public QObject
     Q_PROPERTY(double mavlinkLossPercent READ mavlinkLossPercent NOTIFY changed)
     Q_PROPERTY(int gpsFix READ gpsFix NOTIFY changed)
     Q_PROPERTY(int satellites READ satellites NOTIFY changed)
+    Q_PROPERTY(double hdop READ hdop NOTIFY changed)
+    Q_PROPERTY(double vdop READ vdop NOTIFY changed)
     Q_PROPERTY(int missionIndex READ missionIndex NOTIFY changed)
     Q_PROPERTY(QString flightMode READ flightMode NOTIFY changed)
     Q_PROPERTY(double maxDeviceTempC READ maxDeviceTempC NOTIFY changed)
@@ -36,6 +38,8 @@ public:
     double mavlinkLossPercent() const { return _mavlinkLossPercent; }
     int gpsFix() const { return _gpsFix; }
     int satellites() const { return _satellites; }
+    double hdop() const { return _hdop; }
+    double vdop() const { return _vdop; }
     int missionIndex() const { return _missionIndex; }
     QString flightMode() const { return _flightMode; }
     double maxDeviceTempC() const { return _maxDeviceTempC; }
@@ -48,6 +52,7 @@ public:
     Q_INVOKABLE void stopSession();
     Q_INVOKABLE void markCard(const QString &name, const QString &status, const QString &notes);
     Q_INVOKABLE QString exportJson(const QString &path) const;
+    Q_INVOKABLE QString exportDefault() const;
 
 signals:
     void changed();
@@ -73,6 +78,8 @@ private:
     double _mavlinkLossPercent=0;
     int _gpsFix=0;
     int _satellites=0;
+    double _hdop=qQNaN();
+    double _vdop=qQNaN();
     int _missionIndex=-1;
     QString _flightMode;
     double _maxDeviceTempC=qQNaN();
