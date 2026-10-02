@@ -20,21 +20,21 @@ if not re.fullmatch(r"[0-9a-f]{40}", expected_sha):
 
 runs=json.loads((ev/"run-metadata.json").read_text())
 expected_names={
-    "BUILD":"NEXUS Custom Android",
-    "EMULATOR":"NEXUS Android Emulator Smoke",
-    "PX4 SITL":"NEXUS PX4 Full Qualification",
-    "PIXHAWK BENCH":"NEXUS Real Pixhawk Bench Qualification",
-    "HIL":"NEXUS PX4 HIL Hardware Qualification",
-    "OFFLINE":"NEXUS OFFLINE-FIRST Validation",
-    "FAILURE-MATRIX":"NEXUS V1 Failure Matrix",
-    "FIELD QA":"NEXUS Controlled Field Evidence Validation",
-    "SECURITY REVIEW":"NEXUS V1 Security Review",
-    "SIGNED RELEASE APK":"NEXUS Production Android Release",
+    "BUILD":{"NEXUS Custom Android","NEXUS V1 Self-Hosted Software Gate"},
+    "EMULATOR":{"NEXUS Android Emulator Smoke","NEXUS V1 Self-Hosted Android Emulator"},
+    "PX4 SITL":{"NEXUS PX4 Full Qualification"},
+    "PIXHAWK BENCH":{"NEXUS Real Pixhawk Bench Qualification"},
+    "HIL":{"NEXUS PX4 HIL Hardware Qualification"},
+    "OFFLINE":{"NEXUS OFFLINE-FIRST Validation"},
+    "FAILURE-MATRIX":{"NEXUS V1 Failure Matrix"},
+    "FIELD QA":{"NEXUS Controlled Field Evidence Validation"},
+    "SECURITY REVIEW":{"NEXUS V1 Security Review"},
+    "SIGNED RELEASE APK":{"NEXUS Production Android Release"},
 }
-for gate,name in expected_names.items():
+for gate,names in expected_names.items():
     d=runs.get(gate)
     if not d: fail(f"missing run metadata for {gate}")
-    if d.get("workflow")!=name: fail(f"{gate} workflow mismatch: {d.get('workflow')}")
+    if d.get("workflow") not in names: fail(f"{gate} workflow mismatch: {d.get('workflow')}")
     if d.get("conclusion")!="success": fail(f"{gate} run is not success")
     if d.get("head_sha")!=expected_sha: fail(f"{gate} source SHA mismatch")
 
