@@ -18,7 +18,7 @@ Rectangle {
                 Label { text: qsTr("OBSERVE · MEASURE · ABORT ON ANOMALY"); color: "#83919A"; font.pixelSize: 9; font.bold: true }
             }
             Item { Layout.fillWidth: true }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         RowLayout {
