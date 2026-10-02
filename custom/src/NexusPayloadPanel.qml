@@ -117,31 +117,31 @@ Rectangle {
             columnSpacing: 8
             rowSpacing: 8
 
-            Button {
+            NexusActionButton {
                 text: qsTr("MAP + VIDEO")
                 Layout.fillWidth: true
                 enabled: payloadModel.configured
                 onClicked: root.showMapWithVideoPip()
             }
-            Button {
+            NexusActionButton {
                 text: qsTr("VIDEO MAIN")
                 Layout.fillWidth: true
                 enabled: payloadModel.configured
                 onClicked: root.showVideoMain()
             }
-            Button {
+            NexusActionButton {
                 text: qsTr("FULLSCREEN")
                 Layout.fillWidth: true
                 enabled: payloadModel.decoding
                 onClicked: root.showVideoFullscreen()
             }
-            Button {
+            NexusActionButton {
                 text: qsTr("SNAPSHOT")
                 Layout.fillWidth: true
                 enabled: payloadModel.decoding || payloadModel.hasCamera
                 onClicked: payloadModel.snapshot()
             }
-            Button {
+            NexusActionButton {
                 text: payloadModel.recording ? qsTr("STOP RECORDING") : qsTr("RECORD")
                 Layout.fillWidth: true
                 enabled: payloadModel.configured || payloadModel.hasCamera
@@ -175,10 +175,10 @@ Rectangle {
                 anchors.fill: parent
                 anchors.margins: 10
                 Label { text: "ZOOM"; color: "#9BA8B2"; font.pixelSize: 9; font.bold: true }
-                Button { text: "WIDE"; onPressed: payloadModel.zoomContinuous(-1); onReleased: payloadModel.zoomStop() }
-                Button { text: "−"; onClicked: payloadModel.zoomStep(-1) }
-                Button { text: "+"; onClicked: payloadModel.zoomStep(1) }
-                Button { text: "TELE"; onPressed: payloadModel.zoomContinuous(1); onReleased: payloadModel.zoomStop() }
+                NexusActionButton { text: "WIDE"; onPressed: payloadModel.zoomContinuous(-1); onReleased: payloadModel.zoomStop() }
+                NexusActionButton { text: "−"; onClicked: payloadModel.zoomStep(-1) }
+                NexusActionButton { text: "+"; onClicked: payloadModel.zoomStep(1) }
+                NexusActionButton { text: "TELE"; onPressed: payloadModel.zoomContinuous(1); onReleased: payloadModel.zoomStop() }
             }
         }
 
@@ -197,27 +197,27 @@ Rectangle {
                 columnSpacing: 4
 
                 Item { width: 60; height: 34 }
-                Button {
+                NexusActionButton {
                     text: "▲"
                     onPressed: payloadModel.gimbalRate(15, 0)
                     onReleased: payloadModel.gimbalRate(0, 0)
                 }
                 Item { width: 60; height: 34 }
 
-                Button {
+                NexusActionButton {
                     text: "◀"
                     onPressed: payloadModel.gimbalRate(0, -20)
                     onReleased: payloadModel.gimbalRate(0, 0)
                 }
-                Button { text: "CENTER"; onClicked: payloadModel.gimbalCenter() }
-                Button {
+                NexusActionButton { text: "CENTER"; onClicked: payloadModel.gimbalCenter() }
+                NexusActionButton {
                     text: "▶"
                     onPressed: payloadModel.gimbalRate(0, 20)
                     onReleased: payloadModel.gimbalRate(0, 0)
                 }
 
                 Item { width: 60; height: 34 }
-                Button {
+                NexusActionButton {
                     text: "▼"
                     onPressed: payloadModel.gimbalRate(-15, 0)
                     onReleased: payloadModel.gimbalRate(0, 0)
