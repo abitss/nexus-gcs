@@ -68,7 +68,7 @@ Rectangle {
             Label {
                 Layout.fillWidth: true
                 text: detail
-                color: "#84929D"
+                color: "#AAB7BF"
                 font.pixelSize: 9
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
@@ -160,7 +160,7 @@ Rectangle {
                         Layout.fillWidth: true
                         text: vehicleModel.rebootParameters.join(", ")
                         color: "#C5B58C"
-                        font.pixelSize: 8
+                        font.pixelSize: 9
                         elide: Text.ElideRight
                     }
                 }
@@ -187,20 +187,20 @@ Rectangle {
                 columnSpacing: 12
                 rowSpacing: 7
 
-                Label { text: qsTr("FIRMWARE"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
-                Label { text: qsTr("VERSION"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
-                Label { text: qsTr("MODE"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
-                Label { text: qsTr("SETUP"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
+                Label { text: qsTr("FIRMWARE"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("VERSION"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("MODE"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("SETUP"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
 
                 Label { text: vehicleModel.firmwareType; color: "#EDF2F5"; font.pixelSize: 10; font.bold: true }
                 Label { text: vehicleModel.firmwareVersion; color: "#EDF2F5"; font.pixelSize: 10; font.bold: true }
                 Label { text: vehicleModel.flightMode; color: "#EDF2F5"; font.pixelSize: 10; font.bold: true }
                 Label { text: vehicleModel.setupState; color: root.accent(vehicleModel.setupState); font.pixelSize: 10; font.bold: true }
 
-                Label { text: qsTr("PARAMETERS"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
-                Label { text: qsTr("UID"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
-                Label { text: qsTr("GIT"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
-                Label { text: qsTr("STATE"); color: "#75838E"; font.pixelSize: 8; font.bold: true }
+                Label { text: qsTr("PARAMETERS"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("UID"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("GIT"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("STATE"); color: "#9AAAB4"; font.pixelSize: 9; font.bold: true }
 
                 Label { text: vehicleModel.parameterState; color: root.accent(vehicleModel.parameterState); font.pixelSize: 10; font.bold: true }
                 Label { text: vehicleModel.uidText; color: "#C8D1D8"; font.pixelSize: 9; elide: Text.ElideMiddle; Layout.fillWidth: true }
