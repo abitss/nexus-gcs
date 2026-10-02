@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 import QGroundControl
 import QGroundControl.Controls
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -12,7 +13,7 @@ Rectangle {
     signal closeRequested()
     signal openHealthRequested()
 
-    width: Math.min(650, parent ? parent.width * 0.56 : 650)
+    width: parent ? Math.min(700, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.58)) : 650
     color: "#F60A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -218,18 +219,15 @@ Rectangle {
             sourceComponent: engineerWorkspace
         }
 
-        Item {
+        NexusStateView {
             visible: !engineerModel.unlocked
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            Column {
-                anchors.centerIn: parent
-                spacing: 12
-                Label { anchors.horizontalCenter: parent.horizontalCenter; text: "ENGINEER"; color: "#566773"; font.pixelSize: 28; font.bold: true }
-                Label { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("Protected engineering workspace"); color: "#7D8B95"; font.pixelSize: 11 }
-                Button { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("UNLOCK ENGINEER MODE"); onClicked: unlockDialog.open() }
-            }
+            state: "empty"
+            title: qsTr("Engineer workspace locked")
+            message: qsTr("Authenticate with an ENGINEER or ADMIN credential to access advanced parameters, raw diagnostics and developer tools.")
+            actionText: qsTr("UNLOCK ENGINEER MODE")
+            onAction: unlockDialog.open()
         }
     }
 
