@@ -24,6 +24,18 @@ on:
         description: Successful V1 final acceptance run ID
         required: true
         type: string
+      bench_run_id:
+        description: Exact real Pixhawk bench run reviewed for this aircraft
+        required: true
+        type: string
+      hil_run_id:
+        description: Exact HIL run reviewed for this aircraft
+        required: true
+        type: string
+      field_qa_run_id:
+        description: Exact operational field QA run reviewed for this aircraft
+        required: true
+        type: string
       operator_review_run_id:
         description: Successful operator flight review run ID
         required: true
@@ -74,6 +86,9 @@ jobs:
       - name: Verify source run identities
         env:
           V1_RUN: ${{ inputs.v1_acceptance_run_id }}
+          BENCH_RUN: ${{ inputs.bench_run_id }}
+          HIL_RUN: ${{ inputs.hil_run_id }}
+          FIELD_RUN: ${{ inputs.field_qa_run_id }}
           OP_RUN: ${{ inputs.operator_review_run_id }}
           ENG_RUN: ${{ inputs.engineer_review_run_id }}
         shell: bash
@@ -87,6 +102,9 @@ jobs:
               "NEXUS GCS V1 Final Acceptance",
               "NEXUS GCS V1 Self-Hosted Final Acceptance"
             },os.environ["V1_RUN"]),
+            "bench":({"NEXUS Real Pixhawk Bench Qualification"},os.environ["BENCH_RUN"]),
+            "hil":({"NEXUS PX4 HIL Hardware Qualification"},os.environ["HIL_RUN"]),
+            "field":({"NEXUS Controlled Field Evidence Validation"},os.environ["FIELD_RUN"]),
             "operator":({"NEXUS V1 Operator Flight Review"},os.environ["OP_RUN"]),
             "engineer":({"NEXUS V1 Engineer Airworthiness Review"},os.environ["ENG_RUN"]),
           }
