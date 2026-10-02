@@ -70,7 +70,7 @@ jobs:
           FIELD_JSON="$(find "${RUNNER_TEMP}/operator-field" -type f -name 'nexus-field-*.json' -print -quit)"
           test -n "$FIELD_JSON"
           python3 scripts/validate-operational-field-evidence.py "$FIELD_JSON"
-          python3 - "${{ inputs.profile_path }}" "$FIELD_JSON" <<\'PY\'
+          python3 - "${{ inputs.profile_path }}" "$FIELD_JSON" <<'PY'
           import json,sys
           profile=json.load(open(sys.argv[1],encoding="utf-8"))
           field=json.load(open(sys.argv[2],encoding="utf-8"))
