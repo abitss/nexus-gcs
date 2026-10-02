@@ -1,0 +1,100 @@
+name: NEXUS HIL + Field Harness Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.18-real-pixhawk-validation
+      - phase0-task0.17-px4-validation
+      - develop
+    paths:
+      - 'custom/**'
+      - 'docs/HIL_FIELD_QUALIFICATION.md'
+      - 'scripts/validate-hil-field.sh'
+      - 'scripts/validate-field-evidence.py'
+      - '.github/workflows/nexus-hil-field-harness.yml'
+      - '.github/workflows/nexus-px4-hil-hardware.yml'
+      - '.github/workflows/nexus-field-evidence-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  harness:
+    name: HIL + field harness compile and safety contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate HIL + field architecture
+        shell: bash
+        run: |
+          bash nexus-overlay/scripts/validate-hil-field.sh             nexus-overlay/custom/src/NexusFieldQualificationModel.cc             nexus-overlay/custom/src/NexusFieldQualificationPanel.qml             nexus-overlay/custom/test/NexusPX4HILQualificationTest.cc             nexus-overlay/docs/HIL_FIELD_QUALIFICATION.md
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-hil-field-harness
+          cpm-modules: .cache/CPM
+
+      - uses: ./.github/actions/install-dependencies
+
+      - uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-hil-field-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-hil-field-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-hil-field-build.log
+
+      - name: Verify HIL test refuses cloud hardware execution
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/nexus-hil-field-build/Release/NEXUS-GCS"             --unittest:NexusPX4HILQualificationTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-hil-field-harness.log"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nexus-hil-field-harness-evidence
+          path: |
+            ${{ runner.temp }}/nexus-hil-field-harness.log
+            ${{ runner.temp }}/nexus-hil-field-build/nexus-hil-field-build.log
+          retention-days: 14
+          if-no-files-found: warn
