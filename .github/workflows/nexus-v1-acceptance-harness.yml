@@ -55,6 +55,8 @@ jobs:
           grep -Fq 'NEXUS_ANDROID_CERT_SHA256' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'scripts/validate-field-evidence.py' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'scripts/validate-v1-acceptance.py' .github/workflows/nexus-v1-final-acceptance.yml
+          grep -Fq 'field QA app source SHA mismatch' scripts/validate-v1-acceptance.py
+          grep -Fq 'NEXUS_SOURCE_SHA' custom/src/NexusFieldQualificationModel.cc
           grep -Fq 'environment: production-release' .github/workflows/nexus-v1-final-acceptance.yml
           grep -Fq 'environment: v1-security-review' .github/workflows/nexus-v1-security-review.yml
 
