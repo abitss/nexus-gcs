@@ -72,6 +72,7 @@ jobs:
           set -euo pipefail
           grep -Fq 'environment: operational-flight-release' .github/workflows/nexus-v1-operational-flight-acceptance.yml
           grep -Fq 'NEXUS_ANDROID_CERT_SHA256' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'signingCertSha256' scripts/validate-v1-acceptance.py
           grep -Fq 'parameter baseline SHA-256 mismatch' scripts/validate-operational-acceptance.py
           grep -Fq 'mission baseline SHA-256 mismatch' scripts/validate-operational-acceptance.py
           grep -Fq 'geofence baseline SHA-256 mismatch' scripts/validate-operational-acceptance.py
