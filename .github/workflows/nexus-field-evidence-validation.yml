@@ -1,0 +1,35 @@
+name: NEXUS Controlled Field Evidence Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      evidence_path:
+        description: Absolute path to exported nexus-field-*.json on the self-hosted evidence runner
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: [self-hosted, linux, nexus-field-evidence]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.ref_name }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Validate controlled-field evidence
+        shell: bash
+        run: |
+          test -f "${{ inputs.evidence_path }}"
+          python3 scripts/validate-field-evidence.py "${{ inputs.evidence_path }}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nexus-controlled-field-evidence
+          path: ${{ inputs.evidence_path }}
+          retention-days: 30
+          if-no-files-found: error
