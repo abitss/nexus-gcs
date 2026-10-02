@@ -52,6 +52,7 @@ for path in [
     root / "docs" / "OPERATOR_GUIDE.md",
     root / "docs" / "ENGINEER_GUIDE.md",
     root / "docs" / "TROUBLESHOOTING.md",
+    root / "docs" / "RELEASE_ENGINEERING.md",
 ]:
     if not path.is_file() or path.stat().st_size < 300:
         fail(f"missing/incomplete release documentation: {path.relative_to(root)}")
