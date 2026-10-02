@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import QGroundControl
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -11,7 +12,7 @@ Rectangle {
     property var mapControl
     signal closeRequested()
 
-    width: Math.min(430, parent ? parent.width * 0.36 : 430)
+    width: parent ? Math.min(520, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.42)) : 430
     color: "#F20B1016"
     border.color: "#273540"
     border.width: 1
@@ -76,7 +77,17 @@ Rectangle {
             NexusIconNexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
+        NexusStateView {
+            visible: !payloadModel.configured && !payloadModel.hasCamera
+            Layout.fillWidth: true
+            Layout.preferredHeight: 180
+            state: "empty"
+            title: qsTr("No camera or stream source")
+            message: qsTr("Configure an EO/FPV stream or connect a supported camera before using live view, recording, zoom or gimbal controls.")
+        }
+
         Rectangle {
+            visible: payloadModel.configured || payloadModel.hasCamera
             Layout.fillWidth: true
             Layout.preferredHeight: 74
             radius: 9
@@ -100,6 +111,7 @@ Rectangle {
         }
 
         GridLayout {
+            visible: payloadModel.configured || payloadModel.hasCamera
             Layout.fillWidth: true
             columns: 2
             columnSpacing: 8
