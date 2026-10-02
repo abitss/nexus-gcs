@@ -2,12 +2,6 @@ name: NEXUS V1 Self-Hosted Software Gate
 
 on:
   workflow_dispatch:
-    inputs:
-      run_android:
-        description: Also build the Android arm64 candidate
-        required: true
-        default: true
-        type: boolean
 
 permissions:
   contents: read
@@ -108,14 +102,12 @@ jobs:
           run_test NexusOfflineModelTest
 
       - name: Set Android SDK location
-        if: inputs.run_android
         shell: bash
         run: |
           echo "ANDROID_SDK_ROOT=${RUNNER_TEMP}/android-sdk" >> "$GITHUB_ENV"
           echo "ANDROID_HOME=${RUNNER_TEMP}/android-sdk" >> "$GITHUB_ENV"
 
       - name: Android build setup
-        if: inputs.run_android
         id: android_setup
         uses: ./.github/actions/build-setup
         with:
@@ -128,7 +120,6 @@ jobs:
           cpm-modules: .cache/CPM
 
       - name: Create non-production CI signing key
-        if: inputs.run_android
         shell: bash
         run: |
           set -euo pipefail
@@ -141,7 +132,6 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Configure Android V1 candidate
-        if: inputs.run_android
         uses: ./.github/actions/cmake-configure
         with:
           build-dir: ${{ runner.temp }}/nexus-v1-android
@@ -159,7 +149,6 @@ jobs:
             -DNEXUS_SOURCE_SHA=${{ github.sha }}
 
       - name: Build Android V1 candidate
-        if: inputs.run_android
         uses: ./.github/actions/cmake-build
         with:
           build-dir: ${{ runner.temp }}/nexus-v1-android
@@ -183,7 +172,7 @@ jobs:
             "sourceSha":os.environ["GITHUB_SHA"],
             "qgcBaseline":os.environ["QGC_BASELINE_SHA"],
             "linuxBuild":"attempted",
-            "androidBuildRequested":os.environ.get("INPUT_RUN_ANDROID","").lower()=="true"
+            "androidBuild":"PASS"
           }
           p=os.path.join(os.environ["RUNNER_TEMP"],"v1-software-evidence","nexus-v1-software-gate.json")
           open(p,"w").write(json.dumps(d,indent=2)+"\n")
