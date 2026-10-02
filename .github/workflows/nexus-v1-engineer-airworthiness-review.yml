@@ -68,6 +68,23 @@ jobs:
             assert d["head_sha"]==os.environ["GITHUB_SHA"],(d["head_sha"],os.environ["GITHUB_SHA"])
           PY
 
+      - name: Download and validate reviewed hardware evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="${RUNNER_TEMP}/engineer-hardware"
+          mkdir -p "$ROOT/bench" "$ROOT/hil"
+          gh run download "${{ inputs.bench_run_id }}" -n nexus-real-pixhawk-bench-evidence -D "$ROOT/bench"
+          gh run download "${{ inputs.hil_run_id }}" -n nexus-px4-hil-evidence -D "$ROOT/hil"
+          BENCH_JSON="$(find "$ROOT/bench" -type f -name 'nexus-real-pixhawk-bench.json' -print -quit)"
+          HIL_JSON="$(find "$ROOT/hil" -type f -name 'nexus-px4-hil.json' -print -quit)"
+          test -n "$BENCH_JSON"
+          test -n "$HIL_JSON"
+          python3 scripts/validate-operational-hardware-evidence.py \
+            "${{ inputs.profile_path }}" "$BENCH_JSON" "$HIL_JSON" "$GITHUB_SHA"
+
       - name: Create engineer approval evidence
         env:
           PROFILE: ${{ inputs.profile_path }}
