@@ -35,7 +35,7 @@ if data["releaseTag"] != expected_tag:
 if data["androidPackage"] != "com.abitss.nexusgcs":
     fail("unexpected Android package")
 if data["androidAbi"] != "arm64-v8a":
-    fail("production ABI must be arm64-v8a for 0.1.0")
+    fail("production ABI must be arm64-v8a")
 if data["buildType"] != "Release":
     fail("production buildType must be Release")
 if data["channel"] != "production":
