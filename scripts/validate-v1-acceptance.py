@@ -72,6 +72,7 @@ if len(field_candidates)!=1:
     fail(f"expected exactly one controlled field JSON, found {len(field_candidates)}")
 field=json.loads(field_candidates[0].read_text())
 if field.get("phase")!="FIELD": fail("field QA evidence phase is not FIELD")
+if field.get("sourceSha")!=expected_sha: fail("field QA app source SHA mismatch")
 required_cards={"OUTDOOR_TELEMETRY","GPS_BEHAVIOR","MISSION_EXECUTION","LINK_DEGRADATION","FAILSAFE_BEHAVIOR","APP_STABILITY","PERFORMANCE","THERMAL_BEHAVIOR"}
 cards=field.get("cards",[])
 passed_cards={x.get("name") for x in cards if x.get("status")=="PASS"}
