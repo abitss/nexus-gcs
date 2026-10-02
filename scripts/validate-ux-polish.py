@@ -110,7 +110,12 @@ for name in ["NexusVehiclePanel.qml","NexusRecoveryPanel.qml"]:
         fail(f"{name} missing standardized confirmation")
 
 # Key side panels must clamp to the available tablet width.
-for name in ["NexusVehiclePanel.qml","NexusPayloadPanel.qml","NexusEngineerPanel.qml","NexusRecoveryPanel.qml","NexusAnalyzePanel.qml","NexusReportsPanel.qml"]:
+for name in [
+    "NexusVehiclePanel.qml","NexusPayloadPanel.qml","NexusEngineerPanel.qml",
+    "NexusOfflinePanel.qml","NexusDeviceHealthPanel.qml","NexusSecurityPanel.qml",
+    "NexusRecoveryPanel.qml","NexusFieldQualificationPanel.qml",
+    "NexusAnalyzePanel.qml","NexusReportsPanel.qml"
+]:
     text=read(name)
     if "parent.width - 20" not in text:
         fail(f"{name} lacks tablet width clamp")
