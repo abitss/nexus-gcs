@@ -178,7 +178,7 @@ Rectangle {
                     }
                 }
             }
-            NexusIconNexusIconButton { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
