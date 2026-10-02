@@ -51,14 +51,14 @@ jobs:
           expected={
             "BUILD":({"NEXUS Custom Android","NEXUS V1 Self-Hosted Software Gate"},os.environ["BUILD_ID"]),
             "EMULATOR":({"NEXUS Android Emulator Smoke","NEXUS V1 Self-Hosted Android Emulator"},os.environ["EMULATOR_ID"]),
-            "PX4 SITL":({"NEXUS PX4 Full Qualification"},os.environ["SITL_ID"]),
+            "PX4 SITL":({"NEXUS PX4 Full Qualification","NEXUS V1 Self-Hosted PX4 SITL Qualification"},os.environ["SITL_ID"]),
             "PIXHAWK BENCH":({"NEXUS Real Pixhawk Bench Qualification"},os.environ["BENCH_ID"]),
             "HIL":({"NEXUS PX4 HIL Hardware Qualification"},os.environ["HIL_ID"]),
-            "OFFLINE":({"NEXUS OFFLINE-FIRST Validation"},os.environ["OFFLINE_ID"]),
-            "FAILURE-MATRIX":({"NEXUS V1 Failure Matrix"},os.environ["FAILURE_ID"]),
+            "OFFLINE":({"NEXUS OFFLINE-FIRST Validation","NEXUS V1 Self-Hosted OFFLINE Validation"},os.environ["OFFLINE_ID"]),
+            "FAILURE-MATRIX":({"NEXUS V1 Failure Matrix","NEXUS V1 Self-Hosted Failure Matrix"},os.environ["FAILURE_ID"]),
             "FIELD QA":({"NEXUS Controlled Field Evidence Validation"},os.environ["FIELD_ID"]),
-            "SECURITY REVIEW":({"NEXUS V1 Security Review"},os.environ["SECURITY_ID"]),
-            "SIGNED RELEASE APK":({"NEXUS Production Android Release"},os.environ["RELEASE_ID"]),
+            "SECURITY REVIEW":({"NEXUS V1 Security Review","NEXUS V1 Self-Hosted Security Review"},os.environ["SECURITY_ID"]),
+            "SIGNED RELEASE APK":({"NEXUS Production Android Release","NEXUS V1 Self-Hosted Production Android Release"},os.environ["RELEASE_ID"]),
           }
           rows={}
           for gate,(names,rid) in expected.items():
