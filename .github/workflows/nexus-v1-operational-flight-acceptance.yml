@@ -160,12 +160,12 @@ jobs:
             "${{ inputs.profile_path }}" "$BENCH_JSON" "$HIL_JSON" "$GITHUB_SHA"
 
           python3 - "${{ inputs.profile_path }}" "$FIELD_JSON" <<'PY'
-          import json,sys
+          import json,os,sys
           profile=json.load(open(sys.argv[1],encoding="utf-8"))
           field=json.load(open(sys.argv[2],encoding="utf-8"))
           aircraft=profile["aircraft"]
-          if field.get("sourceSha")!=profile["release"]["sourceSha"]:
-              raise SystemExit("Operational field evidence source SHA differs from locked profile")
+          if field.get("sourceSha")!=os.environ["GITHUB_SHA"]:
+              raise SystemExit("Operational field evidence source SHA differs from accepted Nexus commit")
           if field.get("mavlinkSystemId")!=aircraft["mavlinkSystemId"]:
               raise SystemExit("Operational field evidence MAVLink system ID differs from locked profile")
           if field.get("mavlinkComponentId")!=aircraft["mavlinkComponentId"]:
