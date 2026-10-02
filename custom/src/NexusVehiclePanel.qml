@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import QGroundControl
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
@@ -11,8 +12,8 @@ Rectangle {
     signal closeRequested()
     signal openPayloadRequested()
 
-    width: Math.min(560, parent ? parent.width * 0.48 : 560)
-    color: "#F40A0F14"
+    width: parent ? Math.min(620, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.52)) : 560
+    color: "#F7081017"
     border.color: "#273540"
     border.width: 1
     radius: 12
@@ -85,19 +86,13 @@ Rectangle {
         }
     }
 
-    Dialog {
+    NexusConfirmDialog {
         id: rebootDialog
-        modal: true
-        title: qsTr("Reboot vehicle?")
-        standardButtons: Dialog.Ok | Dialog.Cancel
-
-        Label {
-            width: Math.min(420, root.width - 80)
-            wrapMode: Text.WordWrap
-            text: qsTr("The connected flight controller reports configuration changes that require a reboot. Reboot only while the aircraft is safely disarmed on the ground.")
-        }
-
-        onAccepted: vehicleModel.rebootVehicle()
+        heading: qsTr("Reboot flight controller?")
+        message: qsTr("The vehicle reports configuration changes that require a reboot. Continue only while the aircraft is safely disarmed on the ground.")
+        confirmText: qsTr("REBOOT")
+        critical: true
+        onConfirmed: vehicleModel.rebootVehicle()
     }
 
     ColumnLayout {
@@ -230,7 +225,17 @@ Rectangle {
             wrapMode: Text.WordWrap
         }
 
+        NexusStateView {
+            visible: !vehicleModel.connected
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            state: "empty"
+            title: qsTr("No vehicle connected")
+            message: qsTr("Connect a Pixhawk or telemetry link to inspect firmware, sensors, power, radio, flight modes, safety and calibration.")
+        }
+
         ScrollView {
+            visible: vehicleModel.connected
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
