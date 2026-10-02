@@ -73,7 +73,7 @@ Rectangle {
                     font.bold: true
                 }
             }
-            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
+            NexusIconNexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
