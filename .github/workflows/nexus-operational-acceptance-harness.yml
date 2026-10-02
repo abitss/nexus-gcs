@@ -45,6 +45,10 @@ jobs:
           grep -Fq 'geofenceBaselineSha256 must be a real' scripts/validate-operational-profile.py
           grep -Fq 'cannot be disabled or unknown' scripts/validate-operational-profile.py
           grep -Fq 'visualLineOfSightRequired' scripts/validate-operational-profile.py
+          grep -Fq 'mavlinkSystemId' scripts/validate-operational-profile.py
+          grep -Fq 'mavlinkComponentId' scripts/validate-operational-profile.py
+          test -s scripts/validate-operational-hardware-evidence.py
+          grep -Fq 'MAVLink system ID mismatch' scripts/validate-operational-hardware-evidence.py
 
       - name: Verify operational field breadth
         shell: bash
