@@ -98,7 +98,7 @@ Rectangle {
 
             Item { Layout.fillHeight: true }
 
-            Button {
+            NexusActionButton {
                 Layout.alignment: Qt.AlignRight
                 text: card.buttonText
                 enabled: card.available
@@ -127,7 +127,7 @@ Rectangle {
                 placeholderText: qsTr("Engineer/Admin passphrase")
                 onAccepted: engineerAuthButton.clicked()
             }
-            Button {
+            NexusActionButton {
                 id: engineerAuthButton
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("AUTHENTICATE")
@@ -166,7 +166,7 @@ Rectangle {
             }
             Item { Layout.fillWidth: true }
 
-            Button {
+            NexusActionButton {
                 text: engineerModel.unlocked ? qsTr("LOCK") : qsTr("UNLOCK")
                 onClicked: {
                     if (engineerModel.unlocked) {
@@ -352,14 +352,14 @@ Rectangle {
             RowLayout {
                 Layout.fillWidth: true
                 TextField { id: snapshotALabel; Layout.fillWidth: true; placeholderText: qsTr("Snapshot A label") }
-                Button { text: qsTr("CAPTURE A"); enabled: !!activeVehicle; onClicked: engineerModel.captureSnapshotA(snapshotALabel.text) }
+                NexusActionButton { text: qsTr("CAPTURE A"); enabled: !!activeVehicle; onClicked: engineerModel.captureSnapshotA(snapshotALabel.text) }
             }
             Label { Layout.fillWidth: true; text: engineerModel.snapshotAValid ? engineerModel.snapshotALabel : qsTr("Snapshot A not captured"); color: "#8997A1"; font.pixelSize: 9 }
 
             RowLayout {
                 Layout.fillWidth: true
                 TextField { id: snapshotBLabel; Layout.fillWidth: true; placeholderText: qsTr("Snapshot B label") }
-                Button { text: qsTr("CAPTURE B"); enabled: !!activeVehicle; onClicked: engineerModel.captureSnapshotB(snapshotBLabel.text) }
+                NexusActionButton { text: qsTr("CAPTURE B"); enabled: !!activeVehicle; onClicked: engineerModel.captureSnapshotB(snapshotBLabel.text) }
             }
             Label { Layout.fillWidth: true; text: engineerModel.snapshotBValid ? engineerModel.snapshotBLabel : qsTr("Snapshot B not captured"); color: "#8997A1"; font.pixelSize: 9 }
 
@@ -373,8 +373,8 @@ Rectangle {
                     font.bold: true
                 }
                 Item { Layout.fillWidth: true }
-                Button { text: qsTr("COMPARE"); enabled: engineerModel.snapshotAValid && engineerModel.snapshotBValid; onClicked: engineerModel.compareSnapshots() }
-                Button { text: qsTr("CLEAR"); onClicked: engineerModel.clearSnapshots() }
+                NexusActionButton { text: qsTr("COMPARE"); enabled: engineerModel.snapshotAValid && engineerModel.snapshotBValid; onClicked: engineerModel.compareSnapshots() }
+                NexusActionButton { text: qsTr("CLEAR"); onClicked: engineerModel.clearSnapshots() }
             }
 
             ListView {
