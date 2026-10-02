@@ -53,7 +53,7 @@ jobs:
           python3 - <<'PY'
           import json,os
           d=json.load(open(os.path.join(os.environ["RUNNER_TEMP"],"security-run.json")))
-          assert d["name"]=="NEXUS SECURITY Validation", d["name"]
+          assert d["name"] in {"NEXUS SECURITY Validation","NEXUS V1 Self-Hosted SECURITY Validation"}, d["name"]
           assert d["conclusion"]=="success", d["conclusion"]
           assert d["head_sha"]==os.environ["GITHUB_SHA"], (d["head_sha"],os.environ["GITHUB_SHA"])
           PY
