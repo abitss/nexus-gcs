@@ -30,7 +30,7 @@ def nonplaceholder(path):
     return v.strip()
 
 for path in [
-    "release.product","release.version","release.sourceSha","release.apkSha256",
+    "release.product","release.version",
     "release.signingCertSha256","release.qgcBaselineSha",
     "aircraft.acceptanceId","aircraft.name","aircraft.airframe","aircraft.autopilot",
     "aircraft.firmwareVersion","aircraft.flightController","aircraft.vehicleType",
@@ -52,8 +52,6 @@ for path in ["aircraft.mavlinkSystemId","aircraft.mavlinkComponentId"]:
         fail(path+" must be an integer from 1 to 255")
 
 for path,n in [
-    ("release.sourceSha",40),
-    ("release.apkSha256",64),
     ("release.signingCertSha256",64),
     ("release.qgcBaselineSha",40),
     ("aircraft.parameterFileSha256",64)
