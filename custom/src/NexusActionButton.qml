@@ -9,9 +9,9 @@ Button {
     property bool primary: false
 
     implicitHeight: T.touchMin
-    implicitWidth: Math.max(112, contentItem.implicitWidth + T.space24 * 2)
-    leftPadding: T.space16
-    rightPadding: T.space16
+    implicitWidth: Math.max(T.touchMin, contentItem.implicitWidth + T.space16 * 2)
+    leftPadding: T.space12
+    rightPadding: T.space12
     topPadding: T.space8
     bottomPadding: T.space8
 
