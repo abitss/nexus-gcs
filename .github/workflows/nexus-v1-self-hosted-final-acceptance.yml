@@ -1,61 +1,12 @@
-name: NEXUS GCS V1 Final Acceptance
+name: NEXUS GCS V1 Self-Hosted Final Acceptance
 
 on:
   workflow_dispatch:
-    inputs:
-      build_run_id:
-        description: Hosted or approved self-hosted Android BUILD successful run ID
-        required: true
-        type: string
-      emulator_run_id:
-        description: Hosted or approved self-hosted EMULATOR successful run ID
-        required: true
-        type: string
-      sitl_run_id:
-        description: NEXUS PX4 Full Qualification successful run ID
-        required: true
-        type: string
-      pixhawk_bench_run_id:
-        description: NEXUS Real Pixhawk Bench Qualification successful run ID
-        required: true
-        type: string
-      hil_run_id:
-        description: NEXUS PX4 HIL Hardware Qualification successful run ID
-        required: true
-        type: string
-      offline_run_id:
-        description: NEXUS OFFLINE-FIRST Validation successful run ID
-        required: true
-        type: string
-      failure_matrix_run_id:
-        description: NEXUS V1 Failure Matrix successful run ID
-        required: true
-        type: string
-      field_qa_run_id:
-        description: NEXUS Controlled Field Evidence Validation successful run ID
-        required: true
-        type: string
-      security_review_run_id:
-        description: NEXUS V1 Security Review successful run ID
-        required: true
-        type: string
-      signed_release_run_id:
-        description: NEXUS Production Android Release successful run ID
-        required: true
-        type: string
-      acceptance_confirm:
-        description: Type ACCEPT V1
-        required: true
-        type: string
-
-permissions:
-  contents: read
-  actions: read
 
 jobs:
   final-acceptance:
     if: inputs.acceptance_confirm == 'ACCEPT V1'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, nexus-v1-acceptance]
     environment: production-release
     timeout-minutes: 30
     env:

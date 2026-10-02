@@ -1,29 +1,12 @@
-name: NEXUS V1 Security Review
+name: NEXUS V1 Self-Hosted Security Review
 
 on:
   workflow_dispatch:
-    inputs:
-      security_validation_run_id:
-        description: Successful NEXUS SECURITY Validation run ID for this exact V1 source
-        required: true
-        type: string
-      review_decision:
-        description: Type APPROVE V1 after reviewing security evidence
-        required: true
-        type: string
-      review_notes:
-        description: Security review notes / exceptions
-        required: false
-        type: string
-
-permissions:
-  contents: read
-  actions: read
 
 jobs:
   review:
     if: inputs.review_decision == 'APPROVE V1'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, nexus-v1-security]
     environment: v1-security-review
     timeout-minutes: 10
     steps:

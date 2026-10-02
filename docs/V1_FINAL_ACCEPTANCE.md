@@ -42,9 +42,10 @@ If even one gate was executed on a different revision, final acceptance is BLOCK
 
 ## Gate 1 — BUILD PASS
 
-Evidence source:
+Evidence source, either:
 
-`NEXUS Custom Android`
+- `NEXUS Custom Android`
+- `NEXUS V1 Self-Hosted Software Gate`
 
 Requirements:
 
@@ -60,9 +61,10 @@ It does not satisfy production signing.
 
 ## Gate 2 — EMULATOR PASS
 
-Evidence source:
+Evidence source, either:
 
-`NEXUS Android Emulator Smoke`
+- `NEXUS Android Emulator Smoke`
+- `NEXUS V1 Self-Hosted Android Emulator`
 
 Requirements:
 

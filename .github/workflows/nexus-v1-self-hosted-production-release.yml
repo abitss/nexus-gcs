@@ -1,4 +1,4 @@
-name: NEXUS Production Android Release
+name: NEXUS V1 Self-Hosted Production Android Release
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         type: string
 
 concurrency:
-  group: nexus-production-release-${{ github.ref }}
+  group: nexus-v1-self-hosted-production-release-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
   release:
     name: Production signed Android release
     if: github.ref_type == 'tag' || inputs.release_confirm == 'RELEASE'
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, nexus-v1-release]
     timeout-minutes: 150
     environment: production-release
 

@@ -1,0 +1,187 @@
+name: NEXUS V1 Self-Hosted PX4 SITL Qualification
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-px4-qualification-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+  PX4_V117_SHA: d6f12ad1c4f70ad3230afd7d86e971421e02fef4
+  PX4_DEV_IMAGE: ghcr.io/px4/px4-dev:v1.17.0-rc2
+
+jobs:
+  px4-qualification:
+    name: PX4 lifecycle + mission + recovery qualification
+    runs-on: [self-hosted, linux, nexus-v1-sitl]
+    timeout-minutes: 210
+
+    steps:
+      - name: Checkout pinned QGroundControl
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout NEXUS overlay
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.head_ref || github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate qualification contract
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${QGC_BASELINE_SHA}"
+          bash nexus-overlay/scripts/validate-px4-qualification.sh             nexus-overlay/custom/test/NexusPX4QualificationTest.cc             nexus-overlay/.github/workflows/nexus-px4-qualification.yml
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - name: Build setup
+        id: setup
+        uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-px4-qualification
+          cpm-modules: .cache/CPM
+
+      - name: Install QGC dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure NEXUS qualification tests
+        timeout-minutes: 20
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-px4-qualification-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: >-
+            -DQGC_BUILD_TESTING=ON
+            -DQGC_TEST_ONSCREEN=OFF
+
+      - name: Build NEXUS qualification binary
+        timeout-minutes: 80
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-px4-qualification-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-px4-qualification-build.log
+
+      - name: Checkout pinned PX4 v1.17.0
+        uses: actions/checkout@v7
+        with:
+          repository: PX4/PX4-Autopilot
+          ref: ${{ env.PX4_V117_SHA }}
+          path: px4-autopilot
+          submodules: recursive
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Start pinned PX4 SIH quadrotor
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "${PX4_DEV_IMAGE}"
+          (
+            docker run --rm --network host               --name nexus-px4-qualification               -v "${GITHUB_WORKSPACE}/px4-autopilot:/workspace/PX4-Autopilot"               -w /workspace/PX4-Autopilot               "${PX4_DEV_IMAGE}"               bash -lc 'make px4_sitl sihsim_quadx'
+          ) > "${RUNNER_TEMP}/px4-qualification-sitl.log" 2>&1 &
+          echo $! > "${RUNNER_TEMP}/px4-qualification-wrapper.pid"
+
+          ready=0
+          for _ in $(seq 1 180); do
+            if grep -q "Ready for takeoff" "${RUNNER_TEMP}/px4-qualification-sitl.log" 2>/dev/null; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat "${RUNNER_TEMP}/px4-qualification-wrapper.pid")" 2>/dev/null; then
+              echo "::error::PX4 qualification SITL exited before ready."
+              tail -250 "${RUNNER_TEMP}/px4-qualification-sitl.log" || true
+              exit 1
+            fi
+            sleep 2
+          done
+          test "${ready}" -eq 1
+          tail -100 "${RUNNER_TEMP}/px4-qualification-sitl.log"
+
+      - name: Run full PX4 qualification
+        timeout-minutes: 22
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QGC_TEST_MAXWARNINGS: '400'
+          NEXUS_PX4_QUALIFICATION_EVIDENCE: ${{ runner.temp }}/nexus-px4-qualification.json
+        run: |
+          set -o pipefail
+          "${RUNNER_TEMP}/nexus-px4-qualification-build/Release/NEXUS-GCS"             --unittest:NexusPX4QualificationTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-px4-qualification.log"
+
+      - name: Validate machine-readable qualification evidence
+        if: success()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os
+          path = os.path.join(os.environ["RUNNER_TEMP"], "nexus-px4-qualification.json")
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+          rows = {x["stage"]: x["status"] for x in data["stages"]}
+          required = [
+              "CONNECT", "PREFLIGHT", "MISSION_UPLOAD_READBACK", "ARM", "TAKEOFF",
+              "WAYPOINT_MISSION", "HOLD", "CONTINUE", "RTL", "LAND",
+              "DISCONNECT", "RECONNECT", "FAILURE_CORRUPT_MISSION",
+              "FAILURE_INTERRUPTED_MISSION", "FAILURE_RECOVERY", "QUALIFICATION",
+          ]
+          missing = [x for x in required if rows.get(x) != "PASS"]
+          if missing:
+              raise SystemExit("Missing/failed PX4 qualification stages: " + ", ".join(missing))
+          print("PX4 qualification evidence: PASS")
+          PY
+
+      - name: Stop PX4 SITL
+        if: always()
+        shell: bash
+        run: |
+          docker rm -f nexus-px4-qualification 2>/dev/null || true
+          if [ -f "${RUNNER_TEMP}/px4-qualification-wrapper.pid" ]; then
+            kill "$(cat "${RUNNER_TEMP}/px4-qualification-wrapper.pid")" 2>/dev/null || true
+          fi
+
+      - name: Collect PX4 flight logs
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "${RUNNER_TEMP}/px4-logs"
+          find "${GITHUB_WORKSPACE}/px4-autopilot/build/px4_sitl_default/rootfs/log"             -type f \( -name '*.ulg' -o -name '*.txt' \)             -exec cp --parents {} "${RUNNER_TEMP}/px4-logs/" \; 2>/dev/null || true
+
+      - name: Upload PX4 qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-px4-full-qualification-evidence
+          path: |
+            ${{ runner.temp }}/nexus-px4-qualification.json
+            ${{ runner.temp }}/nexus-px4-qualification.log
+            ${{ runner.temp }}/px4-qualification-sitl.log
+            ${{ runner.temp }}/nexus-px4-qualification-build/nexus-px4-qualification-build.log
+            ${{ runner.temp }}/px4-logs/
+          retention-days: 30
+          if-no-files-found: warn
