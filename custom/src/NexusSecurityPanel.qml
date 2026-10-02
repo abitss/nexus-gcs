@@ -140,7 +140,7 @@ Rectangle {
                 border.color: securityModel.currentRole === "OPERATOR" ? "#60717E" : "#2C9B7F"
                 Label { anchors.centerIn: parent; text: securityModel.currentRole; color: parent.border.color; font.pixelSize: 9; font.bold: true }
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         Rectangle {
