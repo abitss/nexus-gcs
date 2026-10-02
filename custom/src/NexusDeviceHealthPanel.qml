@@ -100,7 +100,7 @@ Rectangle {
                     font.bold: true
                 }
             }
-            Button { text: "×"; onClicked: root.closeRequested() }
+            NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
         ScrollView {
