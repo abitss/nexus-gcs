@@ -80,9 +80,9 @@ jobs:
           grep -Fq 'revocationTriggers' scripts/validate-operational-acceptance.py
           grep -Fq 'Revalidate raw physical evidence' .github/workflows/nexus-v1-operational-flight-acceptance.yml
           grep -Fq 'Verify reviewers approved these exact physical runs' .github/workflows/nexus-v1-operational-flight-acceptance.yml
-          grep -Fq 'operator review references a different field run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
-          grep -Fq 'engineer review references a different bench run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
-          grep -Fq 'engineer review references a different HIL run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Operator review references a different field run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Engineer review references a different bench run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Engineer review references a different HIL run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
 
       - name: Verify acceptance documentation
         run: |
