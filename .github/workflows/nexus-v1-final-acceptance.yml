@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       build_run_id:
-        description: NEXUS Custom Android successful run ID
+        description: Hosted or approved self-hosted Android BUILD successful run ID
         required: true
         type: string
       emulator_run_id:
-        description: NEXUS Android Emulator Smoke successful run ID
+        description: Hosted or approved self-hosted EMULATOR successful run ID
         required: true
         type: string
       sitl_run_id:
@@ -98,25 +98,25 @@ jobs:
           python3 - <<'PY'
           import json,os,subprocess
           expected={
-            "BUILD":("NEXUS Custom Android",os.environ["BUILD_ID"]),
-            "EMULATOR":("NEXUS Android Emulator Smoke",os.environ["EMULATOR_ID"]),
-            "PX4 SITL":("NEXUS PX4 Full Qualification",os.environ["SITL_ID"]),
-            "PIXHAWK BENCH":("NEXUS Real Pixhawk Bench Qualification",os.environ["BENCH_ID"]),
-            "HIL":("NEXUS PX4 HIL Hardware Qualification",os.environ["HIL_ID"]),
-            "OFFLINE":("NEXUS OFFLINE-FIRST Validation",os.environ["OFFLINE_ID"]),
-            "FAILURE-MATRIX":("NEXUS V1 Failure Matrix",os.environ["FAILURE_ID"]),
-            "FIELD QA":("NEXUS Controlled Field Evidence Validation",os.environ["FIELD_ID"]),
-            "SECURITY REVIEW":("NEXUS V1 Security Review",os.environ["SECURITY_ID"]),
-            "SIGNED RELEASE APK":("NEXUS Production Android Release",os.environ["RELEASE_ID"]),
+            "BUILD":({"NEXUS Custom Android","NEXUS V1 Self-Hosted Software Gate"},os.environ["BUILD_ID"]),
+            "EMULATOR":({"NEXUS Android Emulator Smoke","NEXUS V1 Self-Hosted Android Emulator"},os.environ["EMULATOR_ID"]),
+            "PX4 SITL":({"NEXUS PX4 Full Qualification"},os.environ["SITL_ID"]),
+            "PIXHAWK BENCH":({"NEXUS Real Pixhawk Bench Qualification"},os.environ["BENCH_ID"]),
+            "HIL":({"NEXUS PX4 HIL Hardware Qualification"},os.environ["HIL_ID"]),
+            "OFFLINE":({"NEXUS OFFLINE-FIRST Validation"},os.environ["OFFLINE_ID"]),
+            "FAILURE-MATRIX":({"NEXUS V1 Failure Matrix"},os.environ["FAILURE_ID"]),
+            "FIELD QA":({"NEXUS Controlled Field Evidence Validation"},os.environ["FIELD_ID"]),
+            "SECURITY REVIEW":({"NEXUS V1 Security Review"},os.environ["SECURITY_ID"]),
+            "SIGNED RELEASE APK":({"NEXUS Production Android Release"},os.environ["RELEASE_ID"]),
           }
           rows={}
-          for gate,(name,rid) in expected.items():
+          for gate,(names,rid) in expected.items():
             raw=subprocess.check_output(["gh","api",f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{rid}"],text=True)
             d=json.loads(raw)
-            if d["name"]!=name: raise SystemExit(f"{gate}: workflow mismatch {d['name']}")
+            if d["name"] not in names: raise SystemExit(f"{gate}: workflow mismatch {d['name']}")
             if d["conclusion"]!="success": raise SystemExit(f"{gate}: conclusion {d['conclusion']}")
             if d["head_sha"]!=os.environ["GITHUB_SHA"]: raise SystemExit(f"{gate}: source SHA mismatch")
-            rows[gate]={"workflow":name,"run_id":int(rid),"conclusion":"success","head_sha":d["head_sha"]}
+            rows[gate]={"workflow":d["name"],"run_id":int(rid),"conclusion":"success","head_sha":d["head_sha"]}
           out=os.path.join(os.environ["RUNNER_TEMP"],"v1-evidence","run-metadata.json")
           open(out,"w").write(json.dumps(rows,indent=2)+"\n")
           PY
