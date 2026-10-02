@@ -83,7 +83,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Label { text: card.title; color: "#F0F4F7"; font.pixelSize: 11; font.bold: true }
                 Item { Layout.fillWidth: true }
-                Label { visible: card.state.length > 0; text: card.state; color: "#7FA0B5"; font.pixelSize: 8; font.bold: true }
+                Label { visible: card.state.length > 0; text: card.state; color: "#7FA0B5"; font.pixelSize: 9; font.bold: true }
             }
 
             Label {
