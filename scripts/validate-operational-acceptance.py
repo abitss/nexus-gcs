@@ -118,6 +118,8 @@ certificate={
     "airframe":aircraft["airframe"],
     "flightController":aircraft["flightController"],
     "px4FirmwareVersion":aircraft["firmwareVersion"],
+    "mavlinkSystemId":aircraft["mavlinkSystemId"],
+    "mavlinkComponentId":aircraft["mavlinkComponentId"],
     "parameterFileSha256":param_sha,
     "missionBaselineSha256":mission_sha,
     "geofenceBaselineSha256":geofence_sha,
