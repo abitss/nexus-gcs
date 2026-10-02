@@ -6,10 +6,11 @@ This document defines the final acceptance boundary for using NEXUS GCS V1.0.0 o
 
 Operational acceptance is **configuration-bound**.
 
+The source SHA and APK SHA-256 are deliberately **not stored inside the committed locked profile**. A profile containing the SHA/hash of the commit/APK produced from itself would be self-referential and impossible to freeze correctly. Source and APK identity are instead taken from the successful V1 final-acceptance artifact for the exact workflow commit, then bound to the locked profile hash in the operational certificate.
+
 A PASS applies only to the exact combination recorded in the locked operational profile:
 
-- NEXUS source SHA
-- production APK SHA-256
+- locked aircraft/configuration profile SHA-256
 - production signing certificate
 - QGC baseline
 - airframe
