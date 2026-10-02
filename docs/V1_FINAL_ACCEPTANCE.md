@@ -184,6 +184,7 @@ Evidence source:
 Requirements:
 
 - exact accepted source SHA
+- field JSON `sourceSha` embedded by the Android build equals that same SHA
 - field evidence passes `scripts/validate-field-evidence.py`
 - all required field cards PASS
 - no FAIL / OPERATOR_ABORT card
