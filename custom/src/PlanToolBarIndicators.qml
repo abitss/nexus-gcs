@@ -162,7 +162,7 @@ RowLayout {
                         .arg(Math.max(0, _missionController.visualItems.count - 1))
                         .arg(Math.round(_missionController.missionTotalDistance)) : "--"
                 color: "#83919D"
-                font.pixelSize: 8
+                font.pixelSize: 9
             }
         }
     }
