@@ -14,6 +14,12 @@ if d.get("phase")!="FIELD":
     fail("evidence phase is not FIELD")
 if not d.get("sourceSha") or d.get("sourceSha")=="unknown":
     fail("field evidence sourceSha missing")
+for key in ["mavlinkSystemId","mavlinkComponentId"]:
+    v=d.get(key)
+    if isinstance(v,bool) or not isinstance(v,int) or v<1 or v>255:
+        fail(f"field evidence {key} missing/invalid")
+if str(d.get("firmwareType","")).upper() not in {"PX4","MAV_AUTOPILOT_PX4"}:
+    fail("field evidence firmware identity is not PX4")
 
 required={
     "OUTDOOR_TELEMETRY",
