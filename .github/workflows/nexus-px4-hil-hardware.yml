@@ -80,7 +80,7 @@ jobs:
           source-dir: ${{ github.workspace }}
           build-type: ${{ env.BUILD_TYPE }}
           preset: Linux
-          extra-args: -DQGC_BUILD_TESTING=ON -DQGC_TEST_ONSCREEN=OFF
+          extra-args: -DQGC_BUILD_TESTING=ON -DQGC_TEST_ONSCREEN=OFF -DNEXUS_SOURCE_SHA=${{ github.sha }}
       - uses: ./.github/actions/cmake-build
         with:
           build-dir: ${{ runner.temp }}/nexus-px4-hil-build
