@@ -1,0 +1,56 @@
+name: NEXUS Release Engineering Validation
+
+on:
+  pull_request:
+    branches:
+      - phase0-task0.20-final-ux-polish
+      - phase0-task0.19-hil-controlled-field
+      - develop
+    paths:
+      - 'release/**'
+      - 'CHANGELOG.md'
+      - 'docs/**'
+      - 'scripts/validate-release.py'
+      - '.github/workflows/nexus-production-release.yml'
+      - '.github/workflows/nexus-release-validation.yml'
+      - 'custom/cmake/CustomOverrides.cmake'
+  workflow_dispatch:
+
+concurrency:
+  group: nexus-release-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  release-contract:
+    name: Release metadata + docs + signing contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate release contract
+        run: python3 scripts/validate-release.py .
+
+      - name: Verify CI artifact cannot masquerade as production
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'NEXUS-GCS-CI-debug-signed-arm64.apk' .github/workflows/nexus-custom-android.yml
+          ! grep -Fq 'NEXUS-GCS-v0.1.apk' .github/workflows/nexus-custom-android.yml
+
+      - name: Verify production workflow has no debug signing fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -Fq 'androiddebugkey' .github/workflows/nexus-production-release.yml
+          ! grep -Fq 'debug.keystore' .github/workflows/nexus-production-release.yml
+          grep -Fq 'environment: production-release' .github/workflows/nexus-production-release.yml
+          grep -Fq 'apksigner verify --verbose --print-certs' .github/workflows/nexus-production-release.yml
