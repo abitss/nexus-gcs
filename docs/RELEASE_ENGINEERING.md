@@ -9,8 +9,8 @@ Current production release metadata lives in:
 For the first productized release candidate:
 
 - Product: NEXUS GCS
-- Version: 0.1.0
-- Release tag: `nexus-v0.1.0`
+- Version: 1.0.0
+- Release tag: `nexus-v1.0.0`
 - Android package: `com.abitss.nexusgcs`
 - ABI: `arm64-v8a`
 - Build type: Release
@@ -26,11 +26,11 @@ NEXUS does not rewrite upstream QGC versioning code.
 
 During the production workflow only, the pinned QGC checkout receives a temporary local annotated build tag:
 
-`v0.1.0-nexus`
+`v1.0.0-nexus`
 
 This tag is not pushed upstream.
 
-It causes the existing QGC version machinery to emit semantic Android version `0.1.0`.
+It causes the existing QGC version machinery to emit semantic Android version `1.0.0`.
 
 The release manifest separately records the authoritative NEXUS source SHA and QGC baseline SHA.
 
@@ -134,8 +134,8 @@ Release Engineering completion does not waive outstanding aircraft qualification
 After the release branch/commit is accepted, create the NEXUS tag on the exact intended source commit:
 
 ```bash
-git tag -a nexus-v0.1.0 -m "NEXUS GCS 0.1.0"
-git push origin nexus-v0.1.0
+git tag -a nexus-v1.0.0 -m "NEXUS GCS 1.0.0"
+git push origin nexus-v1.0.0
 ```
 
 The production release workflow validates that the Git tag exactly matches `release.json`.
@@ -185,11 +185,11 @@ There is no fallback to debug signing.
 Expected artifact bundle:
 
 ```text
-NEXUS-GCS-0.1.0-arm64-v8a.apk
-NEXUS-GCS-0.1.0-arm64-v8a.apk.sha256
-NEXUS-GCS-0.1.0-arm64-v8a.signing.txt
+NEXUS-GCS-1.0.0-arm64-v8a.apk
+NEXUS-GCS-1.0.0-arm64-v8a.apk.sha256
+NEXUS-GCS-1.0.0-arm64-v8a.signing.txt
 release-manifest.json
-RELEASE_NOTES_0.1.0.md
+RELEASE_NOTES_1.0.0.md
 CHANGELOG.md
 INSTALL_GUIDE.md
 OPERATOR_GUIDE.md
@@ -220,8 +220,8 @@ This is the provenance record for the build.
 Before distribution, verify from a separate trusted machine where practical:
 
 ```bash
-sha256sum NEXUS-GCS-0.1.0-arm64-v8a.apk
-apksigner verify --verbose --print-certs NEXUS-GCS-0.1.0-arm64-v8a.apk
+sha256sum NEXUS-GCS-1.0.0-arm64-v8a.apk
+apksigner verify --verbose --print-certs NEXUS-GCS-1.0.0-arm64-v8a.apk
 ```
 
 Compare:
@@ -229,7 +229,7 @@ Compare:
 - APK SHA-256 against the bundle checksum
 - signing certificate fingerprint against the separately stored trusted fingerprint
 - package ID against `com.abitss.nexusgcs`
-- version against `0.1.0`
+- version against `1.0.0`
 
 ## Install smoke test
 
