@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "NexusTokens.js" as T
 
 Rectangle {
     id: root
     property var recoveryModel
     signal closeRequested()
 
-    width: Math.min(700, parent ? parent.width * 0.60 : 700)
+    width: parent ? Math.min(740, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.62)) : 700
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
@@ -26,7 +27,16 @@ Rectangle {
         color: "#10171E"
         border.color: state === "CRITICAL" ? "#D95151"
                     : state === "WARNING" ? "#D6A84A" : "#293740"
-        ColumnLayout {
+        NexusConfirmDialog {
+        id: clearRecoveryDialog
+        heading: qsTr("Clear recovered event history?")
+        message: qsTr("This clears the in-memory Recovery timeline only. Security audit evidence remains intact.")
+        confirmText: qsTr("CLEAR EVENTS")
+        critical: true
+        onConfirmed: recoveryModel.clearRecoveredEvents()
+    }
+
+    ColumnLayout {
             anchors.fill: parent
             anchors.margins: 9
             spacing: 3
@@ -160,9 +170,9 @@ Rectangle {
                         enabled: recoveryModel.interruptedMission
                         onClicked: recoveryModel.acknowledgeInterruptedMission()
                     }
-                    Button {
+                    NexusActionButton {
                         text: qsTr("CLEAR RECOVERED EVENTS")
-                        onClicked: recoveryModel.clearRecoveredEvents()
+                        onClicked: clearRecoveryDialog.open()
                     }
                     Item { Layout.fillWidth: true }
                 }
