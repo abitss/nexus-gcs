@@ -90,8 +90,8 @@ Rectangle {
                 font.bold: true
             }
             Item { Layout.fillWidth: true }
-            Button { text: qsTr("REFRESH"); onClicked: analyzeModel.refreshHistory() }
-            Button { text: qsTr("QGC LOG VIEWER"); onClicked: root.openDeepAnalysis() }
+            NexusActionButton { text: qsTr("REFRESH"); onClicked: analyzeModel.refreshHistory() }
+            NexusActionButton { text: qsTr("QGC LOG VIEWER"); onClicked: root.openDeepAnalysis() }
             NexusIconButton { text: "×"; onClicked: root.closeRequested() }
         }
 
@@ -219,12 +219,12 @@ Rectangle {
                                     font.pixelSize: 9
                                 }
                             }
-                            Button {
+                            NexusActionButton {
                                 text: qsTr("ROUTE REPLAY")
                                 visible: analyzeModel.selectedReplayOnly
                                 onClicked: root.startReplay()
                             }
-                            Button { text: qsTr("DEEP ANALYSIS"); onClicked: root.openDeepAnalysis() }
+                            NexusActionButton { text: qsTr("DEEP ANALYSIS"); onClicked: root.openDeepAnalysis() }
                         }
 
                         Rectangle {
