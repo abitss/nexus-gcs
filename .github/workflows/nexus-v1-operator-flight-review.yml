@@ -59,6 +59,18 @@ jobs:
           assert d["head_sha"]==os.environ["GITHUB_SHA"], (d["head_sha"],os.environ["GITHUB_SHA"])
           PY
 
+      - name: Download and validate operational field evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/operator-field"
+          gh run download "${{ inputs.field_qa_run_id }}"             -n nexus-controlled-field-evidence             -D "${RUNNER_TEMP}/operator-field"
+          FIELD_JSON="$(find "${RUNNER_TEMP}/operator-field" -type f -name 'nexus-field-*.json' -print -quit)"
+          test -n "$FIELD_JSON"
+          python3 scripts/validate-operational-field-evidence.py "$FIELD_JSON"
+
       - name: Create operator approval evidence
         env:
           PROFILE: ${{ inputs.profile_path }}
