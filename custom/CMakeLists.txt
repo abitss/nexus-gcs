@@ -43,6 +43,7 @@ set(NEXUS_QML_OVERRIDES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusDeviceHealthPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityPanel.qml"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryPanel.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusFieldQualificationPanel.qml"
 )
 
 set_source_files_properties(
@@ -137,6 +138,10 @@ set_source_files_properties(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryPanel.qml"
     PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusRecoveryPanel.qml"
 )
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/NexusFieldQualificationPanel.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "QGroundControl/FlyView/NexusFieldQualificationPanel.qml"
+)
 
 qt_add_resources(
     ${CMAKE_PROJECT_NAME}
@@ -174,6 +179,8 @@ set(CUSTOM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusSecurityModel.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryModel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusRecoveryModel.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusFieldQualificationModel.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/NexusFieldQualificationModel.h
     PARENT_SCOPE
 )
 
