@@ -131,7 +131,7 @@ Rectangle {
             Layout.fillWidth: true
             ColumnLayout {
                 Label { text: qsTr("SECURITY"); color: "#F6FAFC"; font.pixelSize: 19; font.bold: true }
-                Label { text: qsTr("LOCAL TRUST + RELEASE INTEGRITY"); color: "#83919A"; font.pixelSize: 9; font.bold: true }
+                Label { text: qsTr("LOCAL TRUST + RELEASE INTEGRITY"); color: "#AAB7BF"; font.pixelSize: 9; font.bold: true }
             }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -161,7 +161,7 @@ Rectangle {
                         text: securityModel.adminConfigured
                               ? qsTr("Local Admin credential configured. Engineer/Admin sessions require offline passphrase authentication.")
                               : qsTr("No local Admin credential exists yet. Bootstrap is required before privileged roles can be secured.")
-                        color: "#87949D"; font.pixelSize: 8; wrapMode: Text.WordWrap
+                        color: "#87949D"; font.pixelSize: 9; wrapMode: Text.WordWrap
                     }
                 }
                 Button {
@@ -226,9 +226,9 @@ Rectangle {
                                 Layout.fillWidth: true
                                 Label { text: modelData.title; color: "#EDF3F6"; font.pixelSize: 10; font.bold: true }
                                 Item { Layout.fillWidth: true }
-                                Label { text: modelData.value; color: "#7FC5AD"; font.pixelSize: 8; font.bold: true }
+                                Label { text: modelData.value; color: "#7FC5AD"; font.pixelSize: 9; font.bold: true }
                             }
-                            Label { Layout.fillWidth: true; text: modelData.detail; color: "#83919A"; font.pixelSize: 8; wrapMode: Text.WordWrap }
+                            Label { Layout.fillWidth: true; text: modelData.detail; color: "#AAB7BF"; font.pixelSize: 9; wrapMode: Text.WordWrap }
                         }
                     }
                 }
