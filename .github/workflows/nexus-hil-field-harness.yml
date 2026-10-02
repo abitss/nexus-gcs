@@ -3,6 +3,7 @@ name: NEXUS HIL + Field Harness Validation
 on:
   pull_request:
     branches:
+      - phase0-task0.20-final-ux-polish
       - phase0-task0.19-hil-controlled-field
       - phase0-task0.18-real-pixhawk-validation
       - phase0-task0.17-px4-validation
