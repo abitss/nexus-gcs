@@ -45,7 +45,7 @@ env:
 
 jobs:
   android-custom-build:
-    name: NEXUS Android arm64
+    name: NEXUS Android arm64 (CI debug-signed)
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -161,13 +161,13 @@ jobs:
           apk="$(find "${APK_DIR}" -maxdepth 1 -name '*.apk' -print -quit)"
           test -n "${apk}"
           mkdir -p "${RUNNER_TEMP}/artifact"
-          cp "${apk}" "${RUNNER_TEMP}/artifact/NEXUS-GCS-v0.1.apk"
+          cp "${apk}" "${RUNNER_TEMP}/artifact/NEXUS-GCS-CI-debug-signed-arm64.apk"
 
       - name: Upload NEXUS APK
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-gcs-v0.1-android
-          path: ${{ runner.temp }}/artifact/NEXUS-GCS-v0.1.apk
+          name: nexus-gcs-ci-debug-signed-android
+          path: ${{ runner.temp }}/artifact/NEXUS-GCS-CI-debug-signed-arm64.apk
           retention-days: 7
           if-no-files-found: error
 
