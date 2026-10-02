@@ -24,7 +24,7 @@ Dialog {
 
     contentItem: ColumnLayout {
         spacing: T.space12
-        implicitWidth: 400
+        implicitWidth: root.parent ? Math.min(400, Math.max(280, root.parent.width - T.space24 * 2)) : 400
         Label {
             Layout.fillWidth: true
             text: root.heading
