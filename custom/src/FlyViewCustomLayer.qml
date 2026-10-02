@@ -704,6 +704,43 @@ Item {
         onCloseRequested: visible = false
     }
 
+    Rectangle {
+        id: moreMenu
+        visible: false
+        width: Math.min(520, parent.width)
+        implicitHeight: moreGrid.implicitHeight + T.space16 * 2
+        radius: T.radiusLarge
+        color: T.surface
+        border.color: T.border
+        border.width: 1
+        anchors.right: parent.right
+        anchors.bottom: bottomChrome.top
+        anchors.bottomMargin: T.space8
+        z: 9000
+
+        Behavior on opacity { NumberAnimation { duration: T.motionFast } }
+
+        GridLayout {
+            id: moreGrid
+            anchors.fill: parent
+            anchors.margins: T.space16
+            columns: width >= 440 ? 3 : 2
+            columnSpacing: T.space8
+            rowSpacing: T.space8
+
+            NexusNavItem { text: qsTr("ANALYZE"); active: analyzePanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); analyzePanel.visible = true } }
+            NexusNavItem { text: qsTr("VEHICLE"); active: vehiclePanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); vehiclePanel.visible = true } }
+            NexusNavItem { text: qsTr("ENGINEER"); active: engineerPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); engineerPanel.visible = true } }
+            NexusNavItem { text: qsTr("OFFLINE"); active: offlinePanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); offlinePanel.visible = true } }
+            NexusNavItem { text: qsTr("REPORTS"); active: reportsPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); reportsPanel.visible = true } }
+            NexusNavItem { text: qsTr("DEVICE"); active: deviceHealthPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); deviceHealthPanel.visible = true } }
+            NexusNavItem { text: qsTr("SECURITY"); active: securityPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); securityPanel.visible = true } }
+            NexusNavItem { text: qsTr("RECOVERY"); active: recoveryPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); recoveryPanel.visible = true } }
+            NexusNavItem { text: qsTr("VALIDATE"); active: fieldQualificationPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); fieldQualificationPanel.visible = true } }
+        }
+    }
+
+
     Column {
         id: bottomChrome
         objectName: "nexusBottomChrome"
@@ -879,42 +916,6 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                 }
-            }
-        }
-
-        Rectangle {
-            id: moreMenu
-            visible: false
-            width: Math.min(520, parent.width)
-            implicitHeight: moreGrid.implicitHeight + T.space16 * 2
-            radius: T.radiusLarge
-            color: T.surface
-            border.color: T.border
-            border.width: 1
-            anchors.right: parent.right
-            anchors.bottom: navBar.top
-            anchors.bottomMargin: T.space8
-            z: 9000
-
-            Behavior on opacity { NumberAnimation { duration: T.motionFast } }
-
-            GridLayout {
-                id: moreGrid
-                anchors.fill: parent
-                anchors.margins: T.space16
-                columns: width >= 440 ? 3 : 2
-                columnSpacing: T.space8
-                rowSpacing: T.space8
-
-                NexusNavItem { text: qsTr("ANALYZE"); active: analyzePanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); analyzePanel.visible = true } }
-                NexusNavItem { text: qsTr("VEHICLE"); active: vehiclePanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); vehiclePanel.visible = true } }
-                NexusNavItem { text: qsTr("ENGINEER"); active: engineerPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); engineerPanel.visible = true } }
-                NexusNavItem { text: qsTr("OFFLINE"); active: offlinePanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); offlinePanel.visible = true } }
-                NexusNavItem { text: qsTr("REPORTS"); active: reportsPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); reportsPanel.visible = true } }
-                NexusNavItem { text: qsTr("DEVICE"); active: deviceHealthPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); deviceHealthPanel.visible = true } }
-                NexusNavItem { text: qsTr("SECURITY"); active: securityPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); securityPanel.visible = true } }
-                NexusNavItem { text: qsTr("RECOVERY"); active: recoveryPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); recoveryPanel.visible = true } }
-                NexusNavItem { text: qsTr("VALIDATE"); active: fieldQualificationPanel.visible; Layout.fillWidth: true; onClicked: { root.closeWorkspacePanels(); fieldQualificationPanel.visible = true } }
             }
         }
 
