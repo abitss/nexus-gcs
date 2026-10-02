@@ -1,0 +1,129 @@
+name: NEXUS PX4 HIL Hardware Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      serial_port:
+        description: Real HIL Pixhawk serial device
+        required: true
+        type: string
+      baud:
+        description: Serial baud rate
+        required: true
+        default: '921600'
+        type: choice
+        options: ['115200','57600','921600']
+      props_removed:
+        description: Confirm all propellers are physically removed
+        required: true
+        default: 'NO'
+        type: choice
+        options: ['NO','YES']
+      simulator_confirmed:
+        description: Confirm the configured HIL simulator is active and connected to the Pixhawk
+        required: true
+        default: 'NO'
+        type: choice
+        options: ['NO','YES']
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  BUILD_TYPE: Release
+  QGC_BASELINE_SHA: 25185047e855937d694a0174c1541d8f7d794a74
+
+jobs:
+  hil:
+    if: inputs.props_removed == 'YES' && inputs.simulator_confirmed == 'YES'
+    runs-on: [self-hosted, linux, nexus-pixhawk-hil]
+    timeout-minutes: 150
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: ${{ env.QGC_BASELINE_SHA }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Safety and device gate
+        shell: bash
+        run: |
+          test "${{ inputs.props_removed }}" = "YES"
+          test "${{ inputs.simulator_confirmed }}" = "YES"
+          test -e "${{ inputs.serial_port }}"
+          bash nexus-overlay/scripts/validate-hil-field.sh             nexus-overlay/custom/src/NexusFieldQualificationModel.cc             nexus-overlay/custom/src/NexusFieldQualificationPanel.qml             nexus-overlay/custom/test/NexusPX4HILQualificationTest.cc             nexus-overlay/docs/HIL_FIELD_QUALIFICATION.md
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - uses: ./.github/actions/build-setup
+        with:
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          build-type: ${{ env.BUILD_TYPE }}
+          cache-key-suffix: nexus-px4-hil
+          cpm-modules: .cache/CPM
+      - uses: ./.github/actions/install-dependencies
+      - uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-px4-hil-build
+          source-dir: ${{ github.workspace }}
+          build-type: ${{ env.BUILD_TYPE }}
+          preset: Linux
+          extra-args: -DQGC_BUILD_TESTING=ON -DQGC_TEST_ONSCREEN=OFF
+      - uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-px4-hil-build
+          build-type: ${{ env.BUILD_TYPE }}
+          parallel-jobs: '2'
+          output-file: nexus-px4-hil-build.log
+
+      - name: Run real-Pixhawk HIL lifecycle
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          NEXUS_HIL_PIXHAWK_PORT: ${{ inputs.serial_port }}
+          NEXUS_HIL_PIXHAWK_BAUD: ${{ inputs.baud }}
+          NEXUS_PROPS_REMOVED: ${{ inputs.props_removed }}
+          NEXUS_HIL_SIMULATOR_CONFIRMED: ${{ inputs.simulator_confirmed }}
+          NEXUS_HIL_EVIDENCE: ${{ runner.temp }}/nexus-px4-hil.json
+        shell: bash
+        run: |
+          set -o pipefail
+          "${RUNNER_TEMP}/nexus-px4-hil-build/Release/NEXUS-GCS"             --unittest:NexusPX4HILQualificationTest             --allow-multiple             2>&1 | tee "${RUNNER_TEMP}/nexus-px4-hil.log"
+
+      - name: Require HIL PASS
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ["RUNNER_TEMP"],"nexus-px4-hil.json")
+          with open(p,"r",encoding="utf-8") as f: d=json.load(f)
+          req=["CONNECT","HIL_ENABLED","PREFLIGHT_SYNC","MISSION_UPLOAD_READBACK","ARM","TAKEOFF","MISSION_EXECUTION","HOLD","CONTINUE","RTL","LAND"]
+          rows={x["stage"]:x["status"] for x in d.get("stages",[])}
+          bad=[x for x in req if rows.get(x)!="PASS"]
+          if bad or d.get("qualification")!="PASS":
+              raise SystemExit("HIL qualification failed/missing: "+", ".join(bad))
+          print("NEXUS PX4 HIL qualification: PASS")
+          PY
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nexus-px4-hil-evidence
+          path: |
+            ${{ runner.temp }}/nexus-px4-hil.json
+            ${{ runner.temp }}/nexus-px4-hil.log
+            ${{ runner.temp }}/nexus-px4-hil-build/nexus-px4-hil-build.log
+          retention-days: 30
+          if-no-files-found: warn
