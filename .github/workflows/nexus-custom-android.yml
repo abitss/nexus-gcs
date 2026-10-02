@@ -144,6 +144,7 @@ jobs:
             -DQT_ANDROID_ABIS=${{ env.QT_ANDROID_ABIS }}
             -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
             -DQT_ANDROID_SIGN_APK=ON
+            -DNEXUS_SOURCE_SHA=${{ github.sha }}
 
       - name: Build NEXUS Android
         timeout-minutes: 75
