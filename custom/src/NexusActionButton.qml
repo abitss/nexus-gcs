@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "NexusTokens.js" as T
 
 Button {
     id: root
@@ -7,28 +8,37 @@ Button {
     property bool critical: false
     property bool primary: false
 
-    implicitHeight: 40
-    implicitWidth: Math.max(104, contentItem.implicitWidth + 28)
+    implicitHeight: T.touchMin
+    implicitWidth: Math.max(112, contentItem.implicitWidth + T.space24 * 2)
+    leftPadding: T.space16
+    rightPadding: T.space16
+    topPadding: T.space8
+    bottomPadding: T.space8
 
     background: Rectangle {
-        radius: 8
-        color: !root.enabled ? "#141A20"
-                            : root.critical ? "#5B2528"
-                            : root.primary ? "#173D35"
-                            : "#151E27"
-        border.color: !root.enabled ? "#28323B"
-                                  : root.critical ? "#D85B60"
-                                  : root.primary ? "#2C9B7F"
-                                  : "#3B4D5C"
+        radius: T.radiusSmall
+        color: !root.enabled ? "#111920"
+             : root.down ? T.surfacePressed
+             : root.critical ? T.criticalSoft
+             : root.primary ? T.successSoft
+             : T.surfaceRaised
+        border.color: !root.enabled ? T.borderSubtle
+                    : root.critical ? T.critical
+                    : root.primary ? T.success
+                    : T.border
         border.width: 1
+
+        Behavior on color { ColorAnimation { duration: T.motionFast } }
+        Behavior on border.color { ColorAnimation { duration: T.motionFast } }
     }
 
     contentItem: Label {
         text: root.text
-        color: root.enabled ? "#F2F6F9" : "#687581"
+        color: root.enabled ? T.textPrimary : T.textMuted
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 11
+        font.pixelSize: T.textBody
         font.bold: true
+        elide: Text.ElideRight
     }
 }
