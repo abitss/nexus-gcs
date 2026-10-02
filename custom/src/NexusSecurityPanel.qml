@@ -43,7 +43,7 @@ Rectangle {
                 color: "#E26A6A"
                 wrapMode: Text.WordWrap
             }
-            Button {
+            NexusActionButton {
                 id: authButton
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("AUTHENTICATE")
@@ -76,7 +76,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 placeholderText: qsTr("Minimum 10 characters")
             }
-            Button {
+            NexusActionButton {
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("SAVE ENGINEER CREDENTIAL")
                 enabled: securityModel.canAdmin && newEngineerPass.text.length >= 10
@@ -108,7 +108,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 placeholderText: qsTr("Minimum 10 characters")
             }
-            Button {
+            NexusActionButton {
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("CREATE ADMIN")
                 enabled: bootstrapPass.text.length >= 10
@@ -164,27 +164,27 @@ Rectangle {
                         color: "#87949D"; font.pixelSize: 9; wrapMode: Text.WordWrap
                     }
                 }
-                Button {
+                NexusActionButton {
                     visible: !securityModel.adminConfigured
                     text: qsTr("BOOTSTRAP ADMIN")
                     onClicked: bootstrapDialog.open()
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.adminConfigured
                     text: qsTr("ENGINEER")
                     onClicked: { authDialog.role = "ENGINEER"; authDialog.open() }
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.adminConfigured
                     text: qsTr("ADMIN")
                     onClicked: { authDialog.role = "ADMIN"; authDialog.open() }
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.canAdmin
                     text: securityModel.engineerConfigured ? qsTr("ROTATE ENGINEER") : qsTr("SET ENGINEER")
                     onClicked: engineerCredentialDialog.open()
                 }
-                Button {
+                NexusActionButton {
                     visible: securityModel.authenticated
                     text: qsTr("LOCK")
                     onClicked: securityModel.lock()
