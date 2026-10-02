@@ -7,7 +7,7 @@ Rectangle {
     property var securityModel
     signal closeRequested()
 
-    width: Math.min(660, parent ? parent.width * 0.56 : 660)
+    width: parent ? Math.min(720, Math.max(360, parent.width - 20 < 360 ? parent.width - 20 : parent.width * 0.58)) : 660
     color: "#F70A0F14"
     border.color: "#2B3944"
     border.width: 1
