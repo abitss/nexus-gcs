@@ -8,6 +8,7 @@ set(QGC_ORG_NAME "NEXUS GCS" CACHE STRING "Organization name" FORCE)
 set(QGC_ORG_DOMAIN "nexus-gcs.local" CACHE STRING "Organization domain" FORCE)
 set(QGC_PACKAGE_NAME "com.abitss.nexusgcs" CACHE STRING "Package identifier" FORCE)
 set(QGC_ANDROID_PACKAGE_NAME "com.abitss.nexusgcs" CACHE STRING "Android package identifier" FORCE)
+set(NEXUS_SOURCE_SHA "unknown" CACHE STRING "NEXUS source commit embedded in qualification evidence")
 
 # NEXUS 1.0.0 keeps the stock PX4 and ArduPilot firmware factories available.
 # PX4 is the first qualification target; ArduPilot remains available for later validation.
