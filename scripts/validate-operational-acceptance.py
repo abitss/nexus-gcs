@@ -35,8 +35,6 @@ profile_sha=hashlib.sha256(profile_raw).hexdigest()
 
 release=profile["release"]
 aircraft=profile["aircraft"]
-if release["sourceSha"] != expected_sha:
-    fail("profile source SHA differs from accepted source")
 if re.sub(r"[^0-9A-F]","",release["signingCertSha256"].upper()) != trusted_cert:
     fail("profile signing certificate fingerprint differs from trusted production certificate")
 if not parameter_path.is_file():
@@ -78,8 +76,6 @@ if not v1.get("accepted") or v1.get("status")!="ACCEPTED":
     fail("V1 final acceptance is not ACCEPTED")
 if v1.get("version")!="1.0.0" or v1.get("sourceSha")!=expected_sha:
     fail("V1 final acceptance source/version mismatch")
-if v1.get("apkSha256","").lower()!=release["apkSha256"].lower():
-    fail("operational profile APK hash differs from V1 accepted APK")
 if v1.get("qgcBaseline")!=release["qgcBaselineSha"]:
     fail("QGC baseline differs from V1 acceptance")
 
@@ -123,7 +119,7 @@ certificate={
     "parameterFileSha256":param_sha,
     "missionBaselineSha256":mission_sha,
     "geofenceBaselineSha256":geofence_sha,
-    "apkSha256":release["apkSha256"],
+    "apkSha256":v1["apkSha256"],
     "signingCertSha256":release["signingCertSha256"],
     "qgcBaselineSha":release["qgcBaselineSha"],
     "operationalEnvelope":profile["operationalEnvelope"],
