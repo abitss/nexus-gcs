@@ -17,6 +17,8 @@
     "firmwareVersion": "<exact-px4-version>",
     "flightController": "<flight-controller-model>",
     "vehicleType": "<quadrotor/fixed-wing/vtol/etc>",
+    "mavlinkSystemId": 0,
+    "mavlinkComponentId": 0,
     "parameterFileSha256": "<64-char-sha256-of-exported-parameter-file>",
     "missionBaselineSha256": "<64-char-sha256-or-NONE>",
     "geofenceBaselineSha256": "<64-char-sha256-or-NONE>"
