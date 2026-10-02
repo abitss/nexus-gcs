@@ -66,7 +66,7 @@ Rectangle {
 
             Item { Layout.fillHeight: true }
 
-            Button {
+            NexusActionButton {
                 visible: card.buttonText.length > 0
                 Layout.alignment: Qt.AlignRight
                 text: card.buttonText
