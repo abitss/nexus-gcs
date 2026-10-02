@@ -57,7 +57,7 @@ Rectangle {
                 font.pixelSize: 9
                 elide: Text.ElideRight
             }
-            Button {
+            NexusActionButton {
                 visible: card.actionText.length > 0
                 text: card.actionText
                 Layout.alignment: Qt.AlignRight
