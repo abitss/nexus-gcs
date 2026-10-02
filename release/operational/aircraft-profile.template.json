@@ -4,8 +4,6 @@
   "release": {
     "product": "NEXUS GCS",
     "version": "1.0.0",
-    "sourceSha": "<40-char-nexus-source-sha>",
-    "apkSha256": "<64-char-apk-sha256>",
     "signingCertSha256": "<64-char-cert-sha256>",
     "qgcBaselineSha": "25185047e855937d694a0174c1541d8f7d794a74"
   },
