@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0",
+  "status": "DRAFT",
+  "release": {
+    "product": "NEXUS GCS",
+    "version": "1.0.0",
+    "sourceSha": "<40-char-nexus-source-sha>",
+    "apkSha256": "<64-char-apk-sha256>",
+    "signingCertSha256": "<64-char-cert-sha256>",
+    "qgcBaselineSha": "25185047e855937d694a0174c1541d8f7d794a74"
+  },
+  "aircraft": {
+    "acceptanceId": "<unique-aircraft-acceptance-id>",
+    "name": "<aircraft-name>",
+    "airframe": "<airframe-model>",
+    "autopilot": "PX4",
+    "firmwareVersion": "<exact-px4-version>",
+    "flightController": "<flight-controller-model>",
+    "vehicleType": "<quadrotor/fixed-wing/vtol/etc>",
+    "parameterFileSha256": "<64-char-sha256-of-exported-parameter-file>",
+    "missionBaselineSha256": "<64-char-sha256-or-NONE>",
+    "geofenceBaselineSha256": "<64-char-sha256-or-NONE>"
+  },
+  "links": {
+    "primaryTelemetry": "<transport-description>",
+    "independentRecoveryControl": "<rc-or-other-independent-control-path>",
+    "payloadLink": "<payload-link-or-NONE>"
+  },
+  "power": {
+    "batteryConfiguration": "<battery-description>",
+    "powerModule": "<power-module-description>"
+  },
+  "operationalEnvelope": {
+    "maxAltitudeM": 0,
+    "maxHorizontalDistanceM": 0,
+    "maxGroundSpeedMps": 0,
+    "minBatteryReservePercent": 0,
+    "minimumGpsFixType": 3,
+    "minimumSatellites": 6,
+    "maximumHdop": 2.5,
+    "geofenceRadiusM": 0,
+    "rtlAltitudeM": 0,
+    "visualLineOfSightRequired": true,
+    "daylightOnly": true
+  },
+  "requiredFailsafes": {
+    "rcLoss": "<configured-response>",
+    "telemetryLoss": "<configured-response>",
+    "lowBattery": "<configured-response>",
+    "geofence": "<configured-response>"
+  },
+  "scope": {
+    "approvedMissionTypes": [],
+    "approvedPayloads": [],
+    "prohibitedConditions": [
+      "operation outside the validated envelope",
+      "unreviewed firmware or parameter changes",
+      "unverified APK or signing certificate",
+      "invalid Home for Home-dependent flight",
+      "critical GPS/EKF state",
+      "unresolved preflight BLOCKED state"
+    ]
+  }
+}
