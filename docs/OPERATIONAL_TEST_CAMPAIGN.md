@@ -27,8 +27,8 @@ Do not disable PX4 failsafes, geofence, or independent recovery control to obtai
 
 Before bench/HIL/field evidence can become final acceptance evidence, freeze and retain:
 
-- NEXUS source SHA
-- production APK SHA-256
+- exact NEXUS source SHA from the V1 acceptance run
+- production APK SHA-256 from the V1 acceptance artifact
 - production signing certificate SHA-256
 - QGC baseline SHA
 - aircraft acceptance ID
@@ -144,3 +144,14 @@ The first execution step is:
 4. execute BUILD → EMULATOR → PX4 SITL → OFFLINE → FAILURE-MATRIX before physical escalation.
 
 Only after those are green should the real Pixhawk props-off bench campaign start.
+
+
+## Non-recursive release identity rule
+
+Do not write the current commit SHA or the APK hash built from that commit into the committed locked aircraft profile. Doing so changes the commit and invalidates the value being written.
+
+The immutable binding is instead:
+
+`V1 acceptance artifact (source SHA + APK SHA) + locked profile SHA-256 + physical evidence on that source SHA`.
+
+The final operational certificate records all of them together.
