@@ -156,7 +156,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Configure NEXUS Android
-        timeout-minutes: 15
+        timeout-minutes: 45
         uses: ./.github/actions/cmake-configure
         with:
           build-dir: ${{ runner.temp }}/nexus-build
