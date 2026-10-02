@@ -3,6 +3,7 @@ name: NEXUS V1 Acceptance Harness
 on:
   pull_request:
     branches:
+      - phase0-task0.22-v1-final-acceptance
       - phase0-task0.21-release-engineering
       - develop
     paths:
