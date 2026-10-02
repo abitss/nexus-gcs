@@ -1,0 +1,95 @@
+name: NEXUS V1 Operator Flight Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile_path:
+        description: Path to LOCKED operational aircraft profile JSON
+        required: true
+        type: string
+      field_qa_run_id:
+        description: Successful controlled field evidence run ID
+        required: true
+        type: string
+      operator_decision:
+        description: Type APPROVE OPERATIONAL FLIGHT
+        required: true
+        type: string
+      operator_notes:
+        description: Operator limitations / observations
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  operator-review:
+    if: inputs.operator_decision == 'APPROVE OPERATIONAL FLIGHT'
+    runs-on: [self-hosted, linux, nexus-operational-approval]
+    environment: operational-flight-operator
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate locked aircraft profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "${{ inputs.profile_path }}"
+          python3 scripts/validate-operational-profile.py "${{ inputs.profile_path }}"
+
+      - name: Verify controlled field run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.field_qa_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" > "${RUNNER_TEMP}/field-run.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ["RUNNER_TEMP"],"field-run.json")))
+          assert d["name"]=="NEXUS Controlled Field Evidence Validation", d["name"]
+          assert d["conclusion"]=="success", d["conclusion"]
+          assert d["head_sha"]==os.environ["GITHUB_SHA"], (d["head_sha"],os.environ["GITHUB_SHA"])
+          PY
+
+      - name: Create operator approval evidence
+        env:
+          PROFILE: ${{ inputs.profile_path }}
+          FIELD_RUN: ${{ inputs.field_qa_run_id }}
+          NOTES: ${{ inputs.operator_notes }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,os,datetime
+          p=os.environ["PROFILE"]
+          raw=open(p,"rb").read()
+          profile=json.loads(raw)
+          out={
+            "schemaVersion":"1.0",
+            "gate":"OPERATOR FLIGHT REVIEW",
+            "status":"PASS",
+            "sourceSha":os.environ["GITHUB_SHA"],
+            "profileSha256":hashlib.sha256(raw).hexdigest(),
+            "aircraftAcceptanceId":profile["aircraft"]["acceptanceId"],
+            "fieldQaRunId":int(os.environ["FIELD_RUN"]),
+            "operator":os.environ["GITHUB_ACTOR"],
+            "approvedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "notes":os.environ.get("NOTES","")
+          }
+          path=os.path.join(os.environ["RUNNER_TEMP"],"nexus-operational-operator-review.json")
+          open(path,"w").write(json.dumps(out,indent=2)+"\n")
+          PY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nexus-operational-operator-review
+          path: ${{ runner.temp }}/nexus-operational-operator-review.json
+          retention-days: 365
+          if-no-files-found: error
