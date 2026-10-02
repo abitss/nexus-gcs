@@ -78,6 +78,8 @@ if v1.get("version")!="1.0.0" or v1.get("sourceSha")!=expected_sha:
     fail("V1 final acceptance source/version mismatch")
 if v1.get("qgcBaseline")!=release["qgcBaselineSha"]:
     fail("QGC baseline differs from V1 acceptance")
+if re.sub(r"[^0-9A-F]","",str(v1.get("signingCertSha256","")).upper()) != trusted_cert:
+    fail("V1 accepted signing certificate differs from trusted operational certificate")
 
 for label,row in [("operator",operator),("engineer",engineer)]:
     if row.get("status")!="PASS":
