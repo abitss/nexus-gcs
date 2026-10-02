@@ -81,6 +81,10 @@ QString NexusFieldQualificationModel::exportJson(const QString &path) const
         {QStringLiteral("minRamAvailableMb"), _minRamAvailableMb},
         {QStringLiteral("maxEventLoopLagMs"), _maxEventLoopLagMs},
         {QStringLiteral("recoveryEventCount"), _recoveryEventCount},
+        {QStringLiteral("recoveryState"), _recovery ? _recovery->overallState() : QStringLiteral("UNAVAILABLE")},
+        {QStringLiteral("previousUncleanExit"), _recovery ? _recovery->previousUncleanExit() : false},
+        {QStringLiteral("recoveryEvents"), _recovery ? QJsonArray::fromVariantList(_recovery->events()) : QJsonArray{}},
+        {QStringLiteral("deviceThermalState"), _device ? _device->thermalState() : QStringLiteral("UNAVAILABLE")},
         {QStringLiteral("cards"), QJsonArray::fromVariantList(_cards)}
     };
     QFile f(path);
