@@ -1,0 +1,278 @@
+name: NEXUS Production Android Release
+
+on:
+  push:
+    tags:
+      - 'nexus-v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      release_confirm:
+        description: Type RELEASE to authorize a production-signed build
+        required: true
+        type: string
+
+concurrency:
+  group: nexus-production-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  release:
+    name: Production signed Android release
+    if: github.ref_type == 'tag' || inputs.release_confirm == 'RELEASE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    environment: production-release
+
+    env:
+      BUILD_TYPE: Release
+      QT_ANDROID_ABIS: arm64-v8a
+      QGC_STABLE_BUILD: ON
+
+    steps:
+      - name: Checkout pinned QGroundControl baseline from release metadata
+        id: qgc
+        uses: actions/checkout@v7
+        with:
+          repository: mavlink/qgroundcontrol
+          ref: 25185047e855937d694a0174c1541d8f7d794a74
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout NEXUS release source
+        uses: actions/checkout@v7
+        with:
+          repository: abitss/nexus-gcs
+          ref: ${{ github.ref_name }}
+          path: nexus-overlay
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release metadata and requested ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 nexus-overlay/scripts/validate-release.py nexus-overlay
+          python3 - <<'PY'
+          import json, os
+          with open("nexus-overlay/release/release.json","r",encoding="utf-8") as f:
+              d=json.load(f)
+          with open(os.environ["GITHUB_ENV"],"a",encoding="utf-8") as out:
+              out.write(f"NEXUS_VERSION={d['version']}\n")
+              out.write(f"NEXUS_RELEASE_TAG={d['releaseTag']}\n")
+              out.write(f"NEXUS_ARTIFACT_BASE={d['artifactBaseName']}\n")
+              out.write(f"QGC_BASELINE_SHA={d['qgcBaseline']}\n")
+          ref=os.environ.get("GITHUB_REF_NAME","")
+          if os.environ.get("GITHUB_REF_TYPE")=="tag" and ref != d["releaseTag"]:
+              raise SystemExit(f"tag {ref} does not match release metadata {d['releaseTag']}")
+          PY
+          test "$(git rev-parse HEAD)" = "$QGC_BASELINE_SHA"
+
+      - name: Create local QGC build-version tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "NEXUS Release Builder"
+          git config user.email "release-builder@nexus-gcs.local"
+          git tag -a -f "v${NEXUS_VERSION}-nexus" -m "NEXUS local build version ${NEXUS_VERSION}"
+          test "$(git describe --tags --abbrev=0)" = "v${NEXUS_VERSION}-nexus"
+
+      - name: Stage NEXUS overlay
+        shell: bash
+        run: |
+          rm -rf custom
+          mkdir -p custom
+          cp -a nexus-overlay/custom/. custom/
+
+      - name: Fail closed if production signing secrets are unavailable
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.NEXUS_ANDROID_KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.NEXUS_ANDROID_KEYSTORE_ALIAS }}
+          STORE_PASS: ${{ secrets.NEXUS_ANDROID_KEYSTORE_STORE_PASS }}
+          KEY_PASS: ${{ secrets.NEXUS_ANDROID_KEYSTORE_KEY_PASS }}
+          EXPECTED_CERT: ${{ secrets.NEXUS_ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          for name in KEYSTORE_B64 KEY_ALIAS STORE_PASS KEY_PASS EXPECTED_CERT; do
+            test -n "${!name}" || { echo "::error::Missing production signing secret: $name"; exit 1; }
+          done
+
+      - name: Decode production keystore
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.NEXUS_ANDROID_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "${RUNNER_TEMP}/nexus-production.keystore"
+          test -s "${RUNNER_TEMP}/nexus-production.keystore"
+
+      - name: Set Android SDK location
+        shell: bash
+        run: |
+          echo "ANDROID_SDK_ROOT=${RUNNER_TEMP}/android-sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=${RUNNER_TEMP}/android-sdk" >> "$GITHUB_ENV"
+
+      - name: Build setup
+        id: setup
+        uses: ./.github/actions/build-setup
+        with:
+          mode: android
+          qt-host: linux
+          qt-arch: linux_gcc_64
+          abis: ${{ env.QT_ANDROID_ABIS }}
+          build-type: Release
+          cache-key-suffix: nexus-production-release
+          cpm-modules: .cache/CPM
+
+      - name: Install host build dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Configure production signing environment
+        shell: bash
+        env:
+          KEY_ALIAS: ${{ secrets.NEXUS_ANDROID_KEYSTORE_ALIAS }}
+          STORE_PASS: ${{ secrets.NEXUS_ANDROID_KEYSTORE_STORE_PASS }}
+          KEY_PASS: ${{ secrets.NEXUS_ANDROID_KEYSTORE_KEY_PASS }}
+        run: |
+          {
+            echo "QT_ANDROID_KEYSTORE_PATH=${RUNNER_TEMP}/nexus-production.keystore"
+            echo "QT_ANDROID_KEYSTORE_ALIAS=${KEY_ALIAS}"
+            echo "QT_ANDROID_KEYSTORE_STORE_PASS=${STORE_PASS}"
+            echo "QT_ANDROID_KEYSTORE_KEY_PASS=${KEY_PASS}"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure NEXUS Android Release
+        uses: ./.github/actions/cmake-configure
+        with:
+          build-dir: ${{ runner.temp }}/nexus-release-build
+          source-dir: ${{ github.workspace }}
+          build-type: Release
+          preset: Android
+          use-qt-cmake: 'false'
+          extra-args: >-
+            -DCMAKE_WARN_DEPRECATED=FALSE
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup.outputs.target_qt_root_dir }}/lib/cmake/Qt6/qt.toolchain.cmake
+            -DCMAKE_PREFIX_PATH=${{ steps.setup.outputs.target_qt_root_dir }}
+            -DQT_ANDROID_ABIS=${{ env.QT_ANDROID_ABIS }}
+            -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
+            -DQT_ANDROID_SIGN_APK=ON
+            -DQGC_STABLE_BUILD=ON
+
+      - name: Build production APK
+        timeout-minutes: 85
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+        uses: ./.github/actions/cmake-build
+        with:
+          build-dir: ${{ runner.temp }}/nexus-release-build
+          build-type: Release
+          output-file: nexus-production-build.log
+
+      - name: Locate and normalize APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK_DIR="${RUNNER_TEMP}/nexus-release-build/android-build"
+          mapfile -t apks < <(find "$APK_DIR" -maxdepth 1 -type f -name '*.apk' -print)
+          test "${#apks[@]}" -eq 1 || { echo "::error::Expected exactly one APK, found ${#apks[@]}"; printf '%s\n' "${apks[@]}"; exit 1; }
+          mkdir -p "${RUNNER_TEMP}/nexus-release"
+          cp "${apks[0]}" "${RUNNER_TEMP}/nexus-release/${NEXUS_ARTIFACT_BASE}.apk"
+          echo "NEXUS_APK=${RUNNER_TEMP}/nexus-release/${NEXUS_ARTIFACT_BASE}.apk" >> "$GITHUB_ENV"
+
+      - name: Verify APK signature and trusted certificate
+        shell: bash
+        env:
+          EXPECTED_CERT: ${{ secrets.NEXUS_ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(find "${ANDROID_SDK_ROOT}/build-tools" -type f -name apksigner -print | sort -V | tail -1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$NEXUS_APK" | tee "${RUNNER_TEMP}/nexus-release/${NEXUS_ARTIFACT_BASE}.signing.txt"
+          actual="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "${RUNNER_TEMP}/nexus-release/${NEXUS_ARTIFACT_BASE}.signing.txt" | head -1 | tr '[:lower:]' '[:upper:]' | tr -d ':[:space:]')"
+          expected="$(printf '%s' "$EXPECTED_CERT" | tr '[:lower:]' '[:upper:]' | tr -d ':[:space:]')"
+          test -n "$actual"
+          test "$actual" = "$expected" || { echo "::error::APK signing certificate does not match trusted production fingerprint"; exit 1; }
+
+      - name: Verify package/version metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAPT="$(find "${ANDROID_SDK_ROOT}/build-tools" -type f \( -name aapt2 -o -name aapt \) -print | sort -V | tail -1)"
+          test -x "$AAPT"
+          badging="$("$AAPT" dump badging "$NEXUS_APK" | head -20)"
+          printf '%s\n' "$badging"
+          printf '%s\n' "$badging" | grep -q "package: name='com.abitss.nexusgcs'"
+          printf '%s\n' "$badging" | grep -q "versionName='${NEXUS_VERSION}'"
+
+      - name: Create checksum and release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${RUNNER_TEMP}/nexus-release"
+          sha256sum "${NEXUS_ARTIFACT_BASE}.apk" > "${NEXUS_ARTIFACT_BASE}.apk.sha256"
+          NEXUS_SOURCE_SHA="$(git -C "${GITHUB_WORKSPACE}/nexus-overlay" rev-parse HEAD)"
+          QGC_SOURCE_SHA="$(git -C "${GITHUB_WORKSPACE}" rev-parse HEAD)"
+          APK_SHA="$(cut -d' ' -f1 "${NEXUS_ARTIFACT_BASE}.apk.sha256")"
+          export NEXUS_SOURCE_SHA QGC_SOURCE_SHA APK_SHA
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          source=Path(os.environ["GITHUB_WORKSPACE"])/"nexus-overlay"/"release"/"release.json"
+          d=json.loads(source.read_text(encoding="utf-8"))
+          manifest={
+              "schemaVersion":"1.0",
+              "product":d["product"],
+              "version":d["version"],
+              "releaseTag":d["releaseTag"],
+              "androidPackage":d["androidPackage"],
+              "androidAbi":d["androidAbi"],
+              "buildType":"Release",
+              "channel":"production",
+              "nexusSourceSha":os.environ["NEXUS_SOURCE_SHA"],
+              "qgcBaselineSha":os.environ["QGC_SOURCE_SHA"],
+              "apkSha256":os.environ["APK_SHA"],
+              "artifact":d["artifactBaseName"]+".apk",
+          }
+          Path("release-manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
+          PY
+
+      - name: Package release documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "nexus-overlay/release/RELEASE_NOTES_${NEXUS_VERSION}.md" "${RUNNER_TEMP}/nexus-release/"
+          cp "nexus-overlay/CHANGELOG.md" "${RUNNER_TEMP}/nexus-release/"
+          cp "nexus-overlay/docs/INSTALL_GUIDE.md" "${RUNNER_TEMP}/nexus-release/"
+          cp "nexus-overlay/docs/OPERATOR_GUIDE.md" "${RUNNER_TEMP}/nexus-release/"
+          cp "nexus-overlay/docs/ENGINEER_GUIDE.md" "${RUNNER_TEMP}/nexus-release/"
+          cp "nexus-overlay/docs/TROUBLESHOOTING.md" "${RUNNER_TEMP}/nexus-release/"
+
+      - name: Remove keystore before artifact upload
+        if: always()
+        shell: bash
+        run: rm -f "${RUNNER_TEMP}/nexus-production.keystore"
+
+      - name: Upload production release bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-gcs-${{ env.NEXUS_VERSION }}-production
+          path: ${{ runner.temp }}/nexus-release/
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload build diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nexus-production-release-diagnostics
+          path: |
+            ${{ runner.temp }}/nexus-release-build/nexus-production-build.log
+            ${{ runner.temp }}/nexus-release-build/CMakeFiles/CMakeOutput.log
+            ${{ runner.temp }}/nexus-release-build/CMakeFiles/CMakeError.log
+          retention-days: 14
+          if-no-files-found: ignore
