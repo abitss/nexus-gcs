@@ -45,7 +45,7 @@ Rectangle {
                     color: card.state === "CRITICAL" ? "#E36A6A"
                          : card.state === "WARNING" ? "#E0B85F"
                          : "#78B7A1"
-                    font.pixelSize: 8
+                    font.pixelSize: 9
                     font.bold: true
                 }
             }
@@ -54,7 +54,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: card.detail
                 color: "#83919B"
-                font.pixelSize: 8
+                font.pixelSize: 9
                 elide: Text.ElideRight
             }
             Button {
