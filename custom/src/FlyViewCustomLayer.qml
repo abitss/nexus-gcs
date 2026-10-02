@@ -800,7 +800,7 @@ Item {
 
                 Label {
                     text: qsTr("ACTIONS")
-                    color: "#7F8C98"
+                    color: "#AAB7BF"
                     font.pixelSize: 9
                     font.bold: true
                     Layout.preferredWidth: 62
@@ -858,7 +858,7 @@ Item {
                 Label {
                     visible: !activeVehicle
                     text: qsTr("Connect a vehicle to enable flight actions")
-                    color: "#7F8C98"
+                    color: "#AAB7BF"
                     font.pixelSize: 10
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
@@ -873,7 +873,7 @@ Item {
                                                     guidedController.showRTL ||
                                                     guidedController.showLand))
                     text: qsTr("No guided action available in the current vehicle state")
-                    color: "#7F8C98"
+                    color: "#AAB7BF"
                     font.pixelSize: 10
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
