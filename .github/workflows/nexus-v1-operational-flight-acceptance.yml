@@ -11,6 +11,15 @@ on:
         description: Absolute path to the exact exported PX4 parameter baseline on this runner
         required: true
         type: string
+      mission_file_path:
+        description: Absolute path to approved mission baseline, or literal NONE
+        required: true
+        default: 'NONE'
+        type: string
+      geofence_file_path:
+        description: Absolute path to the exact approved geofence baseline on this runner
+        required: true
+        type: string
       v1_acceptance_run_id:
         description: Successful V1 final acceptance run ID
         required: true
@@ -58,6 +67,8 @@ jobs:
           esac
           test -f "${{ inputs.profile_path }}"
           test -f "${{ inputs.parameter_file_path }}"
+          test -f "${{ inputs.geofence_file_path }}"
+          if [ "${{ inputs.mission_file_path }}" != "NONE" ]; then test -f "${{ inputs.mission_file_path }}"; fi
           python3 scripts/validate-operational-profile.py "${{ inputs.profile_path }}"
 
       - name: Verify source run identities
@@ -104,7 +115,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/validate-operational-acceptance.py             .             "${{ inputs.profile_path }}"             "${{ inputs.parameter_file_path }}"             "${RUNNER_TEMP}/operational-evidence"             "$GITHUB_SHA"             "$NEXUS_ANDROID_CERT_SHA256"
+          python3 scripts/validate-operational-acceptance.py             .             "${{ inputs.profile_path }}"             "${{ inputs.parameter_file_path }}"             "${{ inputs.mission_file_path }}"             "${{ inputs.geofence_file_path }}"             "${RUNNER_TEMP}/operational-evidence"             "$GITHUB_SHA"             "$NEXUS_ANDROID_CERT_SHA256"
 
       - name: Create operational certificate summary
         shell: bash
@@ -137,6 +148,10 @@ NEXUS source SHA: `{cert['sourceSha']}`
 APK SHA-256: `{cert['apkSha256']}`
 
 Parameter baseline SHA-256: `{cert['parameterFileSha256']}`
+
+Mission baseline SHA-256: `{cert['missionBaselineSha256']}`
+
+Geofence baseline SHA-256: `{cert['geofenceBaselineSha256']}`
 
 Operator reviewer: **{cert['operatorReviewer']}**
 
