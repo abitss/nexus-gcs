@@ -126,9 +126,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -RIl "libgstreamer-plugins-good1.0-dev" .github | while read -r file; do
-            sed -i 's/libgstreamer-plugins-good1\.0-dev/libgstreamer-plugins-extra1.0-dev/g' "$file"
-          done
+          pkg_file="tools/setup/install_dependencies/_packages.py"
+          if grep -q "libgstreamer-plugins-good1.0-dev" "$pkg_file"; then
+            sed -i 's/libgstreamer-plugins-good1\.0-dev/libgstreamer-plugins-extra1.0-dev/g' "$pkg_file"
+          fi
+          grep -n "libgstreamer-plugins-extra1.0-dev" "$pkg_file"
 
       - name: Install host build dependencies
         uses: ./.github/actions/install-dependencies
