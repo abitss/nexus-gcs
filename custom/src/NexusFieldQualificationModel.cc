@@ -4,6 +4,8 @@
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QDir>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QDateTime>
 #include <QtCore/QtMath>
 
@@ -71,6 +73,8 @@ QString NexusFieldQualificationModel::exportJson(const QString &path) const
         {QStringLiteral("mavlinkLossPercent"), _mavlinkLossPercent},
         {QStringLiteral("gpsFix"), _gpsFix},
         {QStringLiteral("satellites"), _satellites},
+        {QStringLiteral("hdop"), qIsNaN(_hdop) ? QJsonValue() : QJsonValue(_hdop)},
+        {QStringLiteral("vdop"), qIsNaN(_vdop) ? QJsonValue() : QJsonValue(_vdop)},
         {QStringLiteral("missionIndex"), _missionIndex},
         {QStringLiteral("flightMode"), _flightMode},
         {QStringLiteral("maxDeviceTempC"), qIsNaN(_maxDeviceTempC) ? QJsonValue() : QJsonValue(_maxDeviceTempC)},
@@ -83,6 +87,15 @@ QString NexusFieldQualificationModel::exportJson(const QString &path) const
     if(!f.open(QIODevice::WriteOnly|QIODevice::Truncate)) return QString();
     f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
     return path;
+}
+
+QString NexusFieldQualificationModel::exportDefault() const
+{
+    const QString dir=QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+        .filePath(QStringLiteral("validation"));
+    QDir().mkpath(dir);
+    const QString stamp=QDateTime::currentDateTimeUtc().toString(QStringLiteral("yyyyMMdd-HHmmss"));
+    return exportJson(QDir(dir).filePath(QStringLiteral("nexus-%1-%2.json").arg(_phase.toLower(),stamp)));
 }
 
 void NexusFieldQualificationModel::_activeVehicleChanged(Vehicle *vehicle){ _setVehicle(vehicle); }
@@ -115,6 +128,8 @@ void NexusFieldQualificationModel::_sample()
         if(auto *gps=qobject_cast<VehicleGPSFactGroup*>(_vehicle->gpsFactGroup())){
             _gpsFix=gps->lock()->rawValue().toInt();
             _satellites=gps->count()->rawValue().toInt();
+            _hdop=gps->hdop()->rawValue().toDouble();
+            _vdop=gps->vdop()->rawValue().toDouble();
         }
     }
 
