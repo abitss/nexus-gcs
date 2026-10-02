@@ -63,7 +63,7 @@ Rectangle {
                     font.pixelSize: 10
                 }
 
-                Button {
+                NexusActionButton {
                     text: qsTr("RETURN")
                     onClicked: root.closeRequested()
                 }
