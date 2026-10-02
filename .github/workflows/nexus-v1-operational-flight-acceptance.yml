@@ -1,0 +1,178 @@
+name: NEXUS GCS V1 Operational Flight Acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile_path:
+        description: Repo-relative LOCKED operational aircraft profile JSON
+        required: true
+        type: string
+      parameter_file_path:
+        description: Absolute path to the exact exported PX4 parameter baseline on this runner
+        required: true
+        type: string
+      v1_acceptance_run_id:
+        description: Successful V1 final acceptance run ID
+        required: true
+        type: string
+      operator_review_run_id:
+        description: Successful operator flight review run ID
+        required: true
+        type: string
+      engineer_review_run_id:
+        description: Successful engineer airworthiness review run ID
+        required: true
+        type: string
+      release_decision:
+        description: Type RELEASE OPERATIONAL FLIGHT
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  operational-acceptance:
+    if: inputs.release_decision == 'RELEASE OPERATIONAL FLIGHT'
+    runs-on: [self-hosted, linux, nexus-operational-acceptance]
+    environment: operational-flight-release
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NEXUS_ANDROID_CERT_SHA256: ${{ secrets.NEXUS_ANDROID_CERT_SHA256 }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate configuration profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ inputs.profile_path }}" in
+            release/operational/*.json) ;;
+            *) echo "::error::Operational profile must be committed under release/operational/"; exit 1 ;;
+          esac
+          test -f "${{ inputs.profile_path }}"
+          test -f "${{ inputs.parameter_file_path }}"
+          python3 scripts/validate-operational-profile.py "${{ inputs.profile_path }}"
+
+      - name: Verify source run identities
+        env:
+          V1_RUN: ${{ inputs.v1_acceptance_run_id }}
+          OP_RUN: ${{ inputs.operator_review_run_id }}
+          ENG_RUN: ${{ inputs.engineer_review_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/operational-evidence"
+          python3 - <<'PY'
+          import json,os,subprocess
+          expected={
+            "v1":({
+              "NEXUS GCS V1 Final Acceptance",
+              "NEXUS GCS V1 Self-Hosted Final Acceptance"
+            },os.environ["V1_RUN"]),
+            "operator":({"NEXUS V1 Operator Flight Review"},os.environ["OP_RUN"]),
+            "engineer":({"NEXUS V1 Engineer Airworthiness Review"},os.environ["ENG_RUN"]),
+          }
+          rows={}
+          for key,(names,rid) in expected.items():
+            raw=subprocess.check_output(["gh","api",f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{rid}"],text=True)
+            d=json.loads(raw)
+            if d["name"] not in names: raise SystemExit(f"{key}: workflow mismatch {d['name']}")
+            if d["conclusion"]!="success": raise SystemExit(f"{key}: conclusion {d['conclusion']}")
+            if d["head_sha"]!=os.environ["GITHUB_SHA"]: raise SystemExit(f"{key}: source SHA mismatch")
+            rows[key]={"workflow":d["name"],"runId":int(rid),"headSha":d["head_sha"]}
+          p=os.path.join(os.environ["RUNNER_TEMP"],"operational-evidence","operational-run-metadata.json")
+          open(p,"w").write(json.dumps(rows,indent=2)+"\n")
+          PY
+
+      - name: Download acceptance evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="${RUNNER_TEMP}/operational-evidence"
+          gh run download "${{ inputs.v1_acceptance_run_id }}"             -n nexus-gcs-v1.0.0-final-acceptance             -D "$ROOT/v1"
+          gh run download "${{ inputs.operator_review_run_id }}"             -n nexus-operational-operator-review             -D "$ROOT/operator"
+          gh run download "${{ inputs.engineer_review_run_id }}"             -n nexus-operational-engineer-review             -D "$ROOT/engineer"
+
+      - name: Execute fail-closed operational acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate-operational-acceptance.py             .             "${{ inputs.profile_path }}"             "${{ inputs.parameter_file_path }}"             "${RUNNER_TEMP}/operational-evidence"             "$GITHUB_SHA"             "$NEXUS_ANDROID_CERT_SHA256"
+
+      - name: Create operational certificate summary
+        shell: bash
+        env:
+          PROFILE: ${{ inputs.profile_path }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,hashlib,datetime
+          root=os.path.join(os.environ["RUNNER_TEMP"],"operational-evidence")
+          cert_path=os.path.join(root,"NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.json")
+          cert=json.load(open(cert_path,encoding="utf-8"))
+          profile=json.load(open(os.environ["PROFILE"],encoding="utf-8"))
+          text=f"""# NEXUS GCS V1.0.0 — OPERATIONAL FLIGHT ACCEPTANCE
+
+**Status: OPERATIONALLY ACCEPTED**
+
+Aircraft acceptance ID: `{cert['aircraftAcceptanceId']}`
+
+Aircraft: **{cert['aircraftName']}**
+
+Airframe: **{cert['airframe']}**
+
+Flight controller: **{cert['flightController']}**
+
+PX4 firmware: **{cert['px4FirmwareVersion']}**
+
+NEXUS source SHA: `{cert['sourceSha']}`
+
+APK SHA-256: `{cert['apkSha256']}`
+
+Parameter baseline SHA-256: `{cert['parameterFileSha256']}`
+
+Operator reviewer: **{cert['operatorReviewer']}**
+
+Engineer reviewer: **{cert['engineerReviewer']}**
+
+## Approved envelope
+
+- Max altitude: {cert['operationalEnvelope']['maxAltitudeM']} m
+- Max horizontal distance: {cert['operationalEnvelope']['maxHorizontalDistanceM']} m
+- Max ground speed: {cert['operationalEnvelope']['maxGroundSpeedMps']} m/s
+- Minimum battery reserve: {cert['operationalEnvelope']['minBatteryReservePercent']}%
+- Geofence radius: {cert['operationalEnvelope']['geofenceRadiusM']} m
+- RTL altitude: {cert['operationalEnvelope']['rtlAltitudeM']} m
+- Visual line of sight: required
+
+## Validity
+
+{cert['validityRule']}
+
+Any revocation trigger invalidates this certificate until the affected gates are repeated.
+
+**NEXUS GCS V1.0.0 + this aircraft configuration is operationally accepted only inside the envelope above.**
+"""
+          p=os.path.join(root,"NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.md")
+          open(p,"w",encoding="utf-8").write(text)
+          digest=hashlib.sha256(open(cert_path,"rb").read()).hexdigest()
+          open(cert_path+".sha256","w").write(digest+"  "+os.path.basename(cert_path)+"\n")
+          PY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nexus-gcs-v1.0.0-operational-flight-acceptance
+          path: |
+            ${{ runner.temp }}/operational-evidence/NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.json
+            ${{ runner.temp }}/operational-evidence/NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.json.sha256
+            ${{ runner.temp }}/operational-evidence/NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.md
+            ${{ runner.temp }}/operational-evidence/operational-run-metadata.json
+          retention-days: 365
+          if-no-files-found: error
