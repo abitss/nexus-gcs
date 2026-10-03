@@ -57,7 +57,7 @@ env:
 jobs:
   android-custom-build:
     name: NEXUS Android arm64 (CI debug-signed)
-    runs-on: [self-hosted, linux, nexus-v1-software]
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
 
     steps:
