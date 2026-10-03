@@ -210,61 +210,70 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import json,os,hashlib,datetime
-          root=os.path.join(os.environ["RUNNER_TEMP"],"operational-evidence")
-          cert_path=os.path.join(root,"NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.json")
-          cert=json.load(open(cert_path,encoding="utf-8"))
-          profile=json.load(open(os.environ["PROFILE"],encoding="utf-8"))
-          text=f"""# NEXUS GCS V1.0.0 — OPERATIONAL FLIGHT ACCEPTANCE
+          import hashlib
+          import json
+          import os
 
-**Status: OPERATIONALLY ACCEPTED**
+          root = os.path.join(os.environ["RUNNER_TEMP"], "operational-evidence")
+          cert_path = os.path.join(root, "NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.json")
+          cert = json.load(open(cert_path, encoding="utf-8"))
 
-Aircraft acceptance ID: `{cert['aircraftAcceptanceId']}`
+          lines = [
+              "# NEXUS GCS V1.0.0 — OPERATIONAL FLIGHT ACCEPTANCE",
+              "",
+              "**Status: OPERATIONALLY ACCEPTED**",
+              "",
+              f"Aircraft acceptance ID: `{cert['aircraftAcceptanceId']}`",
+              "",
+              f"Aircraft: **{cert['aircraftName']}**",
+              "",
+              f"Airframe: **{cert['airframe']}**",
+              "",
+              f"Flight controller: **{cert['flightController']}**",
+              "",
+              f"PX4 firmware: **{cert['px4FirmwareVersion']}**",
+              "",
+              f"NEXUS source SHA: `{cert['sourceSha']}`",
+              "",
+              f"APK SHA-256: `{cert['apkSha256']}`",
+              "",
+              f"Parameter baseline SHA-256: `{cert['parameterFileSha256']}`",
+              "",
+              f"Mission baseline SHA-256: `{cert['missionBaselineSha256']}`",
+              "",
+              f"Geofence baseline SHA-256: `{cert['geofenceBaselineSha256']}`",
+              "",
+              f"Operator reviewer: **{cert['operatorReviewer']}**",
+              "",
+              f"Engineer reviewer: **{cert['engineerReviewer']}**",
+              "",
+              "## Approved envelope",
+              "",
+              f"- Max altitude: {cert['operationalEnvelope']['maxAltitudeM']} m",
+              f"- Max horizontal distance: {cert['operationalEnvelope']['maxHorizontalDistanceM']} m",
+              f"- Max ground speed: {cert['operationalEnvelope']['maxGroundSpeedMps']} m/s",
+              f"- Minimum battery reserve: {cert['operationalEnvelope']['minBatteryReservePercent']}%",
+              f"- Geofence radius: {cert['operationalEnvelope']['geofenceRadiusM']} m",
+              f"- RTL altitude: {cert['operationalEnvelope']['rtlAltitudeM']} m",
+              "- Visual line of sight: required",
+              "",
+              "## Validity",
+              "",
+              cert["validityRule"],
+              "",
+              "Any revocation trigger invalidates this certificate until the affected gates are repeated.",
+              "",
+              "**NEXUS GCS V1.0.0 + this aircraft configuration is operationally accepted only inside the envelope above.**",
+              "",
+          ]
 
-Aircraft: **{cert['aircraftName']}**
+          summary_path = os.path.join(root, "NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.md")
+          with open(summary_path, "w", encoding="utf-8") as handle:
+              handle.write("\n".join(lines))
 
-Airframe: **{cert['airframe']}**
-
-Flight controller: **{cert['flightController']}**
-
-PX4 firmware: **{cert['px4FirmwareVersion']}**
-
-NEXUS source SHA: `{cert['sourceSha']}`
-
-APK SHA-256: `{cert['apkSha256']}`
-
-Parameter baseline SHA-256: `{cert['parameterFileSha256']}`
-
-Mission baseline SHA-256: `{cert['missionBaselineSha256']}`
-
-Geofence baseline SHA-256: `{cert['geofenceBaselineSha256']}`
-
-Operator reviewer: **{cert['operatorReviewer']}**
-
-Engineer reviewer: **{cert['engineerReviewer']}**
-
-## Approved envelope
-
-- Max altitude: {cert['operationalEnvelope']['maxAltitudeM']} m
-- Max horizontal distance: {cert['operationalEnvelope']['maxHorizontalDistanceM']} m
-- Max ground speed: {cert['operationalEnvelope']['maxGroundSpeedMps']} m/s
-- Minimum battery reserve: {cert['operationalEnvelope']['minBatteryReservePercent']}%
-- Geofence radius: {cert['operationalEnvelope']['geofenceRadiusM']} m
-- RTL altitude: {cert['operationalEnvelope']['rtlAltitudeM']} m
-- Visual line of sight: required
-
-## Validity
-
-{cert['validityRule']}
-
-Any revocation trigger invalidates this certificate until the affected gates are repeated.
-
-**NEXUS GCS V1.0.0 + this aircraft configuration is operationally accepted only inside the envelope above.**
-"""
-          p=os.path.join(root,"NEXUS-GCS-V1.0.0-OPERATIONAL-FLIGHT-ACCEPTANCE.md")
-          open(p,"w",encoding="utf-8").write(text)
-          digest=hashlib.sha256(open(cert_path,"rb").read()).hexdigest()
-          open(cert_path+".sha256","w").write(digest+"  "+os.path.basename(cert_path)+"\n")
+          digest = hashlib.sha256(open(cert_path, "rb").read()).hexdigest()
+          with open(cert_path + ".sha256", "w", encoding="utf-8") as handle:
+              handle.write(digest + "  " + os.path.basename(cert_path) + "\n")
           PY
 
       - uses: actions/upload-artifact@v7
