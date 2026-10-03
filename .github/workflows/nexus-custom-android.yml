@@ -183,6 +183,52 @@ jobs:
             echo "QT_ANDROID_KEYSTORE_KEY_PASS=android"
           } >> "$GITHUB_ENV"
 
+      - name: Pre-seed pinned Android OpenSSL helper
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rev="b71f1470962019bd89534a2919f5925f93bc5779"
+          work="${RUNNER_TEMP}/android-openssl-src"
+          cache="${GITHUB_WORKSPACE}/.cache/CPM/android_openssl"
+          archive="${cache}/android_openssl-${rev}.zip"
+
+          rm -rf "${work}"
+          mkdir -p "${work}" "${cache}"
+
+          git -C "${work}" init
+          git -C "${work}" remote add origin https://github.com/KDAB/android_openssl.git
+          git -C "${work}" fetch --depth=1 origin "${rev}"
+          git -C "${work}" archive \
+            --format=zip \
+            --prefix="android_openssl-${rev}/" \
+            --output="${archive}" \
+            FETCH_HEAD
+
+          hash="$(sha256sum "${archive}" | awk '{print $1}')"
+          echo "Locally seeded Android OpenSSL helper: ${archive}"
+          echo "SHA256=${hash}"
+
+          python3 - "${hash}" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          new_hash = sys.argv[1]
+          path = Path("cmake/modules/AndroidOpenSSL.cmake")
+          text = path.read_text(encoding="utf-8")
+          text, count = re.subn(
+              r'set\(_android_openssl_hash SHA256=[0-9a-f]{64}\)',
+              f'set(_android_openssl_hash SHA256={new_hash})',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit("Could not patch Android OpenSSL helper archive hash")
+          path.write_text(text, encoding="utf-8")
+          PY
+
+          test -s "${archive}"
       - name: Configure NEXUS Android
         timeout-minutes: 90
         uses: ./.github/actions/cmake-configure
