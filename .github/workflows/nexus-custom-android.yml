@@ -182,6 +182,7 @@ jobs:
             -DQT_HOST_PATH=${{ steps.setup.outputs.host_qt_root_dir }}
             -DQT_ANDROID_SIGN_APK=ON
             -DNEXUS_SOURCE_SHA=${{ github.sha }}
+            -DQGC_ENABLE_GST_VIDEOSTREAMING=OFF
 
       - name: Build NEXUS Android
         timeout-minutes: 75
@@ -201,13 +202,13 @@ jobs:
           apk="$(find "${APK_DIR}" -maxdepth 1 -name '*.apk' -print -quit)"
           test -n "${apk}"
           mkdir -p "${RUNNER_TEMP}/artifact"
-          cp "${apk}" "${RUNNER_TEMP}/artifact/NEXUS-GCS-CI-debug-signed-arm64.apk"
+          cp "${apk}" "${RUNNER_TEMP}/artifact/NEXUS-GCS-PREVIEW-no-gstreamer-arm64.apk"
 
       - name: Upload NEXUS APK
         uses: actions/upload-artifact@v7
         with:
-          name: nexus-gcs-ci-debug-signed-android
-          path: ${{ runner.temp }}/artifact/NEXUS-GCS-CI-debug-signed-arm64.apk
+          name: nexus-gcs-preview-no-gstreamer-android
+          path: ${{ runner.temp }}/artifact/NEXUS-GCS-PREVIEW-no-gstreamer-arm64.apk
           retention-days: 7
           if-no-files-found: error
 
