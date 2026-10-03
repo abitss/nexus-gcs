@@ -48,7 +48,7 @@ QVariantMap NexusAnalyzeModel::_entryForFile(const QFileInfo &fileInfo)
 
 void NexusAnalyzeModel::refreshHistory()
 {
-    const auto *app = SettingsManager::instance()->appSettings();
+    auto *app = SettingsManager::instance()->appSettings();
     const QStringList roots = {
         app->telemetrySavePath(),
         app->logSavePath()
