@@ -57,7 +57,7 @@ env:
 jobs:
   android-custom-build:
     name: NEXUS Android arm64 (CI debug-signed)
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, nexus-v1-software]
     timeout-minutes: 120
 
     steps:
@@ -132,8 +132,18 @@ jobs:
           fi
           grep -n "libgstreamer-plugins-extra1.0-dev" "$pkg_file"
 
-      - name: Install host build dependencies
-        uses: ./.github/actions/install-dependencies
+      - name: Verify pre-provisioned host build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v ccache
+          command -v mold
+          command -v cmake
+          command -v ninja
+          command -v pkg-config
+          command -v git
+          command -v python3
+
 
       - name: Create CI debug keystore
         shell: bash
@@ -156,7 +166,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Configure NEXUS Android
-        timeout-minutes: 45
+        timeout-minutes: 90
         uses: ./.github/actions/cmake-configure
         with:
           build-dir: ${{ runner.temp }}/nexus-build
