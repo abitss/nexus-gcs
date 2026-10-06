@@ -114,7 +114,10 @@ double NexusDeviceHealthModel::_readBatteryTemperatureC() const
 int NexusDeviceHealthModel::_androidThermalStatus() const
 {
 #ifdef Q_OS_ANDROID
-    if (SDLPlatform::getAndroidSDKVersion() < 29) return -1;
+    const jint sdk = QJniObject::getStaticField<jint>(
+        "android/os/Build$VERSION",
+        "SDK_INT");
+    if (sdk < 29) return -1;
 
     QJniObject activity = QJniObject::callStaticObjectMethod(
         "org/qtproject/qt/android/QtNative",
@@ -158,8 +161,50 @@ void NexusDeviceHealthModel::_refreshPermissions()
 
 void NexusDeviceHealthModel::refresh()
 {
+#ifdef Q_OS_ANDROID
+    _batteryPercent = -1;
+    _batteryState = QStringLiteral("UNKNOWN");
+
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;");
+
+    if (activity.isValid()) {
+        QJniObject serviceName = QJniObject::fromString(QStringLiteral("batterymanager"));
+        QJniObject batteryManager = activity.callObjectMethod(
+            "getSystemService",
+            "(Ljava/lang/String;)Ljava/lang/Object;",
+            serviceName.object<jstring>());
+
+        if (batteryManager.isValid()) {
+            QJniEnvironment env;
+
+            const jint percent = batteryManager.callMethod<jint>(
+                "getIntProperty",
+                "(I)I",
+                jint(4)); // BatteryManager.BATTERY_PROPERTY_CAPACITY
+
+            if (!env.checkAndClearExceptions() && percent >= 0 && percent <= 100) {
+                _batteryPercent = static_cast<int>(percent);
+            }
+
+            const jboolean charging = batteryManager.callMethod<jboolean>(
+                "isCharging",
+                "()Z");
+
+            if (!env.checkAndClearExceptions()) {
+                _batteryState = charging
+                    ? (_batteryPercent >= 100 ? QStringLiteral("CHARGED")
+                                              : QStringLiteral("CHARGING"))
+                    : QStringLiteral("ON BATTERY");
+            }
+        }
+    }
+#else
     int seconds = -1;
     _batteryState = SDLPlatform::getDevicePowerInfo(&seconds, &_batteryPercent).toUpper();
+#endif
 
     _temperatureC = _readBatteryTemperatureC();
 
