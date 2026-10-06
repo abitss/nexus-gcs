@@ -1,0 +1,91 @@
+name: NEXUS Operational Acceptance Harness
+
+on:
+  pull_request:
+    branches:
+      - release/v1-production-hardening
+      - phase0-task0.22-v1-final-acceptance
+    paths:
+      - 'release/operational/**'
+      - 'scripts/validate-operational-*.py'
+      - 'docs/OPERATIONAL_FLIGHT_ACCEPTANCE.md'
+      - '.github/workflows/nexus-v1-operator-flight-review.yml'
+      - '.github/workflows/nexus-v1-engineer-airworthiness-review.yml'
+      - '.github/workflows/nexus-v1-operational-flight-acceptance.yml'
+      - '.github/workflows/nexus-operational-acceptance-harness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: [self-hosted, linux, nexus-v1-software]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify operational profile template
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s release/operational/aircraft-profile.template.json
+          grep -Fq '"status": "DRAFT"' release/operational/aircraft-profile.template.json
+          grep -Fq 'geofenceBaselineSha256' release/operational/aircraft-profile.template.json
+          grep -Fq 'parameterFileSha256' release/operational/aircraft-profile.template.json
+
+      - name: Verify fail-closed profile validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'profile status must be LOCKED' scripts/validate-operational-profile.py
+          grep -Fq 'geofenceBaselineSha256 must be a real' scripts/validate-operational-profile.py
+          grep -Fq 'cannot be disabled or unknown' scripts/validate-operational-profile.py
+          grep -Fq 'visualLineOfSightRequired' scripts/validate-operational-profile.py
+          grep -Fq 'mavlinkSystemId' scripts/validate-operational-profile.py
+          grep -Fq 'mavlinkComponentId' scripts/validate-operational-profile.py
+          test -s scripts/validate-operational-hardware-evidence.py
+          grep -Fq 'MAVLink system ID mismatch' scripts/validate-operational-hardware-evidence.py
+
+      - name: Verify operational field breadth
+        shell: bash
+        run: |
+          set -euo pipefail
+          for card in             OUTDOOR_TELEMETRY GPS_BEHAVIOR CONTROLLED_HOVER MODE_TRANSITIONS             MISSION_EXECUTION LINK_DEGRADATION FAILSAFE_BEHAVIOR RTL_LAND             RECONNECT_RECOVERY ABORT_PATH APP_STABILITY PERFORMANCE             THERMAL_BEHAVIOR POST_FLIGHT_REVIEW; do
+            grep -Fq "$card" scripts/validate-operational-field-evidence.py
+          done
+
+      - name: Verify independent approvals
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'environment: operational-flight-operator' .github/workflows/nexus-v1-operator-flight-review.yml
+          grep -Fq 'environment: operational-flight-engineer' .github/workflows/nexus-v1-engineer-airworthiness-review.yml
+          grep -Fq 'operator and engineer approvals must be performed by different identities' scripts/validate-operational-acceptance.py
+
+      - name: Verify final operational release contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'environment: operational-flight-release' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'NEXUS_ANDROID_CERT_SHA256' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'signingCertSha256' scripts/validate-v1-acceptance.py
+          grep -Fq 'parameter baseline SHA-256 mismatch' scripts/validate-operational-acceptance.py
+          grep -Fq 'mission baseline SHA-256 mismatch' scripts/validate-operational-acceptance.py
+          grep -Fq 'geofence baseline SHA-256 mismatch' scripts/validate-operational-acceptance.py
+          grep -Fq 'OPERATIONALLY_ACCEPTED' scripts/validate-operational-acceptance.py
+          grep -Fq 'revocationTriggers' scripts/validate-operational-acceptance.py
+          grep -Fq 'Revalidate raw physical evidence' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Verify reviewers approved these exact physical runs' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Operator review references a different field run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Engineer review references a different bench run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+          grep -Fq 'Engineer review references a different HIL run' .github/workflows/nexus-v1-operational-flight-acceptance.yml
+
+      - name: Verify acceptance documentation
+        run: |
+          test -s docs/OPERATIONAL_FLIGHT_ACCEPTANCE.md
+          grep -Fq 'Daily operational GO/NO-GO' docs/OPERATIONAL_FLIGHT_ACCEPTANCE.md
+          grep -Fq 'Automatic revocation' docs/OPERATIONAL_FLIGHT_ACCEPTANCE.md

@@ -115,6 +115,7 @@ report={
     "gates":gates,
     "apk":release["artifactBaseName"]+".apk",
     "apkSha256":actual,
+    "signingCertSha256":actual_cert,
     "androidPackage":"com.abitss.nexusgcs",
     "qgcBaseline":release["qgcBaseline"],
     "securityReviewer":security.get("reviewer"),

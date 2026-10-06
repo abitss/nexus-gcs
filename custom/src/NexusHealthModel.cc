@@ -127,7 +127,7 @@ void NexusHealthModel::_mavlinkMessageReceived(const mavlink_message_t &message)
 
     _fenceStatusSeen = true;
     _fenceBreached = fence.breach_status == 1;
-    _fenceBreachType = static_cast<MAV_FENCE_BREACH>(fence.breach_type);
+    _fenceBreachType = static_cast<FENCE_BREACH>(fence.breach_type);
     refresh();
 }
 

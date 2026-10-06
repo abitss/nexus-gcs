@@ -69,6 +69,10 @@ QString NexusFieldQualificationModel::exportJson(const QString &path) const
     QJsonObject root{
         {QStringLiteral("schemaVersion"), QStringLiteral("1.0")},
         {QStringLiteral("sourceSha"), QStringLiteral(NEXUS_SOURCE_SHA)},
+        {QStringLiteral("mavlinkSystemId"), _vehicle ? _vehicle->id() : -1},
+        {QStringLiteral("mavlinkComponentId"), _vehicle ? _vehicle->defaultComponentId() : -1},
+        {QStringLiteral("firmwareType"), _vehicle ? _vehicle->firmwareTypeString() : QStringLiteral("UNAVAILABLE")},
+        {QStringLiteral("vehicleType"), _vehicle ? _vehicle->vehicleTypeString() : QStringLiteral("UNAVAILABLE")},
         {QStringLiteral("phase"), _phase},
         {QStringLiteral("durationSeconds"), durationSeconds()},
         {QStringLiteral("heartbeatRateHz"), _heartbeatRateHz},

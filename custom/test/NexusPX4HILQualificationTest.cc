@@ -48,7 +48,7 @@ void NexusPX4HILQualificationTest::_testHILLifecycle()
     QVERIFY2(sim=="YES","HIL simulator confirmation is required.");
 
     QJsonArray stages;
-    QJsonObject root{{"schemaVersion","1.0"},{"suite","NEXUS PX4 HIL QUALIFICATION"}};
+    QJsonObject root{{"schemaVersion","1.0"},{"suite","NEXUS PX4 HIL QUALIFICATION"},{"sourceSha",QStringLiteral(NEXUS_SOURCE_SHA)}};
     const QString evidence=qEnvironmentVariable("NEXUS_HIL_EVIDENCE","/tmp/nexus-px4-hil.json");
     auto stage=[&](const QString &name,const QString &status,const QString &detail=QString()){
         QJsonObject row{{"stage",name},{"status",status}};
@@ -71,6 +71,10 @@ void NexusPX4HILQualificationTest::_testHILLifecycle()
     QVERIFY2(UnitTest::waitForCondition([&]{return mvm->activeVehicle()!=nullptr;},60000,QStringLiteral("HIL Pixhawk discovery")),"No HIL Pixhawk discovered.");
     QPointer<Vehicle> vehicle=mvm->activeVehicle();
     QVERIFY(vehicle); QCOMPARE(vehicle->firmwareType(),MAV_AUTOPILOT_PX4);
+    root.insert("mavlinkSystemId", vehicle->id());
+    root.insert("mavlinkComponentId", vehicle->defaultComponentId());
+    root.insert("firmwareType", vehicle->firmwareTypeString());
+    root.insert("vehicleType", vehicle->vehicleTypeString());
     stage("CONNECT","PASS");
 
     bool hilEnabled=false;

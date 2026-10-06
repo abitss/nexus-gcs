@@ -340,9 +340,9 @@ bool NexusSecurityModel::validateMissionFile(const QString &path)
     const QJsonObject root = doc.object();
     if (root.value(QStringLiteral("fileType")).toString() != QString::fromLatin1(PlanMasterController::kPlanFileType) ||
         root.value(QStringLiteral("version")).toInt(-1) != PlanMasterController::kPlanFileVersion ||
-        !root.value(QStringLiteral(PlanMasterController::kJsonMissionObjectKey)).isObject() ||
-        !root.value(QStringLiteral(PlanMasterController::kJsonGeoFenceObjectKey)).isObject() ||
-        !root.value(QStringLiteral(PlanMasterController::kJsonRallyPointsObjectKey)).isObject()) {
+        !root.value(QString::fromLatin1(PlanMasterController::kJsonMissionObjectKey)).isObject() ||
+        !root.value(QString::fromLatin1(PlanMasterController::kJsonGeoFenceObjectKey)).isObject() ||
+        !root.value(QString::fromLatin1(PlanMasterController::kJsonRallyPointsObjectKey)).isObject()) {
         _setError(QStringLiteral("Mission file does not match the supported QGC Plan schema."));
         return false;
     }

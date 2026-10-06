@@ -78,6 +78,7 @@ void NexusRealPixhawkBenchTest::_testRealPixhawkBenchQualification()
     QJsonObject root{
         {QStringLiteral("schemaVersion"), QStringLiteral("1.0")},
         {QStringLiteral("suite"), QStringLiteral("NEXUS REAL PIXHAWK BENCH QUALIFICATION")},
+        {QStringLiteral("sourceSha"), QStringLiteral(NEXUS_SOURCE_SHA)},
         {QStringLiteral("port"), port},
         {QStringLiteral("baud"), baud > 0 ? baud : 115200},
         {QStringLiteral("propsRemoved"), true},
@@ -133,6 +134,10 @@ void NexusRealPixhawkBenchTest::_testRealPixhawkBenchQualification()
     QVERIFY(vehicle);
     QCOMPARE(vehicle->firmwareType(), MAV_AUTOPILOT_PX4);
 
+    root.insert(QStringLiteral("mavlinkSystemId"), vehicle->id());
+    root.insert(QStringLiteral("mavlinkComponentId"), vehicle->defaultComponentId());
+    root.insert(QStringLiteral("firmwareType"), vehicle->firmwareTypeString());
+    root.insert(QStringLiteral("vehicleType"), vehicle->vehicleTypeString());
     facts.insert(QStringLiteral("systemId"), vehicle->id());
     facts.insert(QStringLiteral("componentId"), vehicle->defaultComponentId());
     facts.insert(QStringLiteral("firmwareType"), vehicle->firmwareTypeString());

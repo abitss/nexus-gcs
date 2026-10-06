@@ -97,7 +97,7 @@ private:
 
     bool _fenceStatusSeen = false;
     bool _fenceBreached = false;
-    MAV_FENCE_BREACH _fenceBreachType = FENCE_BREACH_NONE;
+    FENCE_BREACH _fenceBreachType = FENCE_BREACH_NONE;
 
     QString _overallState = QStringLiteral("DEGRADED");
     QString _overallDetail = QStringLiteral("No active vehicle");
